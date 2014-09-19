@@ -1,3 +1,5 @@
+**WARNING** We just discover a bug in the actual version, preventing the circuit to open when a single request is successful. This is a major issue we are fixing in the next few days.
+
 # Circuitbox
 
 Circuitbox is a Ruby circuit breaker gem. It protects your application from failures of it's service dependencies. It wraps calls to external services and monitors for failures in one minute intervals. Once more than 10 requests have been made with a 50% failure rate, Circuitbox stops sending requests to that failing service for one minute. This helps your application gracefully degrade.
