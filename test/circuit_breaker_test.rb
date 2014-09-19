@@ -17,6 +17,55 @@ class CircuitBreakerTest < Minitest::Test
     assert circuit.send(:half_open?)
   end
 
+
+  describe 'ratio' do
+    def cb_options
+      {
+        sleep_window:     300,
+        volume_threshold: 5,
+        error_threshold:  10,
+        timeout_seconds:  1
+      }
+    end
+
+    def setup
+      Circuitbox::CircuitBreaker.reset
+    end
+
+
+    it 'open the circuit on 100% failure' do
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, cb_options)
+      run_counter = 0
+      10.times do
+        circuit.run do
+          run_counter += 1
+          raise RequestFailureError
+        end
+      end
+      assert_equal 6, run_counter, 'the circuit did not open after 6 failures (5 failures + 10%)'
+    end
+
+    it 'open the circuit even after 1 success' do
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, cb_options)
+      run_counter = 0
+      5.times do
+        circuit.run do
+          run_counter += 1
+          raise RequestFailureError
+        end
+      end
+      circuit.run { 'success'}
+      assert_equal 5, circuit.send(:failure_count), 'the total count of failures is not 5'
+      5.times do
+        circuit.run do
+          run_counter += 1
+          raise RequestFailureError
+        end
+      end
+      assert_equal 6, run_counter, 'the circuit did not open after 6 failures (5 failures + 10%)'
+    end
+  end
+
   describe "when in half open state" do
     before do
       Circuitbox::CircuitBreaker.reset
@@ -129,7 +178,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_open_checks_error_rate_threshold
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open_flag? => false, 
+    circuit.stubs(:open_flag? => false,
                   :passed_volume_threshold? => true)
 
     circuit.expects(:passed_rate_threshold?).once
@@ -138,7 +187,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_open_is_false_if_awake_and_under_rate_threshold
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open_flag? => false, 
+    circuit.stubs(:open_flag? => false,
                   :passed_volume_threshold? => false,
                   :passed_rate_threshold => false)
 
@@ -190,7 +239,7 @@ class CircuitBreakerTest < Minitest::Test
     Circuitbox::Notifier.expects(:notify).with(:open, :yammer, nil)
     circuit.send(:log_event, :open)
   end
-  
+
   def emulate_circuit_run(circuit, response_type, response_value)
     circuit.run do
       case response_type
