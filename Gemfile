@@ -14,4 +14,5 @@ group :test do
   gem 'guard-minitest'
   gem 'gimme'
   gem 'terminal-notifier-guard'
+  gem 'pry-byebug'
 end
