@@ -23,21 +23,21 @@ class CircuitBreakerTest < Minitest::Test
       {
         sleep_window:     300,
         volume_threshold: 5,
-        error_threshold:  10,
+        error_threshold:  33,
         timeout_seconds:  1
       }
     end
 
     def setup
       Circuitbox::CircuitBreaker.reset
+      @circuit = Circuitbox::CircuitBreaker.new(:yammer, cb_options)
     end
 
 
     it 'open the circuit on 100% failure' do
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, cb_options)
       run_counter = 0
       10.times do
-        circuit.run do
+        @circuit.run do
           run_counter += 1
           raise RequestFailureError
         end
@@ -45,25 +45,85 @@ class CircuitBreakerTest < Minitest::Test
       assert_equal 6, run_counter, 'the circuit did not open after 6 failures (5 failures + 10%)'
     end
 
+    it 'keep circuit closed on 0% failure' do
+      run_counter = 0
+      10.times do
+        @circuit.run do
+          run_counter += 1
+          'sucess'
+        end
+      end
+      assert_equal 10, run_counter, 'run block was not executed 10 times'
+    end
+
     it 'open the circuit even after 1 success' do
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, cb_options)
       run_counter = 0
       5.times do
-        circuit.run do
+        @circuit.run do
           run_counter += 1
           raise RequestFailureError
         end
       end
-      circuit.run { 'success'}
-      assert_equal 5, circuit.send(:failure_count), 'the total count of failures is not 5'
+
+      # one success
+      @circuit.run { 'success'}
+      assert_equal 5, @circuit.failure_count, 'the total count of failures is not 5'
+
       5.times do
-        circuit.run do
+        @circuit.run do
           run_counter += 1
           raise RequestFailureError
         end
       end
-      assert_equal 6, run_counter, 'the circuit did not open after 6 failures (5 failures + 10%)'
+      assert_equal 5, run_counter, 'the circuit did not open after 5 failures (5 failures + 10%)'
     end
+
+    it 'keep circuit closed when failure ratio do not exceed limit' do
+      run_counter = 0
+      7.times do
+        @circuit.run do
+          run_counter += 1
+          'sucess'
+        end
+      end
+      assert_equal 0, @circuit.failure_count, 'some errors were counted'
+
+      3.times do
+        @circuit.run do
+          run_counter += 1
+          raise RequestFailureError
+        end
+      end
+      assert_equal 10, run_counter, 'block was not executed 10 times'
+      assert @circuit.error_rate < 33, 'error_rate pass over 33%'
+    end
+
+    ## Over the ration
+    it 'circuit open when failure ratio exceed limit' do
+      run_counter = 0
+      10.times do
+        @circuit.run do
+          run_counter += 1
+          'sucess'
+        end
+      end
+      assert_equal 0, @circuit.failure_count, 'some errors were counted'
+
+      10.times do
+        @circuit.run do
+          run_counter += 1
+          raise RequestFailureError
+        end
+      end
+      # 5 failure on 15 run is 33%
+      assert_equal 15, run_counter, 'block was not executed 10 times'
+      assert @circuit.error_rate >= 33, 'error_rate pass over 33%'
+    end
+
+  end
+
+  describe 'closing the circuit after sleep' do
+
   end
 
   describe "when in half open state" do
