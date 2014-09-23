@@ -117,6 +117,10 @@ class Circuitbox
       circuit_store.read(stat_storage_key(:success)).to_i
     end
 
+    def clear_open_flag
+      circuit_store.delete(storage_key(:asleep)).present?
+    end
+
   private
     def open!
       log_event :open

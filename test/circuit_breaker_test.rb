@@ -123,7 +123,54 @@ class CircuitBreakerTest < Minitest::Test
   end
 
   describe 'closing the circuit after sleep' do
+    class GodTime < SimpleDelegator
+      def initialize(now=nil)
+        @now = now || Time.now
+        super(@now)
+      end
 
+      def __getobj__
+        @now
+      end
+
+      def __setobj__(obj)
+        @now = obj
+      end
+
+      def jump(interval)
+        __setobj__ @now + interval
+      end
+    end
+
+    def cb_options
+      {
+        sleep_window:     70,
+        time_window:      60,
+        volume_threshold: 5,
+        error_threshold:  33,
+        timeout_seconds:  1,
+        time_now: Proc.new { @timer }
+      }
+    end
+
+    def setup
+      @timer   = GodTime.new
+      @circuit = Circuitbox::CircuitBreaker.new(:yammer, cb_options)
+    end
+
+
+    it 'close the circuit after sleeping time' do
+      # lets open the circuit
+      10.times { @circuit.run { raise RequestFailureError } }
+      run_count = 0
+      @circuit.run { run_count += 1 }
+      assert_equal 0, run_count, 'circuit is not open'
+
+      @timer.jump(cb_options[:sleep_window] + 1)
+      @circuit.clear_open_flag # force eviction of flag in the cache to force recalculation of ratio
+      @circuit.run { run_count += 1 }
+      assert_equal 1, run_count, 'circuit is not closed'
+    end
   end
 
   describe "when in half open state" do
