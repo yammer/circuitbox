@@ -1,5 +1,6 @@
 require 'test_helper'
 require 'circuitbox'
+require 'ostruct'
 
 class CircuitBreakerTest < Minitest::Test
   SUCCESSFUL_RESPONSE_STRING = "Success!"
@@ -9,6 +10,18 @@ class CircuitBreakerTest < Minitest::Test
 
   def setup
     Circuitbox::CircuitBreaker.reset
+  end
+
+  describe 'initialize' do
+    it 'force sleep_window to equal time_window if it is too short' do
+      circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                     :sleep_window   =>  1,
+                                     :time_window    => 10
+                                    )
+      assert_equal circuit.option_value(:sleep_window),
+        circuit.option_value(:time_window),
+        'sleep_window has not been corrected properly'
+    end
   end
 
   def test_goes_into_half_open_state_on_sleep
@@ -341,10 +354,79 @@ class CircuitBreakerTest < Minitest::Test
     assert_equal 0, circuit.send(:success_count)
   end
 
-  def test_notifies_on_open_circuit
-    circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    Circuitbox::Notifier.expects(:notify).with(:open, :yammer, nil)
-    circuit.send(:log_event, :open)
+  describe 'notifications' do
+
+    def setup
+      Circuitbox::CircuitBreaker.reset
+    end
+
+    def circuit
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, :notifier_class => @notifier)
+    end
+
+
+    it 'notifies on open circuit' do
+      @notifier = gimme_notifier
+      circuit.send(:log_event, :open)
+      assert @notifier.notified?, 'no notification sent'
+    end
+
+    it 'notifies warning if sleep_window is shorter than time_window' do
+      @notifier = gimme_notifier
+      Circuitbox::CircuitBreaker.new(:yammer,
+                                     :notifier_class => @notifier,
+                                     :sleep_window   =>  1,
+                                     :time_window    => 10
+                                    )
+      assert @notifier.notified?, 'no notification sent'
+    end
+
+    it 'DO NOT notifies warning if sleep_window is longer than time_window' do
+      @notifier = gimme_notifier
+      Circuitbox::CircuitBreaker.new(:yammer,
+                                     :notifier_class => @notifier,
+                                     :sleep_window   => 11,
+                                     :time_window    => 10
+                                    )
+      assert_equal false, @notifier.notified?, 'no notification sent'
+    end
+
+
+    it 'notifies error_rate on error_rate calculation' do
+      @notifier = gimme_notifier(metric: :error_rate, metric_value: 0.0)
+      circuit.run {'success' }
+      circuit.error_rate
+      assert @notifier.notified?, 'no notification sent'
+    end
+
+    it 'notifies failure_count on error_rate calculation' do
+      @notifier = gimme_notifier(metric: :failure_count, metric_value: 1)
+      circuit.run { raise RequestFailureError  }
+      circuit.error_rate
+      assert @notifier.notified?, 'no notification sent'
+    end
+
+    it 'notifies success_count on error_rate calculation' do
+      @notifier = gimme_notifier(metric: :success_count, metric_value: 1)
+      circuit.run { 'success' }
+      circuit.error_rate
+      assert @notifier.notified?, 'no notification sent'
+    end
+
+    def gimme_notifier(opts={})
+      metric       = opts.fetch(:metric,:error_rate)
+      metric_value = opts.fetch(:metric_value, 0.0)
+      warning_msg  = opts.fetch(:warning_msg, '')
+      @notified = false
+      fake_notifier = gimme
+      give(fake_notifier).notify(:open) { @notified=true }
+      give(fake_notifier).notify_warning(Gimme::Matchers::Anything.new) { @notified = true }
+      give(fake_notifier).metric_gauge(metric, metric_value) { @notified=true }
+      fake_notifier_class = gimme
+      give(fake_notifier_class).new(:yammer,nil) { fake_notifier }
+      give(fake_notifier_class).notified? { @notified }
+      fake_notifier_class
+    end
   end
 
   def emulate_circuit_run(circuit, response_type, response_value)
