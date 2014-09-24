@@ -1,4 +1,4 @@
-#source 'https://rubygems.org'
+source 'https://rubygems.org'
 source 'http://gems.int.yammer.com'
 
 # Specify your gem's dependencies in circuitbox.gemspec
