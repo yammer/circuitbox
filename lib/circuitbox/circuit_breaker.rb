@@ -33,6 +33,7 @@ class Circuitbox
       @logger     = defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
       @stat_store = options.fetch(:stat_store) { Circuitbox.stat_store }
       @time_now   = options.fetch(:time_now) { Proc.new {Time.now} }
+      check_options
     end
 
     def option_value(name)
@@ -178,6 +179,14 @@ class Circuitbox
       n.metric_gauge(:error_rate, error_rate)
       n.metric_gauge(:failure_count, failures)
       n.metric_gauge(:success_count, successes)
+    end
+
+    def check_options
+      sleep_window = option_value(:sleep_window)
+      time_window  = option_value(:time_window)
+      if sleep_window < time_window
+        notifier.new(service,partition).notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep")
+      end
     end
 
     # When there is a successful response within a stat interval, clear the failures.

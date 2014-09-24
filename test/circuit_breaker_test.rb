@@ -359,31 +359,56 @@ class CircuitBreakerTest < Minitest::Test
       assert @notifier.notified?, 'no notification sent'
     end
 
+    it 'notifies warning if sleep_window is shorter than time_window' do
+      @notifier = gimme_notifier
+      Circuitbox::CircuitBreaker.new(:yammer,
+                                     :notifier_class => @notifier,
+                                     :sleep_window   =>  1,
+                                     :time_window    => 10
+                                    )
+      assert @notifier.notified?, 'no notification sent'
+    end
+
+    it 'DO NOT notifies warning if sleep_window is longer than time_window' do
+      @notifier = gimme_notifier
+      Circuitbox::CircuitBreaker.new(:yammer,
+                                     :notifier_class => @notifier,
+                                     :sleep_window   => 11,
+                                     :time_window    => 10
+                                    )
+      assert_equal false, @notifier.notified?, 'no notification sent'
+    end
+
+
     it 'notifies error_rate on error_rate calculation' do
-      @notifier = gimme_notifier(:error_rate, 0.0)
+      @notifier = gimme_notifier(metric: :error_rate, metric_value: 0.0)
       circuit.run {'success' }
       circuit.error_rate
       assert @notifier.notified?, 'no notification sent'
     end
 
     it 'notifies failure_count on error_rate calculation' do
-      @notifier = gimme_notifier(:failure_count, 1)
+      @notifier = gimme_notifier(metric: :failure_count, metric_value: 1)
       circuit.run { raise RequestFailureError  }
       circuit.error_rate
       assert @notifier.notified?, 'no notification sent'
     end
 
     it 'notifies success_count on error_rate calculation' do
-      @notifier = gimme_notifier(:success_count, 1)
+      @notifier = gimme_notifier(metric: :success_count, metric_value: 1)
       circuit.run { 'success' }
       circuit.error_rate
       assert @notifier.notified?, 'no notification sent'
     end
 
-    def gimme_notifier(metric=:error_rate, metric_value=0.0)
+    def gimme_notifier(opts={})
+      metric       = opts.fetch(:metric,:error_rate)
+      metric_value = opts.fetch(:metric_value, 0.0)
+      warning_msg  = opts.fetch(:warning_msg, '')
       @notified = false
       fake_notifier = gimme
       give(fake_notifier).notify(:open) { @notified=true }
+      give(fake_notifier).notify_warning(Gimme::Matchers::Anything.new) { @notified = true }
       give(fake_notifier).metric_gauge(metric, metric_value) { @notified=true }
       fake_notifier_class = gimme
       give(fake_notifier_class).new(:yammer,nil) { fake_notifier }

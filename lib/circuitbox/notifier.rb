@@ -7,8 +7,12 @@ class Circuitbox
 
     def notify(event)
       return unless notification_available?
-
       ActiveSupport::Notifications.instrument("circuit_#{event}", circuit: circuit_name)
+    end
+
+    def notify_warning(message)
+      return unless notification_available?
+      ActiveSupport::Notifications.instrument("circuit_warning", { circuit: circuit_name, message: message})
     end
 
     def metric_gauge(gauge, value)
