@@ -7,7 +7,8 @@ class Circuitbox
       sleep_window:     300,
       volume_threshold: 5,
       error_threshold:  50,
-      timeout_seconds:  1
+      timeout_seconds:  1,
+      time_window:      60,
     }
 
     #
@@ -18,6 +19,7 @@ class Circuitbox
     # `error_threshold`   - percentage of failed requests needed to trip circuit
     # `timeout_seconds`   - seconds until it will timeout the request
     # `exceptions`        - exceptions other than Timeout::Error that count as failures
+    # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
     #
     def initialize(service, options = {})
       @service = service
@@ -30,6 +32,7 @@ class Circuitbox
 
       @logger     = defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
       @stat_store = options.fetch(:stat_store) { Circuitbox.stat_store }
+      @time_now   = options.fetch(:time_now) { Proc.new {Time.now} }
     end
 
     def option_value(name)
@@ -100,6 +103,24 @@ class Circuitbox
       stats
     end
 
+    def error_rate
+      all_count = failure_count + success_count
+      return 0.0 unless all_count > 0
+      failure_count.to_f / all_count.to_f * 100
+    end
+
+    def failure_count
+      circuit_store.read(stat_storage_key(:failure)).to_i
+    end
+
+    def success_count
+      circuit_store.read(stat_storage_key(:success)).to_i
+    end
+
+    def clear_open_flag
+      circuit_store.delete(storage_key(:asleep)).present?
+    end
+
   private
     def open!
       log_event :open
@@ -128,24 +149,9 @@ class Circuitbox
       error_rate >= option_value(:error_threshold)
     end
 
-    def failure_count
-      circuit_store.read(stat_storage_key(:failure)).to_i
-    end
-
-    def success_count
-      circuit_store.read(stat_storage_key(:success)).to_i
-    end
-
-    def error_rate
-      all_count = failure_count + success_count
-      return 0.0 unless all_count > 0
-      failure_count.to_f / all_count.to_f * 100
-    end
-
     def success!
       log_event :success
       circuit_store.delete(storage_key(:half_open))
-      clear_failures!
     end
 
     def failure!
@@ -201,7 +207,14 @@ class Circuitbox
     end
 
     def stat_storage_key(event, options = {})
-      storage_key(:stats, Time.new.change(sec: 0).to_i, event, options)
+      storage_key(:stats, time_window_begin, event, options)
+    end
+
+    # return time representation in seconds
+    def time_window_begin(time=nil)
+      time      ||= @time_now.call.to_i
+      time_window = option_value(:time_window)
+      time - ( time % time_window ) # remove rest of integer division
     end
 
     def storage_key(*args)
@@ -225,7 +238,7 @@ class Circuitbox
     end
 
     def stats_for_time(time, options = {})
-      stats = { time: time }
+      stats = { time: time_window_begin(time) }
       [:success, :failure, :open].each do |event|
         stats[event] = stat_store.read(storage_key(:stats, time, event, options), raw: true) || 0
       end
