@@ -1,4 +1,3 @@
-**WARNING** We just discover a bug in the actual version, preventing the circuit to open when a single request is successful. This is a major issue we are fixing in the next few days.
 
 # Circuitbox
 
@@ -17,14 +16,14 @@ end
 ```
 
 Circuitbox will return nil for failed requests and open circuits.
-If your HTTP client has it's own conditions for failure, you can pass an `exceptions` option. 
+If your HTTP client has it's own conditions for failure, you can pass an `exceptions` option.
 
 ```ruby
 class ExampleServiceClient
   def circuit
     Circuitbox.circuit(:yammer, exceptions: [Zephyr::FailedRequest])
   end
-  
+
   def http_get
     circuit.run do
       Zephyr.new("http://example.com").get(200, 1000, "/api/messages")
@@ -42,16 +41,16 @@ class ExampleServiceClient
       exceptions:       [YourCustomException],
 
       # seconds the circuit stays open once it has passed the error threshold
-      sleep_window:     300,     
+      sleep_window:     300,
 
       # number of requests within 1 minute before it calculates error rates
-      volume_threshold: 10,      
+      volume_threshold: 10,
 
-      # exceeding this rate will open the circuit 
+      # exceeding this rate will open the circuit
       error_threshold:  50,
 
-      # seconds before the circuit times out      
-      timeout_seconds:  1        
+      # seconds before the circuit times out
+      timeout_seconds:  1
     })
   end
 end
@@ -60,20 +59,20 @@ end
 You can also pass a Proc as an option value which will evaluate each time the circuit breaker is used. This lets you configure the circuit breaker without having to restart the processes.
 
 ```ruby
-Circuitbox.circuit(:yammer, { 
+Circuitbox.circuit(:yammer, {
   sleep_window: Proc.new { Configuration.get(:sleep_window) }
 })
 ```
 
 ## Monitoring & Statistics
 
-You can also run `rake circuits:stats SERVICE={service_name}` to see successes, failures and opened circuits. 
+You can also run `rake circuits:stats SERVICE={service_name}` to see successes, failures and opened circuits.
 Add `PARTITION={partition_key}` to see the circuit for a particular partition.
 The stats are aggregated into 1 minute intervals.
 
 ## Faraday (Caveat: Open circuits return a nil response object)
 
-Circuitbox ships with [Faraday HTTP client](https://github.com/lostisland/faraday) middleware. 
+Circuitbox ships with [Faraday HTTP client](https://github.com/lostisland/faraday) middleware.
 
 ```ruby
 require 'faraday'
