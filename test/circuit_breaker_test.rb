@@ -12,6 +12,18 @@ class CircuitBreakerTest < Minitest::Test
     Circuitbox::CircuitBreaker.reset
   end
 
+  describe 'initialize' do
+    it 'force sleep_window to equal time_window if it is too short' do
+      circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                     :sleep_window   =>  1,
+                                     :time_window    => 10
+                                    )
+      assert_equal circuit.option_value(:sleep_window),
+        circuit.option_value(:time_window),
+        'sleep_window has not been corrected properly'
+    end
+  end
+
   def test_goes_into_half_open_state_on_sleep
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
     circuit.send(:open!)

@@ -186,6 +186,7 @@ class Circuitbox
       time_window  = option_value(:time_window)
       if sleep_window < time_window
         notifier.new(service,partition).notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep")
+        @circuit_options[:sleep_window] = option_value(:time_window)
       end
     end
 
