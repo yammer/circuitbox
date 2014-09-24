@@ -1,4 +1,5 @@
-source 'https://rubygems.org'
+#source 'https://rubygems.org'
+source 'http://gems.int.yammer.com'
 
 # Specify your gem's dependencies in circuitbox.gemspec
 gemspec
@@ -14,4 +15,8 @@ group :test do
   gem 'guard-minitest'
   gem 'gimme'
   gem 'terminal-notifier-guard'
+end
+
+group :development do
+  gem 'bundler-yammer_gem_tasks'
 end
