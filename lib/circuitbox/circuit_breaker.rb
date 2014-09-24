@@ -104,9 +104,13 @@ class Circuitbox
     end
 
     def error_rate
-      all_count = failure_count + success_count
+      _failures = failure_count
+      _success  = success_count
+      all_count = _failures + _success
       return 0.0 unless all_count > 0
-      failure_count.to_f / all_count.to_f * 100
+      rate = failure_count.to_f / all_count.to_f * 100
+      log_metrics(rate, _failures, _success)
+      rate
     end
 
     def failure_count
@@ -167,6 +171,13 @@ class Circuitbox
         log_event_to_stat_store(stat_storage_key(event))
         log_event_to_stat_store(stat_storage_key(event, without_partition: true))
       end
+    end
+
+    def log_metrics(error_rate, failures, successes)
+      n=notifier.new(service,partition)
+      n.metric_gauge(:error_rate, error_rate)
+      n.metric_gauge(:failure_count, failures)
+      n.metric_gauge(:success_count, successes)
     end
 
     # When there is a successful response within a stat interval, clear the failures.
