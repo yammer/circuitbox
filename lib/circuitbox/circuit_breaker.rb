@@ -25,7 +25,7 @@ class Circuitbox
       @service = service
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
-      @notifier        = Circuitbox::Notifier
+      @notifier        = options.fetch(:notifier_class) { Circuitbox::Notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
@@ -160,7 +160,7 @@ class Circuitbox
 
     # Store success/failure/open/close data in memcache
     def log_event(event)
-      notifier.notify(event, service, partition)
+      notifier.new(service,partition).notify(event)
       log_event_to_process(event)
 
       if stat_store.present?

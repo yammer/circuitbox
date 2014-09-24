@@ -3,8 +3,14 @@ require 'circuitbox/notifier'
 require 'active_support/notifications'
 
 describe Circuitbox::Notifier do
-  it "sends an ActiveSupport::Notification" do
-    ActiveSupport::Notifications.expects(:instrument).with("circuit_open", circuit: :yammer)
-    Circuitbox::Notifier.notify(:open, :yammer)
+  it "[notify] sends an ActiveSupport::Notification" do
+    ActiveSupport::Notifications.expects(:instrument).with("circuit_open", circuit: 'yammer:12')
+    Circuitbox::Notifier.new(:yammer, 12).notify(:open)
+  end
+
+  it '[gauge] sends an ActiveSupport::Notifier' do
+    ActiveSupport::Notifications.expects(:instrument).with("circuit_gauge", { circuit: 'yammer:12', gauge: 'ratio', value: 12})
+    Circuitbox::Notifier.new(:yammer, 12).metric_gauge(:ratio, 12)
+
   end
 end
