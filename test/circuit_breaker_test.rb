@@ -111,7 +111,6 @@ class CircuitBreakerTest < Minitest::Test
       assert @circuit.error_rate < 33, 'error_rate pass over 33%'
     end
 
-    ## Over the ration
     it 'circuit open when failure ratio exceed limit' do
       run_counter = 0
       10.times do
@@ -137,6 +136,10 @@ class CircuitBreakerTest < Minitest::Test
 
   describe 'closing the circuit after sleep' do
     class GodTime < SimpleDelegator
+      def now
+        self
+      end
+
       def initialize(now=nil)
         @now = now || Time.now
         super(@now)
@@ -162,7 +165,7 @@ class CircuitBreakerTest < Minitest::Test
         volume_threshold: 5,
         error_threshold:  33,
         timeout_seconds:  1,
-        time_now: Proc.new { @timer }
+        time_class: @timer
       }
     end
 
@@ -180,7 +183,7 @@ class CircuitBreakerTest < Minitest::Test
       assert_equal 0, run_count, 'circuit is not open'
 
       @timer.jump(cb_options[:sleep_window] + 1)
-      @circuit.clear_open_flag # force eviction of flag in the cache to force recalculation of ratio
+      @circuit.try_close_next_time
       @circuit.run { run_count += 1 }
       assert_equal 1, run_count, 'circuit is not closed'
     end
@@ -394,22 +397,19 @@ class CircuitBreakerTest < Minitest::Test
 
     it 'notifies error_rate on error_rate calculation' do
       @notifier = gimme_notifier(metric: :error_rate, metric_value: 0.0)
-      circuit.run {'success' }
-      circuit.error_rate
+      10.times { circuit.run {'success' }}
       assert @notifier.notified?, 'no notification sent'
     end
 
     it 'notifies failure_count on error_rate calculation' do
       @notifier = gimme_notifier(metric: :failure_count, metric_value: 1)
-      circuit.run { raise RequestFailureError  }
-      circuit.error_rate
+      10.times { circuit.run { raise RequestFailureError  }}
       assert @notifier.notified?, 'no notification sent'
     end
 
     it 'notifies success_count on error_rate calculation' do
-      @notifier = gimme_notifier(metric: :success_count, metric_value: 1)
-      circuit.run { 'success' }
-      circuit.error_rate
+      @notifier = gimme_notifier(metric: :success_count, metric_value: 6)
+      10.times { circuit.run { 'success' }}
       assert @notifier.notified?, 'no notification sent'
     end
 

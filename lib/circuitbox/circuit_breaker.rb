@@ -25,15 +25,15 @@ class Circuitbox
       @service = service
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
-      @notifier        = options.fetch(:notifier_class) { Circuitbox::Notifier }
+      @notifier        = options.fetch(:notifier_class) { Notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
 
       @logger     = defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
       @stat_store = options.fetch(:stat_store) { Circuitbox.stat_store }
-      @time_now   = options.fetch(:time_now) { Proc.new {Time.now} }
-      check_options
+      @time_class   = options.fetch(:time_class) { Time }
+      sanitize_options
     end
 
     def option_value(name)
@@ -104,14 +104,10 @@ class Circuitbox
       stats
     end
 
-    def error_rate
-      _failures = failure_count
-      _success  = success_count
-      all_count = _failures + _success
+    def error_rate(failures = failure_count, success = success_count)
+      all_count = failures + success
       return 0.0 unless all_count > 0
-      rate = failure_count.to_f / all_count.to_f * 100
-      log_metrics(rate, _failures, _success)
-      rate
+      failure_count.to_f / all_count.to_f * 100
     end
 
     def failure_count
@@ -122,8 +118,8 @@ class Circuitbox
       circuit_store.read(stat_storage_key(:success)).to_i
     end
 
-    def clear_open_flag
-      circuit_store.delete(storage_key(:asleep)).present?
+    def try_close_next_time
+      circuit_store.delete(storage_key(:asleep))
     end
 
   private
@@ -151,7 +147,15 @@ class Circuitbox
     end
 
     def passed_rate_threshold?
-      error_rate >= option_value(:error_threshold)
+      read_and_log_error_rate >= option_value(:error_threshold)
+    end
+
+    def read_and_log_error_rate
+      failures = failure_count
+      success  = success_count
+      rate = error_rate(failures, success)
+      log_metrics(rate, failures, success)
+      rate
     end
 
     def success!
@@ -175,17 +179,17 @@ class Circuitbox
     end
 
     def log_metrics(error_rate, failures, successes)
-      n=notifier.new(service,partition)
+      n = notifier.new(service,partition)
       n.metric_gauge(:error_rate, error_rate)
       n.metric_gauge(:failure_count, failures)
       n.metric_gauge(:success_count, successes)
     end
 
-    def check_options
+    def sanitize_options
       sleep_window = option_value(:sleep_window)
       time_window  = option_value(:time_window)
       if sleep_window < time_window
-        notifier.new(service,partition).notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep")
+        notifier.new(service,partition).notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
         @circuit_options[:sleep_window] = option_value(:time_window)
       end
     end
@@ -228,12 +232,12 @@ class Circuitbox
     end
 
     def stat_storage_key(event, options = {})
-      storage_key(:stats, time_window_begin, event, options)
+      storage_key(:stats, align_time_on_minute, event, options)
     end
 
     # return time representation in seconds
-    def time_window_begin(time=nil)
-      time      ||= @time_now.call.to_i
+    def align_time_on_minute(time=nil)
+      time      ||= @time_class.now.to_i
       time_window = option_value(:time_window)
       time - ( time % time_window ) # remove rest of integer division
     end
@@ -259,7 +263,7 @@ class Circuitbox
     end
 
     def stats_for_time(time, options = {})
-      stats = { time: time_window_begin(time) }
+      stats = { time: align_time_on_minute(time) }
       [:success, :failure, :open].each do |event|
         stats[event] = stat_store.read(storage_key(:stats, time, event, options), raw: true) || 0
       end
