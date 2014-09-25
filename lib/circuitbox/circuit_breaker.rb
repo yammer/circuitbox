@@ -50,6 +50,7 @@ class Circuitbox
         response = nil
         open! unless open_flag?
       else
+        close! if was_open?
         logger.debug "[CIRCUIT] closed: querying #{service}"
 
         begin
@@ -132,7 +133,23 @@ class Circuitbox
       logger.debug "[CIRCUIT] opening #{service} circuit"
       circuit_store.write(storage_key(:asleep), true, expires_in: option_value(:sleep_window).seconds)
       half_open!
+      was_open!
     end
+
+    ### BEGIN - all this is just here to produce a close notification
+    def close!
+      log_event :close
+      circuit_store.delete(storage_key(:was_open))
+    end
+
+    def was_open!
+      circuit_store.write(storage_key(:was_open), true)
+    end
+
+    def was_open?
+      circuit_store.read(storage_key(:was_open)).present?
+    end
+    ### END
 
     def half_open!
       circuit_store.write(storage_key(:half_open), true)
