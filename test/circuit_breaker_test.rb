@@ -361,13 +361,23 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def circuit
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, :notifier_class => @notifier)
+      Circuitbox::CircuitBreaker.new(:yammer, :notifier_class => @notifier)
     end
 
 
     it 'notifies on open circuit' do
       @notifier = gimme_notifier
-      circuit.send(:log_event, :open)
+      c = circuit
+      10.times { c.run { raise RequestFailureError }}
+      assert @notifier.notified?, 'no notification sent'
+    end
+
+    it 'notifies on close circuit' do
+      @notifier = gimme_notifier
+      c = circuit
+      5.times { c.run { raise RequestFailureError }}
+      clear_notified!
+      10.times { c.run { 'success' }}
       assert @notifier.notified?, 'no notification sent'
     end
 
@@ -413,13 +423,18 @@ class CircuitBreakerTest < Minitest::Test
       assert @notifier.notified?, 'no notification sent'
     end
 
+    def clear_notified!
+      @notified = false
+    end
+
     def gimme_notifier(opts={})
+      clear_notified!
       metric       = opts.fetch(:metric,:error_rate)
       metric_value = opts.fetch(:metric_value, 0.0)
       warning_msg  = opts.fetch(:warning_msg, '')
-      @notified = false
       fake_notifier = gimme
       give(fake_notifier).notify(:open) { @notified=true }
+      give(fake_notifier).notify(:close) { @notified=true }
       give(fake_notifier).notify_warning(Gimme::Matchers::Anything.new) { @notified = true }
       give(fake_notifier).metric_gauge(metric, metric_value) { @notified=true }
       fake_notifier_class = gimme
