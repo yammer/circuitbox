@@ -69,6 +69,61 @@ You can also run `rake circuits:stats SERVICE={service_name}` to see successes, 
 Add `PARTITION={partition_key}` to see the circuit for a particular partition.
 The stats are aggregated into 1 minute intervals.
 
+## Notifications
+
+circuitbox use ActiveSupport Notifications.
+
+Usage example:
+
+**Log on circuit open/close:**
+
+```ruby
+class CircuitOpenException    < StandardError ; end
+
+ActiveSupport::Notifications.subscribe('circuit_open') do |name, start, finish, id, payload|
+  circuit_name = payload[:circuit]
+  Rails.logger.warning("Open circuit for: #{circuit_name}")
+end
+ActiveSupport::Notifications.subscribe('circuit_close') do |name, start, finish, id, payload|
+  circuit_name = payload[:circuit]
+  Rails.logger.info("Close circuit for: #{circuit_name}")
+end
+````
+
+**generate metrics:**
+
+```ruby
+$statsd = Statsd.new 'localhost', 9125
+
+ActiveSupport::Notifications.subscribe('circuit_gauge') do |name, start, finish, id, payload|
+  circuit_name = payload[:circuit]
+  gauge        = payload[:gauge]
+  value        = payload[:value]
+  metrics_key  = "circuitbox.circuit.#{circuit_name}.#{gauge}"
+
+  $statsd.gauge(metrics_key, value)
+end
+```
+
+`payload[:gauge]` can be:
+
+- `failure_count`
+- `success_count`
+- `error_rate`
+
+**warnings:**
+in case of misconfiguration, circuitbox will fire a circuitbox_warning
+notification.
+
+```ruby
+ActiveSupport::Notifications.subscribe('circuit_warning') do |name, start, finish, id, payload|
+  circuit_name = payload[:circuit]
+  warning      = payload[:message]
+  Rails.logger.warning("#{circuit_name} - #{warning}")
+end
+
+```
+
 ## Faraday (Caveat: Open circuits return a nil response object)
 
 Circuitbox ships with [Faraday HTTP client](https://github.com/lostisland/faraday) middleware.
