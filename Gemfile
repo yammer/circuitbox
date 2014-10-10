@@ -1,5 +1,4 @@
 source 'https://rubygems.org'
-source 'http://gems.int.yammer.com' # remove this when we re-open source circuitbox
 
 # Specify your gem's dependencies in circuitbox.gemspec
 gemspec
@@ -17,7 +16,3 @@ group :test do
   gem 'terminal-notifier-guard'
 end
 
-# remove this when we re-open source circuitbox
-group :development do
-  gem 'bundler-yammer_gem_tasks'
-end
