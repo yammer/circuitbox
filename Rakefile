@@ -1,5 +1,5 @@
 require 'rake/testtask'
-require 'bundler/yammer_gem_tasks'
+require "bundler/gem_version_tasks"
 
 Rake::TestTask.new do |t|
   t.libs << 'test'
