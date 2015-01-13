@@ -7,4 +7,3 @@ rvm:
   - jruby-19mode
   - jruby-20mode
   - jruby-21mode
-  - rbx-2

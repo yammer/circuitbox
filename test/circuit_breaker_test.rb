@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'circuitbox'
 require 'ostruct'
 
 class CircuitBreakerTest < Minitest::Test
