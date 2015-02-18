@@ -1,3 +1,4 @@
+![Build Status](https://travis-ci.org/yammer/circuitbox.svg)
 
 # Circuitbox
 
