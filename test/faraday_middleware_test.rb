@@ -1,41 +1,97 @@
 require 'test_helper'
-require_relative '../lib/circuitbox/faraday_middleware'
+require 'circuitbox/faraday_middleware'
+
+class SentialException < StandardError; end
 
 class Circuitbox
   class FaradayMiddlewareTest < Minitest::Test
 
+    attr_reader :app
     def setup
       @app = gimme
-      @env = gimme
-      give(@env).url { 'URL' }
-
-      @middleware = FaradayMiddleware.new @app,
-                                          :identifier => 'ID',
-                                          :exceptions => [StandardError]
+      give(@app).run { :run }
     end
 
-    def test_should_use_env_url_proc_if_not_provided_as_identifier
-      middleware = FaradayMiddleware.new @app, :exceptions => gimme
-      assert middleware.identifier.is_a?(Proc)
-      assert_equal 'URL', middleware.identifier.call(@env)
+    def test_default_identifier
+      env = { url: "sential" }
+      assert_equal FaradayMiddleware.new(app).identifier.call(env), "sential"
     end
 
-    def test_should_use_request_error_if_not_provided_as_exception
-      middleware = FaradayMiddleware.new @app, :identifier => 'ID'
-      assert_equal [Faraday::Error::TimeoutError],
-                   middleware.exceptions
+    def test_overwrite_identifier
+      middleware = FaradayMiddleware.new(app, identifier: "sential")
+      assert_equal middleware.identifier, "sential"
     end
 
-    def test_successful_call
-      @middleware.call(@env)
+    def test_default_exceptions
+      middleware = FaradayMiddleware.new(app)
+      assert_includes middleware.exceptions, Faraday::Error::TimeoutError
+      assert_includes middleware.exceptions, FaradayMiddleware::RequestFailed
     end
 
-    def test_failed_call
-      assert_raises Circuitbox::RequestError do
-        give(@env).success? { false }
-        @middleware.on_complete(@env)
-      end
+    def test_overwrite_exceptions
+      middleware = FaradayMiddleware.new(app, exceptions: [SentialException])
+      assert_includes middleware.exceptions, SentialException
     end
 
+    def test_pass_circuit_breaker_run_options
+      stub_circuitbox
+      give(circuit).run(:sential)
+      give(circuitbox).circuit("url", anything) { circuit }
+      env = { url: "url", circuit_breaker_run_options: :sential }
+      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
+      middleware.call(env)
+      verify(circuit).run(:sential)
+    end
+
+    def test_pass_circuit_breaker_options
+      stub_circuitbox
+      env = { url: "url" }
+      expected_circuit_breaker_options = {
+        sential: :sential,
+        exceptions: FaradayMiddleware::DEFAULT_EXCEPTIONS,
+        volume_threshold: 10
+      }
+      give(circuitbox).circuit("url", expected_circuit_breaker_options) { circuit }
+      options = { circuitbox: circuitbox, circuit_breaker_options: { sential: :sential } }
+      middleware = FaradayMiddleware.new(app, options)
+      middleware.call(env)
+
+      verify(circuitbox).circuit("url", expected_circuit_breaker_options)
+    end
+
+    def test_overwrite_circuitbreaker_default_value
+      stub_circuitbox
+      env = { url: "url", circuit_breaker_default_value: :sential }
+      give(circuitbox).circuit("url", anything) { circuit }
+      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
+      assert_equal middleware.call(env), :sential
+    end
+
+    def test_return_value_closed_circuit
+      stub_circuitbox
+      env = { url: "url" }
+      give(circuit).run(anything) { :sential }
+      give(circuitbox).circuit("url", anything) { circuit }
+      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
+      assert_equal middleware.call(env), :sential
+    end
+
+    def test_return_null_response_for_open_circuit
+      stub_circuitbox
+      env = { url: "url" }
+      give(circuit).run(anything) { nil }
+      give(circuitbox).circuit("url", anything) { circuit }
+      response = FaradayMiddleware.new(app, circuitbox: circuitbox).call(env)
+      assert_kind_of Faraday::Response, response
+      assert_equal response.status, 503
+      assert response.finished?
+      refute response.success?
+    end
+
+    attr_reader :circuitbox, :circuit
+    def stub_circuitbox
+      @circuitbox = gimme
+      @circuit = gimme
+    end
   end
 end

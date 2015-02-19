@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'circuitbox'
 
 class Circuitbox::ExampleStore < ActiveSupport::Cache::MemoryStore; end
 

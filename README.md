@@ -125,7 +125,7 @@ end
 
 ```
 
-## Faraday (Caveat: Open circuits return a nil response object)
+## Faraday
 
 Circuitbox ships with [Faraday HTTP client](https://github.com/lostisland/faraday) middleware.
 
@@ -133,19 +133,31 @@ Circuitbox ships with [Faraday HTTP client](https://github.com/lostisland/farada
 require 'faraday'
 require 'circuitbox/faraday_middleware'
 
-conn = Faraday::Connection.new(:url => "http://example.com") do |builder|
-  builder.use Circuitbox::FaradayMiddleware
+conn = Faraday.new(:url => "http://example.com") do |c|
+  c.use Circuitbox::FaradayMiddleware
 end
 
-if response = conn.get("/api")
+response = conn.get("/api")
+if response.success?
   # success
 else
   # failure or open circuit
 end
 ```
 
+By default the Faraday middleware returns a `503` response when the circuit is
+open, but this as many other things can be configured via middleware options
+
+* `exceptions` pass a list of exceptions for the Circuitbreaker to catch,
+  defaults to Timeout and Request failures
+* `default_value` value to return for open circuits, defaults to 503 response
+* `identifier` circuit id, defaults to request url
+* `circuit_breaker_run_options` options passed to the circuit run method
+* `circuit_breaker_options` options to initialize the circuit with defaults to
+  `{ volume_threshold: 10, exceptions: Circuitbox::FaradayMiddleware::DEFAULT_EXCEPTIONS }`
+
 ## TODO
-* Fix Faraday integration to return a Faraday response object
+* ~~Fix Faraday integration to return a Faraday response object~~
 * Split stats into it's own repository
 * Circuit Breaker should raise an exception by default instead of returning nil
 * Refactor to use single state variable
