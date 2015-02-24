@@ -150,11 +150,40 @@ open, but this as many other things can be configured via middleware options
 
 * `exceptions` pass a list of exceptions for the Circuitbreaker to catch,
   defaults to Timeout and Request failures
+
+```ruby
+c.use Circuitbox::FaradayMiddleware, exceptions: [Faraday::Error::TimeoutError]
+```
+
 * `default_value` value to return for open circuits, defaults to 503 response
+  wrapping the original response given by the service and stored as
+  `original_response` property of the returned 503, this can be overwritten
+  either with a static value or a `lambda` which is passed the
+  original_response.
+
+```ruby
+c.use Circuitbox::FaradayMiddleware, default_value: lambda { |response| ... }
+```
+
 * `identifier` circuit id, defaults to request url
-* `circuit_breaker_run_options` options passed to the circuit run method
+
+```ruby
+c.use Circuitbox::FaradayMiddleware, identifier: "service_name_circuit"
+```
+
+* `circuit_breaker_run_options` options passed to the circuit run method, see
+  the main circuitbreaker for those.
+
+```ruby
+conn.get("/api", circuit_breaker_run_options: {})
+```
+
 * `circuit_breaker_options` options to initialize the circuit with defaults to
   `{ volume_threshold: 10, exceptions: Circuitbox::FaradayMiddleware::DEFAULT_EXCEPTIONS }`
+
+```ruby
+c.use Circuitbox::FaradayMiddleware, circuit_breaker_options: {}
+```
 
 ## TODO
 * ~~Fix Faraday integration to return a Faraday response object~~

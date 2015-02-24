@@ -9,7 +9,6 @@ class Circuitbox
     attr_reader :app
     def setup
       @app = gimme
-      give(@app).run { :run }
     end
 
     def test_default_identifier
@@ -20,6 +19,25 @@ class Circuitbox
     def test_overwrite_identifier
       middleware = FaradayMiddleware.new(app, identifier: "sential")
       assert_equal middleware.identifier, "sential"
+    end
+
+    def test_overwrite_default_value_generator_lambda
+      stub_circuitbox
+      env = { url: "url" }
+      give(circuitbox).circuit("url", anything) { circuit }
+      default_value_generator = lambda { |_| :sential }
+      middleware = FaradayMiddleware.new(app,
+                                         circuitbox: circuitbox,
+                                         default_value: default_value_generator)
+      assert_equal middleware.call(env), :sential
+    end
+
+    def test_overwrite_default_value_generator_static_value
+      stub_circuitbox
+      env = { url: "url" }
+      give(circuitbox).circuit("url", anything) { circuit }
+      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox, default_value: :sential)
+      assert_equal middleware.call(env), :sential
     end
 
     def test_default_exceptions

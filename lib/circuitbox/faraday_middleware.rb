@@ -3,7 +3,7 @@ require 'circuitbox'
 
 class Circuitbox
   class FaradayMiddleware < Faraday::Middleware
-    class RequestFailed < StandardError ; end
+    class RequestFailed < StandardError; end
 
     DEFAULT_EXCEPTIONS = [
       Faraday::Error::TimeoutError,
@@ -11,7 +11,9 @@ class Circuitbox
     ]
 
     class NullResponse < Faraday::Response
-      def initialize
+      attr_reader :original_response
+      def initialize(response = nil)
+        @original_response = response
         super(status: 503, response_headers: {})
       end
     end
@@ -25,13 +27,14 @@ class Circuitbox
     end
 
     def call(request_env)
+      service_response = nil
       response = circuit(request_env).run(run_options(request_env)) do
-        @app.call(request_env).on_complete do |response_env|
-          raise RequestFailed unless response_env.success?
-        end
+          service_response = @app.call(request_env)
+          raise RequestFailed unless service_response.success?
+          service_response
       end
 
-      response.nil? ? circuit_open_value(request_env) : response
+      response.nil? ? circuit_open_value(request_env, service_response) : response
     end
 
     def exceptions
@@ -59,15 +62,25 @@ class Circuitbox
     end
 
     def default_value
-      @default_value ||= opts.fetch(:default_value, NullResponse.new)
+      return @default_value if @default_value
+
+      default = opts.fetch(:default_value) do
+        lambda { |service_response| NullResponse.new(service_response) }
+      end
+
+      @default_value = if default.respond_to?(:call)
+                         default
+                       else
+                         lambda { |_| default }
+                       end
     end
 
     def circuitbox
       @circuitbox ||= opts.fetch(:circuitbox, Circuitbox)
     end
 
-    def circuit_open_value(env)
-      env[:circuit_breaker_default_value] || default_value
+    def circuit_open_value(env, service_response)
+      env[:circuit_breaker_default_value] || default_value.call(service_response)
     end
 
     def circuit(env)

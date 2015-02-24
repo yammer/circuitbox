@@ -23,11 +23,14 @@ class Circuitbox
 
     def test_open_circuit_response
       10.times { @connection.get(@failure_url) } # make the CircuitBreaker open
-      assert @connection.get(@failure_url).status, 503
+      open_circuit_response = @connection.get(@failure_url)
+      assert open_circuit_response.status, 503
+      assert_match open_circuit_response.original_response.body, "Failure!"
     end
 
     def test_closed_circuit_response
-      assert @connection.get(@success_url).success?
+      result = @connection.get(@success_url)
+      assert result.success?
     end
   end
 end
