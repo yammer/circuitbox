@@ -133,6 +133,23 @@ class CircuitBreakerTest < Minitest::Test
 
   end
 
+  describe 'exceptions' do
+    before do
+      Circuitbox::CircuitBreaker.reset
+      @circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [SomeOtherError])
+    end
+
+    it 'raises exception when circuit is open' do
+      @circuit.stubs(open_flag?: true)
+      -> { @circuit.run! {} }.must_raise Circuitbox::OpenCircuitError
+    end
+
+    it 'raises exception when service fails' do
+      err = -> { @circuit.run! { raise SomeOtherError } }.must_raise Circuitbox::ServiceFailureError
+      err.original.must_be_instance_of SomeOtherError
+    end
+  end
+
   describe 'closing the circuit after sleep' do
     class GodTime < SimpleDelegator
       def now

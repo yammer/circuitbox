@@ -3,11 +3,15 @@ require 'active_support'
 require 'logger'
 require 'timeout'
 
-require "circuitbox/version"
+require 'circuitbox/version'
 require 'circuitbox/memcache_store'
 require 'circuitbox/railtie' if defined?(Rails)  
 require 'circuitbox/circuit_breaker'
 require 'circuitbox/notifier'
+
+require 'circuitbox/errors/error'
+require 'circuitbox/errors/open_circuit_error'
+require 'circuitbox/errors/service_failure_error'
 
 class Circuitbox
   attr_accessor :circuits, :circuit_store, :stat_store

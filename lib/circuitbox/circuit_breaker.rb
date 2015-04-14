@@ -41,14 +41,14 @@ class Circuitbox
       value.is_a?(Proc) ? value.call : value
     end
 
-    def run(run_options = {}, &block)
+    def run!(run_options = {})
       @partition = run_options.delete(:partition) # sorry for this hack.
       cache_key  = run_options.delete(:storage_key)
 
       if open?
         logger.debug "[CIRCUIT] open: skipping #{service}"
-        response = nil
         open! unless open_flag?
+        raise Circuitbox::OpenCircuitError.new(service)
       else
         close! if was_open?
         logger.debug "[CIRCUIT] closed: querying #{service}"
@@ -67,12 +67,24 @@ class Circuitbox
         rescue *exceptions => exception
           logger.debug "[CIRCUIT] closed: detected #{service} failure"
           failure!
-          response = cache_key ? get_cached_response(cache_key) : nil
           open! if half_open?
+          if cache_key
+            response = get_cached_response(cache_key)
+          else
+            raise Circuitbox::ServiceFailureError.new(service, exception)
+          end
         end
       end
 
       return response
+    end
+
+    def run(run_options = {})
+      begin
+        run!(run_options, &Proc.new)
+      rescue Circuitbox::Error
+        nil
+      end
     end
 
     def open?
