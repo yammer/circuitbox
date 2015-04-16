@@ -204,26 +204,19 @@ c.use Circuitbox::FaradayMiddleware, circuit_breaker_options: {}
 c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.status >= 500 }
 ```
 ## CHANGELOG
+<<<<<<< HEAD
 ### version next
 
 ### v0.10
 - configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
 - fix for issue 16, support of in_parallel requests in faraday middlware which were opening the circuit.
-
-### v0.9
 - deprecate the __run_option__ `:storage_key`
 
-### v0.8
-- 0.8 add `run!` method to raise exception on circuit open and service
-    errors.
+### v0.9
+- add `run!` method to raise exception on circuit open and service
 
-## TODO
-* ~~Fix Faraday integration to return a Faraday response object~~
-* Split stats into it's own repository
-* ~~Circuit Breaker should raise an exception by default instead of returning nil~~
-* Refactor to use single state variable
-* Fix the partition hack
-* Integrate with Breakerbox/Hystrix
+### v0.8
+- Everything prior to keeping the change log
 
 ## Installation
 
