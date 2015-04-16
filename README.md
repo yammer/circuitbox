@@ -196,12 +196,26 @@ conn.get("/api", circuit_breaker_run_options: {})
 c.use Circuitbox::FaradayMiddleware, circuit_breaker_options: {}
 ```
 
+<<<<<<< HEAD
 * `open_circuit` lambda determining what response is considered a failure, 
   counting towards the opening of the circuit
 
 ```ruby
 c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.status >= 500 }
 ```
+## CHANGELOG
+### version next
+
+### v0.10
+- configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
+- fix for issue 16, support of in_parallel requests in faraday middlware which were opening the circuit.
+
+### v0.9
+- deprecate the __run_option__ `:storage_key`
+
+### v0.8
+- 0.8 add `run!` method to raise exception on circuit open and service
+    errors.
 
 ## TODO
 * ~~Fix Faraday integration to return a Faraday response object~~
@@ -224,15 +238,6 @@ And then execute:
 Or install it yourself as:
 
     $ gem install circuitbox
-
-## Changes
-
-### version next
-- configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
-- fix for issue 16, support of in_parallel requests in faraday middlware which were opening the circuit.
-
-### 0.9.0
-- Everything released, as we did not keep a changelog prior
 
 ## Contributing
 
