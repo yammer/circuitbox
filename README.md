@@ -32,6 +32,17 @@ class ExampleServiceClient
 end
 ```
 
+Using the `run!` method will throw an exception when the circuit is open or the underlying service fails.
+
+```ruby
+  def http_get
+    circuit.run! do
+      Zephyr.new("http://example.com").get(200, 1000, "/api/messages")
+    end
+  end
+```
+
+
 ## Configuration
 
 ```ruby
@@ -188,7 +199,7 @@ c.use Circuitbox::FaradayMiddleware, circuit_breaker_options: {}
 ## TODO
 * ~~Fix Faraday integration to return a Faraday response object~~
 * Split stats into it's own repository
-* Circuit Breaker should raise an exception by default instead of returning nil
+* ~~Circuit Breaker should raise an exception by default instead of returning nil~~
 * Refactor to use single state variable
 * Fix the partition hack
 * Integrate with Breakerbox/Hystrix
