@@ -43,7 +43,6 @@ class Circuitbox
 
     def run!(run_options = {})
       @partition = run_options.delete(:partition) # sorry for this hack.
-      cache_key  = run_options.delete(:storage_key)
 
       if open?
         logger.debug "[CIRCUIT] open: skipping #{service}"
@@ -62,17 +61,12 @@ class Circuitbox
           end
 
           logger.debug "[CIRCUIT] closed: #{service} querie success"
-          cache_response(cache_key, response) if cache_key
           success!
         rescue *exceptions => exception
           logger.debug "[CIRCUIT] closed: detected #{service} failure"
           failure!
           open! if half_open?
-          if cache_key
-            response = get_cached_response(cache_key)
-          else
-            raise Circuitbox::ServiceFailureError.new(service, exception)
-          end
+          raise Circuitbox::ServiceFailureError.new(service, exception)
         end
       end
 
@@ -250,14 +244,6 @@ class Circuitbox
     # For returning stale responses when the circuit is open
     def response_key(args)
       Digest::SHA1.hexdigest(storage_key(:cache, args.inspect.to_s))
-    end
-
-    def cache_response(args, response)
-      cache.write(response_key(args), response)
-    end
-
-    def get_cached_response(args)
-      cache.read(response_key(args))
     end
 
     def stat_storage_key(event, options = {})
