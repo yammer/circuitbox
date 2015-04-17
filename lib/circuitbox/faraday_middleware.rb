@@ -29,13 +29,15 @@ class Circuitbox
 
     def call(request_env)
       service_response = nil
-      response = circuit(request_env).run(run_options(request_env)) do
-        service_response = @app.call(request_env)
-        raise RequestFailed if opts[:open_circuit].call(service_response)
-        service_response
+      check_circuit_open!(request_env)
+      circuit(request_env).run!(run_options(request_env)) do
+        @app.call(request_env).on_complete do |env|
+          service_response = Faraday::Response.new(env)
+          raise RequestFailed if open_circuit?(service_response)
+        end
       end
-
-      response.nil? ? circuit_open_value(request_env, service_response) : response
+    rescue Circuitbox::Error
+      circuit_open_value(request_env, service_response)
     end
 
     def exceptions
@@ -47,6 +49,11 @@ class Circuitbox
     end
 
     private
+
+    def check_circuit_open!(env)
+      # raises if the circuit is open
+      circuit(env).run!(run_options(env)) { :noop }
+    end
 
     def run_options(env)
       env[:circuit_breaker_run_options] || {}
@@ -74,6 +81,10 @@ class Circuitbox
                        else
                          lambda { |_| default }
                        end
+    end
+
+    def open_circuit?(response)
+      opts[:open_circuit].call(response)
     end
 
     def circuitbox
