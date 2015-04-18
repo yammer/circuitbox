@@ -63,7 +63,7 @@ class ExampleServiceClient
       # seconds before the circuit times out
       timeout_seconds:  1,
 
-      # lambda determining what response is considered a failure
+      # lambda determining what response is considered a failure 
       error_response: lambda { |response| response.status >= 500 }
     })
   end
