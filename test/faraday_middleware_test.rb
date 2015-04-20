@@ -52,7 +52,7 @@ class Circuitbox
       app = gimme
       give(app).call(anything) { Faraday::Response.new(status: 400) }
       error_response = lambda { |response| response.status >= 500 }
-      response = FaradayMiddleware.new(app, error_response: error_response).call(env)
+      response = FaradayMiddleware.new(app, open_circuit: error_response).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 400
       assert response.finished?

@@ -22,7 +22,8 @@ class Circuitbox
 
     def initialize(app, opts = {})
       @app = app
-      @opts = opts
+      default_options = { open_circuit: lambda { |response| !response.success? } }
+      @opts = default_options.merge(opts)
       super(app)
     end
 
@@ -30,7 +31,7 @@ class Circuitbox
       service_response = nil
       response = circuit(request_env).run(run_options(request_env)) do
         service_response = @app.call(request_env)
-        raise RequestFailed unless successful_response?(service_response)
+        raise RequestFailed if opts[:open_circuit].call(service_response)
         service_response
       end
 
@@ -46,14 +47,6 @@ class Circuitbox
     end
 
     private
-
-    def successful_response?(faraday_response)
-      if opts[:error_response]
-        !opts[:error_response].call(faraday_response)
-      else
-        faraday_response.success?
-      end
-    end
 
     def run_options(env)
       env[:circuit_breaker_run_options] || {}
