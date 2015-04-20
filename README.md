@@ -225,6 +225,14 @@ Or install it yourself as:
 
     $ gem install circuitbox
 
+## Changes
+
+### version next
+- configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
+
+### 0.9.0
+- Everything released, as we did not keep a changelog prior
+
 ## Contributing
 
 1. Fork it
