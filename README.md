@@ -229,6 +229,7 @@ Or install it yourself as:
 
 ### version next
 - configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
+- fix for issue 16, support of in_parallel requests in faraday middlware which were opening the circuit.
 
 ### 0.9.0
 - Everything released, as we did not keep a changelog prior
