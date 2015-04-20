@@ -14,7 +14,7 @@ class Circuitbox
 
     def test_default_identifier
       env = { url: "sential" }
-      assert_equal FaradayMiddleware.new(app).identifier.call(env), "sential"
+      assert_equal "sential", FaradayMiddleware.new(app).identifier.call(env)
     end
 
     def test_overwrite_identifier
@@ -26,19 +26,21 @@ class Circuitbox
       stub_circuitbox
       env = { url: "url" }
       give(circuitbox).circuit("url", anything) { circuit }
+      give(circuit).run!(anything) { raise Circuitbox::Error }
       default_value_generator = lambda { |_| :sential }
       middleware = FaradayMiddleware.new(app,
                                          circuitbox: circuitbox,
                                          default_value: default_value_generator)
-      assert_equal middleware.call(env), :sential
+      assert_equal :sential, middleware.call(env)
     end
 
     def test_overwrite_default_value_generator_static_value
       stub_circuitbox
       env = { url: "url" }
       give(circuitbox).circuit("url", anything) { circuit }
+      give(circuit).run!(anything) { raise Circuitbox::Error }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox, default_value: :sential)
-      assert_equal middleware.call(env), :sential
+      assert_equal :sential, middleware.call(env)
     end
 
     def test_default_exceptions
@@ -77,12 +79,12 @@ class Circuitbox
 
     def test_pass_circuit_breaker_run_options
       stub_circuitbox
-      give(circuit).run(:sential)
+      give(circuit).run!(:sential)
       give(circuitbox).circuit("url", anything) { circuit }
       env = { url: "url", circuit_breaker_run_options: :sential }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       middleware.call(env)
-      verify(circuit).run(:sential)
+      verify(circuit, 2.times).run!(:sential) # one to check open, one to execute command
     end
 
     def test_pass_circuit_breaker_options
@@ -98,13 +100,14 @@ class Circuitbox
       middleware = FaradayMiddleware.new(app, options)
       middleware.call(env)
 
-      verify(circuitbox).circuit("url", expected_circuit_breaker_options)
+      verify(circuitbox, 2.times).circuit("url", expected_circuit_breaker_options)
     end
 
     def test_overwrite_circuitbreaker_default_value
       stub_circuitbox
       env = { url: "url", circuit_breaker_default_value: :sential }
       give(circuitbox).circuit("url", anything) { circuit }
+      give(circuit).run!(anything) { raise Circuitbox::Error }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.call(env), :sential
     end
@@ -112,7 +115,7 @@ class Circuitbox
     def test_return_value_closed_circuit
       stub_circuitbox
       env = { url: "url" }
-      give(circuit).run(anything) { :sential }
+      give(circuit).run!(anything) { :sential }
       give(circuitbox).circuit("url", anything) { circuit }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.call(env), :sential
@@ -121,7 +124,7 @@ class Circuitbox
     def test_return_null_response_for_open_circuit
       stub_circuitbox
       env = { url: "url" }
-      give(circuit).run(anything) { nil }
+      give(circuit).run!(anything) { raise Circuitbox::Error }
       give(circuitbox).circuit("url", anything) { circuit }
       response = FaradayMiddleware.new(app, circuitbox: circuitbox).call(env)
       assert_kind_of Faraday::Response, response
