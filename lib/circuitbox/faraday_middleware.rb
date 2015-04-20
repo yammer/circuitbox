@@ -22,16 +22,17 @@ class Circuitbox
 
     def initialize(app, opts = {})
       @app = app
-      @opts = opts
+      default_options = { open_circuit: lambda { |response| !response.success? } }
+      @opts = default_options.merge(opts)
       super(app)
     end
 
     def call(request_env)
       service_response = nil
       response = circuit(request_env).run(run_options(request_env)) do
-          service_response = @app.call(request_env)
-          raise RequestFailed unless service_response.success?
-          service_response
+        service_response = @app.call(request_env)
+        raise RequestFailed if opts[:open_circuit].call(service_response)
+        service_response
       end
 
       response.nil? ? circuit_open_value(request_env, service_response) : response

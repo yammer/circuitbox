@@ -7,6 +7,7 @@ class Circuitbox
   class FaradayMiddlewareTest < Minitest::Test
 
     attr_reader :app
+    
     def setup
       @app = gimme
     end
@@ -44,6 +45,29 @@ class Circuitbox
       middleware = FaradayMiddleware.new(app)
       assert_includes middleware.exceptions, Faraday::Error::TimeoutError
       assert_includes middleware.exceptions, FaradayMiddleware::RequestFailed
+    end
+
+    def test_overridde_success_response
+      env = { url: "url" }
+      app = gimme
+      give(app).call(anything) { Faraday::Response.new(status: 400) }
+      error_response = lambda { |response| response.status >= 500 }
+      response = FaradayMiddleware.new(app, open_circuit: error_response).call(env)
+      assert_kind_of Faraday::Response, response
+      assert_equal response.status, 400
+      assert response.finished?
+      refute response.success?
+    end
+
+    def test_default_success_response
+      env = { url: "url" }
+      app = gimme
+      give(app).call(anything) { Faraday::Response.new(status: 400) }
+      response = FaradayMiddleware.new(app).call(env)
+      assert_kind_of Faraday::Response, response
+      assert_equal response.status, 503
+      assert response.finished?
+      refute response.success?
     end
 
     def test_overwrite_exceptions
