@@ -6,29 +6,11 @@ describe Circuitbox do
   before { Circuitbox.reset }
   after { Circuitbox.reset }
 
-  describe "Circuitbox.configure" do
-    it "configures instance variables on init" do
-      Circuitbox.configure do
-        self.stat_store = "hello"
-      end
-
-      assert_equal "hello", Circuitbox.stat_store
-    end
-  end
-
   describe "Circuitbox.circuit_store" do
     it "is configurable" do
       example_store = Circuitbox::ExampleStore.new
       Circuitbox.circuit_store = example_store
       assert_equal example_store, Circuitbox[:yammer].circuit_store
-    end
-  end
-
-  describe "Circuitbox.stat_store" do
-    it "is configurable" do
-      example_store = Circuitbox::ExampleStore.new
-      Circuitbox.stat_store = example_store
-      assert_equal example_store, Circuitbox[:yammer].stat_store
     end
   end
 
