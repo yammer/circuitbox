@@ -196,15 +196,15 @@ conn.get("/api", circuit_breaker_run_options: {})
 c.use Circuitbox::FaradayMiddleware, circuit_breaker_options: {}
 ```
 
-<<<<<<< HEAD
 * `open_circuit` lambda determining what response is considered a failure, 
   counting towards the opening of the circuit
 
 ```ruby
 c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.status >= 500 }
 ```
+
 ## CHANGELOG
-<<<<<<< HEAD
+
 ### version next
 
 ### v0.10
