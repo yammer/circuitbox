@@ -22,6 +22,30 @@ class Circuitbox
       Circuitbox.reset
     end
 
+    def open_circuit
+      volume_threshold = Circuitbox['test'].option_value(:volume_threshold)
+      (volume_threshold + 1).times { @connection.get(@failure_url) }
+    end
+
+    def test_failure_count
+      6.times { @connection.get(@failure_url) }
+      assert_equal Circuitbox['localhost'].failure_count, 6
+      assert_equal Circuitbox['localhost'].success_count, 0
+    end
+
+    def test_success_count
+      6.times { @connection.get(@success_url) }
+      assert_equal Circuitbox['localhost'].success_count, 6
+      assert_equal Circuitbox['localhost'].failure_count, 0
+    end
+
+    def test_multiple_calls_count
+      6.times { @connection.get(@success_url) }
+      4.times { @connection.get(@failure_url) }
+      assert_equal Circuitbox['localhost'].success_count, 6
+      assert_equal Circuitbox['localhost'].failure_count, 4
+    end
+
     def test_failure_circuit_response
       failure_response = @connection.get(@failure_url)
       assert_equal failure_response.status, 503
@@ -29,8 +53,7 @@ class Circuitbox
     end
 
     def test_open_circuit_response
-      10.times { @connection.get(@failure_url) } # make the CircuitBreaker open
-
+      open_circuit
       open_circuit_response = @connection.get(@failure_url)
       assert_equal open_circuit_response.status, 503
       assert open_circuit_response.original_response.nil?
@@ -53,7 +76,7 @@ class Circuitbox
     end
 
     def test_parallel_requests_open_circuit_response
-      10.times { @connection.get(@failure_url) } # make the CircuitBreaker open
+      open_circuit
       response_1, response_2 = nil
       @connection.in_parallel do
         response_1 = @connection.get(@failure_url)

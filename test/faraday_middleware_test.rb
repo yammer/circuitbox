@@ -7,7 +7,7 @@ class Circuitbox
   class FaradayMiddlewareTest < Minitest::Test
 
     attr_reader :app
-    
+
     def setup
       @app = gimme
     end
@@ -84,7 +84,7 @@ class Circuitbox
       env = { url: "url", circuit_breaker_run_options: :sential }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       middleware.call(env)
-      verify(circuit, 2.times).run!(:sential) # one to check open, one to execute command
+      verify(circuit, 1.times).run!(:sential)
     end
 
     def test_pass_circuit_breaker_options
@@ -92,15 +92,14 @@ class Circuitbox
       env = { url: "url" }
       expected_circuit_breaker_options = {
         sential: :sential,
-        exceptions: FaradayMiddleware::DEFAULT_EXCEPTIONS,
-        volume_threshold: 10
+        exceptions: FaradayMiddleware::DEFAULT_EXCEPTIONS
       }
       give(circuitbox).circuit("url", expected_circuit_breaker_options) { circuit }
       options = { circuitbox: circuitbox, circuit_breaker_options: { sential: :sential } }
       middleware = FaradayMiddleware.new(app, options)
       middleware.call(env)
 
-      verify(circuitbox, 2.times).circuit("url", expected_circuit_breaker_options)
+      verify(circuitbox, 1.times).circuit("url", expected_circuit_breaker_options)
     end
 
     def test_overwrite_circuitbreaker_default_value

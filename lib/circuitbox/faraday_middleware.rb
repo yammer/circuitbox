@@ -29,7 +29,6 @@ class Circuitbox
 
     def call(request_env)
       service_response = nil
-      check_circuit_open!(request_env)
       circuit(request_env).run!(run_options(request_env)) do
         @app.call(request_env).on_complete do |env|
           service_response = Faraday::Response.new(env)
@@ -50,11 +49,6 @@ class Circuitbox
 
     private
 
-    def check_circuit_open!(env)
-      # raises if the circuit is open
-      circuit(env).run!(run_options(env)) { :noop }
-    end
-
     def run_options(env)
       env[:circuit_breaker_run_options] || {}
     end
@@ -64,8 +58,7 @@ class Circuitbox
 
       @circuit_breaker_options = opts.fetch(:circuit_breaker_options, {})
       @circuit_breaker_options.merge!(
-        exceptions: opts.fetch(:exceptions, DEFAULT_EXCEPTIONS),
-        volume_threshold: 10
+        exceptions: opts.fetch(:exceptions, DEFAULT_EXCEPTIONS)
       )
     end
 
