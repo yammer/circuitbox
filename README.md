@@ -94,7 +94,7 @@ class CircuitOpenException    < StandardError ; end
 
 ActiveSupport::Notifications.subscribe('circuit_open') do |name, start, finish, id, payload|
   circuit_name = payload[:circuit]
-  Rails.logger.warning("Open circuit for: #{circuit_name}")
+  Rails.logger.warn("Open circuit for: #{circuit_name}")
 end
 ActiveSupport::Notifications.subscribe('circuit_close') do |name, start, finish, id, payload|
   circuit_name = payload[:circuit]
