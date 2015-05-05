@@ -206,6 +206,7 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 
 ### version next
+- [Documentation fix](https://github.com/yammer/circuitbox/pull/29) [chiefcll](https://github.com/chiefcll) 
 
 ### v0.10
 - configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
