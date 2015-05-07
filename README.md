@@ -196,7 +196,7 @@ conn.get("/api", circuit_breaker_run_options: {})
 c.use Circuitbox::FaradayMiddleware, circuit_breaker_options: {}
 ```
 
-* `open_circuit` lambda determining what response is considered a failure, 
+* `open_circuit` lambda determining what response is considered a failure,
   counting towards the opening of the circuit
 
 ```ruby
@@ -206,7 +206,8 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 
 ### version next
-- [Documentation fix](https://github.com/yammer/circuitbox/pull/29) [chiefcll](https://github.com/chiefcll) 
+- [Documentation fix](https://github.com/yammer/circuitbox/pull/29) [chiefcll](https://github.com/chiefcll)
+- [Faraday middleware fix](https://github.com/yammer/circuitbox/pull/30) [chiefcll](https://github.com/chiefcll)
 
 ### v0.10
 - configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
