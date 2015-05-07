@@ -38,3 +38,11 @@ class FakeServer
     sleep 0.5 # wait for the server to spin up
   end
 end
+
+module IntegrationHelpers
+  def open_circuit
+    volume_threshold = Circuitbox['test'].option_value(:volume_threshold)
+    (volume_threshold + 1).times { connection.get(failure_url) }
+  end
+end
+

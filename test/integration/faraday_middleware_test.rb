@@ -2,7 +2,12 @@ require "integration_helper"
 require "typhoeus/adapters/faraday"
 
 class Circuitbox
+
   class FaradayMiddlewareTest < Minitest::Test
+    include IntegrationHelpers
+
+    attr_reader :connection, :success_url, :failure_url
+
     @@only_once = false
     def setup
       @connection = Faraday.new do |c|
@@ -22,53 +27,34 @@ class Circuitbox
       Circuitbox.reset
     end
 
-    def open_circuit
-      volume_threshold = Circuitbox['test'].option_value(:volume_threshold)
-      (volume_threshold + 1).times { @connection.get(@failure_url) }
-    end
-
-    def test_failure_count
-      6.times { @connection.get(@failure_url) }
-      assert_equal Circuitbox['localhost'].failure_count, 6
-      assert_equal Circuitbox['localhost'].success_count, 0
-    end
-
-    def test_success_count
-      6.times { @connection.get(@success_url) }
-      assert_equal Circuitbox['localhost'].success_count, 6
-      assert_equal Circuitbox['localhost'].failure_count, 0
-    end
-
-    def test_multiple_calls_count
-      6.times { @connection.get(@success_url) }
-      4.times { @connection.get(@failure_url) }
-      assert_equal Circuitbox['localhost'].success_count, 6
-      assert_equal Circuitbox['localhost'].failure_count, 4
+    def test_circuit_does_not_open_for_below_threshhold_failed_requests
+      5.times { connection.get(failure_url) }
+      assert_equal connection.get(success_url).status, 200
     end
 
     def test_failure_circuit_response
-      failure_response = @connection.get(@failure_url)
+      failure_response = connection.get(failure_url)
       assert_equal failure_response.status, 503
       assert_match failure_response.original_response.body, "Failure!"
     end
 
     def test_open_circuit_response
       open_circuit
-      open_circuit_response = @connection.get(@failure_url)
+      open_circuit_response = connection.get(failure_url)
       assert_equal open_circuit_response.status, 503
       assert open_circuit_response.original_response.nil?
     end
 
     def test_closed_circuit_response
-      result = @connection.get(@success_url)
+      result = connection.get(success_url)
       assert result.success?
     end
 
     def test_parallel_requests_closed_circuit_response
       response_1, response_2 = nil
-      @connection.in_parallel do
-        response_1 = @connection.get(@success_url)
-        response_2 = @connection.get(@success_url)
+      connection.in_parallel do
+        response_1 = connection.get(success_url)
+        response_2 = connection.get(success_url)
       end
 
       assert response_1.success?
@@ -78,9 +64,9 @@ class Circuitbox
     def test_parallel_requests_open_circuit_response
       open_circuit
       response_1, response_2 = nil
-      @connection.in_parallel do
-        response_1 = @connection.get(@failure_url)
-        response_2 = @connection.get(@failure_url)
+      connection.in_parallel do
+        response_1 = connection.get(failure_url)
+        response_2 = connection.get(failure_url)
       end
 
       assert_equal response_1.status, 503
