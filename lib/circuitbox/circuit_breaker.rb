@@ -118,11 +118,11 @@ class Circuitbox
     end
 
     def failure_count
-      circuit_store.read(stat_storage_key(:failure)).to_i
+      circuit_store.load(stat_storage_key(:failure), raw: true).to_i
     end
 
     def success_count
-      circuit_store.read(stat_storage_key(:success)).to_i
+      circuit_store.load(stat_storage_key(:success), raw: true).to_i
     end
 
     def try_close_next_time
@@ -133,7 +133,7 @@ class Circuitbox
     def open!
       log_event :open
       logger.debug "[CIRCUIT] opening #{service} circuit"
-      circuit_store.write(storage_key(:asleep), true, expires_in: option_value(:sleep_window).seconds)
+      circuit_store.store(storage_key(:asleep), true, expires_in: option_value(:sleep_window).seconds)
       half_open!
       was_open!
     end
@@ -145,24 +145,24 @@ class Circuitbox
     end
 
     def was_open!
-      circuit_store.write(storage_key(:was_open), true)
+      circuit_store.store(storage_key(:was_open), true)
     end
 
     def was_open?
-      circuit_store.read(storage_key(:was_open)).present?
+      circuit_store[storage_key(:was_open)].present?
     end
     ### END
 
     def half_open!
-      circuit_store.write(storage_key(:half_open), true)
+      circuit_store.store(storage_key(:half_open), true)
     end
 
     def open_flag?
-      circuit_store.read(storage_key(:asleep)).present?
+      circuit_store[storage_key(:asleep)].present?
     end
 
     def half_open?
-      circuit_store.read(storage_key(:half_open)).present?
+      circuit_store[storage_key(:half_open)].present?
     end
 
     def passed_volume_threshold?
@@ -219,16 +219,17 @@ class Circuitbox
 
     # When there is a successful response within a stat interval, clear the failures.
     def clear_failures!
-      circuit_store.write(stat_storage_key(:failure), 0, raw: true)
+      circuit_store.store(stat_storage_key(:failure), 0, raw: true)
     end
 
     # Logs to process memory.
     def log_event_to_process(event)
       key = stat_storage_key(event)
-      if circuit_store.read(key, raw: true)
+      if circuit_store.load(key, raw: true)
         circuit_store.increment(key)
       else
-        circuit_store.write(key, 1, raw: true)
+        # yes we want a string here, as the underlying stores impement this as a native type.
+        circuit_store.store(key, "1", raw: true)
       end
     end
 
@@ -237,7 +238,7 @@ class Circuitbox
       if stat_store.read(key, raw: true)
         stat_store.increment(key)
       else
-        stat_store.write(key, 1, raw: true)
+        stat_store.store(key, 1)
       end
     end
 

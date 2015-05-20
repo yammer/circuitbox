@@ -40,9 +40,9 @@ class FakeServer
 end
 
 module IntegrationHelpers
-  def open_circuit
-    volume_threshold = Circuitbox['test'].option_value(:volume_threshold)
-    (volume_threshold + 1).times { connection.get(failure_url) }
+  def open_circuit(c = connection)
+    volume_threshold = Circuitbox::CircuitBreaker::DEFAULTS[:volume_threshold]
+    (volume_threshold + 1).times { c.get(failure_url) }
   end
 end
 
