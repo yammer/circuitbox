@@ -206,6 +206,8 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 
 ### version next
+
+### v0.10.1
 - [Documentation fix](https://github.com/yammer/circuitbox/pull/29) [chiefcll](https://github.com/chiefcll)
 - [Faraday middleware fix](https://github.com/yammer/circuitbox/pull/30) [chiefcll](https://github.com/chiefcll)
 
