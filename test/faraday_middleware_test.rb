@@ -27,11 +27,23 @@ class Circuitbox
       env = { url: "url" }
       give(circuitbox).circuit("url", anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
-      default_value_generator = lambda { |_| :sential }
+      default_value_generator = lambda { |*| :sential }
       middleware = FaradayMiddleware.new(app,
                                          circuitbox: circuitbox,
                                          default_value: default_value_generator)
       assert_equal :sential, middleware.call(env)
+    end
+
+    def test_default_value_generator_lambda_passed_error
+      stub_circuitbox
+      env = { url: "url" }
+      give(circuitbox).circuit("url", anything) { circuit }
+      give(circuit).run!(anything) { raise Circuitbox::Error.new("error text") }
+      default_value_generator = lambda { |_,error| error.message }
+      middleware = FaradayMiddleware.new(app,
+                                         circuitbox: circuitbox,
+                                         default_value: default_value_generator)
+      assert_equal "error text", middleware.call(env)
     end
 
     def test_overwrite_default_value_generator_static_value

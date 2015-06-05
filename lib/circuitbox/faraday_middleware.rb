@@ -11,9 +11,10 @@ class Circuitbox
     ]
 
     class NullResponse < Faraday::Response
-      attr_reader :original_response
-      def initialize(response = nil)
-        @original_response = response
+      attr_reader :original_response, :original_exception
+      def initialize(response = nil, exception = nil)
+        @original_response  = response
+        @original_exception = exception
         super(status: 503, response_headers: {})
       end
     end
@@ -35,8 +36,8 @@ class Circuitbox
           raise RequestFailed if open_circuit?(service_response)
         end
       end
-    rescue Circuitbox::Error
-      circuit_open_value(request_env, service_response)
+    rescue Circuitbox::Error => ex
+      circuit_open_value(request_env, service_response, ex)
     end
 
     def exceptions
@@ -66,13 +67,13 @@ class Circuitbox
       return @default_value if @default_value
 
       default = opts.fetch(:default_value) do
-        lambda { |service_response| NullResponse.new(service_response) }
+        lambda { |service_response, exception| NullResponse.new(service_response, exception) }
       end
 
       @default_value = if default.respond_to?(:call)
                          default
                        else
-                         lambda { |_| default }
+                         lambda { |*| default }
                        end
     end
 
@@ -84,8 +85,8 @@ class Circuitbox
       @circuitbox ||= opts.fetch(:circuitbox, Circuitbox)
     end
 
-    def circuit_open_value(env, service_response)
-      env[:circuit_breaker_default_value] || default_value.call(service_response)
+    def circuit_open_value(env, service_response, exception)
+      env[:circuit_breaker_default_value] || default_value.call(service_response, exception)
     end
 
     def circuit(env)
