@@ -42,7 +42,8 @@ class Circuitbox
       open_circuit
       open_circuit_response = connection.get(failure_url)
       assert_equal open_circuit_response.status, 503
-      assert open_circuit_response.original_response.nil?
+      assert_nil open_circuit_response.original_response
+      assert_kind_of Circuitbox::OpenCircuitError, open_circuit_response.original_exception
     end
 
     def test_closed_circuit_response

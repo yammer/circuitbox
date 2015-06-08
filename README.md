@@ -169,11 +169,17 @@ c.use Circuitbox::FaradayMiddleware, exceptions: [Faraday::Error::TimeoutError]
 * `default_value` value to return for open circuits, defaults to 503 response
   wrapping the original response given by the service and stored as
   `original_response` property of the returned 503, this can be overwritten
-  either with a static value or a `lambda` which is passed the
-  original_response.
+  with either
+  * a static value
+  * a `lambda` which is passed the `original_response` and `original_error`.
+    `original_response` will be populated if Faraday returne an error response,
+    `original_error` will be populated if an error was thrown before Faraday
+    returned a response.  (It will also accept a lambda with arity 1 that is
+    only passed `original_response`.  This use is deprecated and will be removed
+    in the next major version.)
 
 ```ruby
-c.use Circuitbox::FaradayMiddleware, default_value: lambda { |response| ... }
+c.use Circuitbox::FaradayMiddleware, default_value: lambda { |response, error| ... }
 ```
 
 * `identifier` circuit id, defaults to request url
@@ -206,6 +212,13 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 
 ### version next
+
+- Faraday middleware passes two arguments to the `default_value`
+  callback, not just one.  First argument is still the error response from
+  Faraday if there is one.  Second argument is the exception that caused the
+  call to fail if it failed before Faraday returned a response.  Old behaviour
+  is preserved if you pass a lambda that takes just one argument, but this is
+  deprecated and will be removed in the next version of Circuitbox.
 
 ### v0.10.1
 - [Documentation fix](https://github.com/yammer/circuitbox/pull/29) [chiefcll](https://github.com/chiefcll)
