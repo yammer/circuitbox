@@ -213,12 +213,14 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 
 ### version next
 
-- Faraday middleware passes two arguments to the `default_value`
-  callback, not just one.  First argument is still the error response from
-  Faraday if there is one.  Second argument is the exception that caused the
-  call to fail if it failed before Faraday returned a response.  Old behaviour
-  is preserved if you pass a lambda that takes just one argument, but this is
-  deprecated and will be removed in the next version of Circuitbox.
+### v0.10.2
+- Faraday middleware passes two arguments to the `default_value` callback, not
+  just one.  First argument is still the error response from Faraday if there is
+  one.  Second argument is the exception that caused the call to fail if it
+  failed before Faraday returned a response.  Old behaviour is preserved if you
+  pass a lambda that takes just one argument, but this is deprecated and will be
+  removed in the next version of Circuitbox.
+  [dwaller](https://github.com/dwaller)
 
 ### v0.10.1
 - [Documentation fix](https://github.com/yammer/circuitbox/pull/29) [chiefcll](https://github.com/chiefcll)
