@@ -1,6 +1,5 @@
 require "integration_helper"
 require "typhoeus/adapters/faraday"
-require 'pry'
 
 class Circuitbox
 
