@@ -27,7 +27,7 @@ class Circuitbox
       env = { url: "url" }
       give(circuitbox).circuit("url", anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
-      default_value_generator = lambda { |*| :sential }
+      default_value_generator = lambda { |response| :sential }
       middleware = FaradayMiddleware.new(app,
                                          circuitbox: circuitbox,
                                          default_value: default_value_generator)
