@@ -7,5 +7,9 @@ class Circuitbox
       @original = exception
     end
 
+    def to_s
+      "#{self.class.name} wrapped: #{original}"
+    end
+
   end
 end

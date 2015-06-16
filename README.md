@@ -213,6 +213,13 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 
 ### version next
 
+### v0.10.3
+- Circuitbox::ServiceFailureError wraps the original exception that was raised.
+  The behaviour for to_s wasn't exposing this information and was returning the
+  name of class "Circuitbox::ServiceFailureError". Change the behaviour for to_s
+  to indicate this exception is a wrapper around the original exception.
+  [sherrry](https://github.com/sherrry)
+
 ### v0.10.2
 - Faraday middleware passes two arguments to the `default_value` callback, not
   just one.  First argument is still the error response from Faraday if there is
