@@ -1,21 +1,29 @@
 require 'test_helper'
 require 'circuitbox/notifier'
-require 'active_support/notifications'
 
 describe Circuitbox::Notifier do
-  it "[notify] sends an ActiveSupport::Notification" do
-    ActiveSupport::Notifications.expects(:instrument).with("circuit_open", circuit: 'yammer:12')
-    Circuitbox::Notifier.new(:yammer, 12).notify(:open)
+  describe '#initialize' do
+    subject { Circuitbox::Notifier }
+
+    it 'need at least the service parameter' do
+      proc { subject.new }.must_raise ArgumentError
+      subject.new(:a_service).must_be_instance_of(Circuitbox::Notifier)
+    end
+  end
+end
+
+describe Circuitbox::NullNotifier do
+  subject { Circuitbox::NullNotifier.new(:yammer, 12) }
+
+  it 'respond to .notify' do
+    assert subject.respond_to?(:notify)
   end
 
-  it "[notify_warning] sends an ActiveSupport::Notification" do
-    ActiveSupport::Notifications.expects(:instrument).with("circuit_warning", { circuit: 'yammer:12', message: 'hello'})
-    Circuitbox::Notifier.new(:yammer, 12).notify_warning('hello')
+  it 'respond to .notify_warning' do
+    assert subject.respond_to?(:notify_warning)
   end
 
-  it '[gauge] sends an ActiveSupport::Notifier' do
-    ActiveSupport::Notifications.expects(:instrument).with("circuit_gauge", { circuit: 'yammer:12', gauge: 'ratio', value: 12})
-    Circuitbox::Notifier.new(:yammer, 12).metric_gauge(:ratio, 12)
-
+  it 'respond to .metric_gauge' do
+    assert subject.respond_to?(:metric_gauge)
   end
 end

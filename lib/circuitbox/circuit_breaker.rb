@@ -25,7 +25,7 @@ class Circuitbox
       @service = service
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
-      @notifier        = options.fetch(:notifier_class) { Notifier }
+      @notifier        = options.fetch(:notifier_class) { NullNotifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
