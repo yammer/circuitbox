@@ -212,6 +212,8 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 
 ### version next
+
+### v0.10.4
 - Issue #39, keep the original backtrace for the wrapped exception around when
   re-raising a Circuitbox::Error
 
