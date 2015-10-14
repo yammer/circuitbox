@@ -13,7 +13,7 @@ class Circuitbox
     end
 
     def test_default_identifier
-      env = { url: "sential" }
+      env = { path: "sential" }
       assert_equal "sential", ExconMiddleware.new(app).identifier.call(env)
     end
 
@@ -24,10 +24,10 @@ class Circuitbox
 
     def test_overwrite_default_value_generator_lambda
       stub_circuitbox
-      env = { url: "url" }
-      give(circuitbox).circuit("url", anything) { circuit }
+      env = { path: "path" }
+      give(circuitbox).circuit("path", anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
-      default_value_generator = lambda { :sential }
+      default_value_generator = lambda { |_, _| :sential }
       middleware = ExconMiddleware.new(app,
                                          circuitbox: circuitbox,
                                          default_value: default_value_generator)
@@ -36,8 +36,8 @@ class Circuitbox
 
     def test_overwrite_default_value_generator_static_value
       stub_circuitbox
-      env = { url: "url" }
-      give(circuitbox).circuit("url", anything) { circuit }
+      env = { path: "path" }
+      give(circuitbox).circuit("path", anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
       middleware = ExconMiddleware.new(app, circuitbox: circuitbox, default_value: :sential)
       assert_equal :sential, middleware.error_call(env)
@@ -50,8 +50,9 @@ class Circuitbox
     end
 
     def test_overridde_success_response
-      env = { url: "url", status: 400 }
-      error_response = lambda { |r| r.status >= 500 }
+      env = { path: "path", response: { status: 400 } }
+      error_response = lambda { |r| r[:status] >= 500 }
+      give(app).response_call(anything) { Excon::Response.new(status: 400) }
       mw = ExconMiddleware.new(app, open_circuit: error_response)
       response = mw.response_call(env)
       assert_kind_of Excon::Response, response
@@ -59,17 +60,13 @@ class Circuitbox
     end
 
     def test_default_success_response
-      env = { url: "url", status: 400 }
+      env = { path: "path", response: { status: 400 } }
       app = gimme
-      give(app).request_call(anything) { Excon::Response.new(status: 400) }
+      give(app).response_call(anything) { Excon::Response.new(status: 400) }
       response = nil
 
-      begin
-        mw = ExconMiddleware.new(app)
-        mw.response_call(env)
-      rescue
-        response = mw.error_call(env)
-      end
+      mw = ExconMiddleware.new(app)
+      response = mw.response_call(env)
 
       assert_kind_of Excon::Response, response
       assert_equal response.status, 503
@@ -83,8 +80,8 @@ class Circuitbox
     def test_pass_circuit_breaker_run_options
       stub_circuitbox
       give(circuit).run!(:sential)
-      give(circuitbox).circuit("url", anything) { circuit }
-      env = { url: "url", circuit_breaker_run_options: :sential }
+      give(circuitbox).circuit("path", anything) { circuit }
+      env = { path: "path", circuit_breaker_run_options: :sential }
       middleware = ExconMiddleware.new(app, circuitbox: circuitbox)
       middleware.request_call(env)
       verify(circuit, 1.times).run!(:sential)
@@ -92,23 +89,23 @@ class Circuitbox
 
     def test_pass_circuit_breaker_options
       stub_circuitbox
-      env = { url: "url" }
+      env = { path: "path" }
       expected_circuit_breaker_options = {
         sential: :sential,
         exceptions: ExconMiddleware::DEFAULT_EXCEPTIONS
       }
-      give(circuitbox).circuit("url", expected_circuit_breaker_options) { circuit }
+      give(circuitbox).circuit("path", expected_circuit_breaker_options) { circuit }
       options = { circuitbox: circuitbox, circuit_breaker_options: { sential: :sential } }
       middleware = ExconMiddleware.new(app, options)
       middleware.request_call(env)
 
-      verify(circuitbox, 1.times).circuit("url", expected_circuit_breaker_options)
+      verify(circuitbox, 1.times).circuit("path", expected_circuit_breaker_options)
     end
 
     def test_overwrite_circuitbreaker_default_value
       stub_circuitbox
-      env = { url: "url", circuit_breaker_default_value: :sential }
-      give(circuitbox).circuit("url", anything) { circuit }
+      env = { path: "path", circuit_breaker_default_value: :sential }
+      give(circuitbox).circuit("path", anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
       middleware = ExconMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.error_call(env), :sential
@@ -116,9 +113,9 @@ class Circuitbox
 
     def test_return_null_response_for_open_circuit
       stub_circuitbox
-      env = { url: "url" }
+      env = { path: "path" }
       give(circuit).run!(anything) { raise Circuitbox::Error }
-      give(circuitbox).circuit("url", anything) { circuit }
+      give(circuitbox).circuit("path", anything) { circuit }
       mw = ExconMiddleware.new(app, circuitbox: circuitbox)
       response = mw.error_call(env)
       assert_kind_of Excon::Response, response

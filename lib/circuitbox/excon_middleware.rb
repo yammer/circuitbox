@@ -11,7 +11,9 @@ class Circuitbox
     ]
 
     class NullResponse < Excon::Response
-      def initialize
+      def initialize(response, exception)
+        @original_response = response
+        @original_exception = exception
         super(status: 503, response_headers: {})
       end
     end
@@ -20,13 +22,17 @@ class Circuitbox
 
     def initialize(stack, opts = {})
       @stack = stack
-      default_options = { open_circuit: lambda { |response| !(200..299).include?(response.status) } }
+      default_options = { open_circuit: lambda { |response| response[:status] >= 400 } }
       @opts = default_options.merge(opts)
       super(stack)
     end
 
     def error_call(datum)
-      circuit_open_value(datum)
+      circuit(datum).run!(run_options(datum)) do
+        raise RequestFailed
+      end
+    rescue Circuitbox::Error => exception
+      circuit_open_value(datum, datum[:response], exception)
     end
 
     def request_call(datum)
@@ -36,14 +42,16 @@ class Circuitbox
     end
 
     def response_call(datum)
+      circuit(datum).run!(run_options(datum)) do
+        raise RequestFailed if open_circuit?(datum[:response])
+      end
       @stack.response_call(datum)
-      service_response = Excon::Response.new(datum)
-      raise RequestFailed if open_circuit?(service_response)
-      service_response
+    rescue Circuitbox::Error => exception
+      circuit_open_value(datum, datum[:response], exception)
     end
 
     def identifier
-      @identifier ||= opts.fetch(:identifier, ->(env) { env[:url] })
+      @identifier ||= opts.fetch(:identifier, ->(env) { env[:path] })
     end
 
     def exceptions
@@ -52,13 +60,13 @@ class Circuitbox
 
     private
 
-    def circuit(env)
-      id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
+    def circuit(datum)
+      id = identifier.respond_to?(:call) ? identifier.call(datum) : identifier
       circuitbox.circuit id, circuit_breaker_options
     end
 
-    def run_options(env)
-      env[:circuit_breaker_run_options] || {}
+    def run_options(datum)
+      opts.merge(datum)[:circuit_breaker_run_options] || {}
     end
 
     def open_circuit?(response)
@@ -69,8 +77,8 @@ class Circuitbox
       @circuitbox ||= opts.fetch(:circuitbox, Circuitbox)
     end
 
-    def circuit_open_value(env)
-      env[:circuit_breaker_default_value] || default_value.call
+    def circuit_open_value(env, response, exception)
+      env[:circuit_breaker_default_value] || default_value.call(response, exception)
     end
 
     def circuit_breaker_options
@@ -86,7 +94,7 @@ class Circuitbox
       return @default_value if @default_value
 
       default = opts.fetch(:default_value) do
-        lambda { NullResponse.new }
+        lambda { |response, exception| NullResponse.new(response, exception) }
       end
 
       @default_value = if default.respond_to?(:call)
