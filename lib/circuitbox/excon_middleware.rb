@@ -16,6 +16,10 @@ class Circuitbox
         @original_exception = exception
         super(status: 503, response_headers: {})
       end
+
+      def []=(key, value)
+        @data[key] = value
+      end
     end
 
     attr_reader :opts
