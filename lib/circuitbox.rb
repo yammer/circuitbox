@@ -1,3 +1,4 @@
+require 'uri'
 require 'singleton'
 require 'active_support'
 require 'logger'
