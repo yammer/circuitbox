@@ -297,6 +297,8 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 
 ### version next
+
+### v0.11.0
 - fix URI require missing (https://github.com/yammer/circuitbox/pull/42 @gottfrois)
 - configurable circuitbox store backend via Moneta supporting multi process circuits
 
