@@ -30,6 +30,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "excon"
   spec.add_development_dependency "logger"
   spec.add_development_dependency "bundler-gem_version_tasks"
+  spec.add_development_dependency "lmdb"
+  spec.add_development_dependency "daybreak"
 
   spec.add_dependency "activesupport"
+  spec.add_dependency "moneta"
 end

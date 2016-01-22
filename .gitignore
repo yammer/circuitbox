@@ -1,4 +1,5 @@
 *.gem
+.vagrant
 *.rbc
 .bundle
 .config
@@ -13,6 +14,7 @@ pkg
 rdoc
 spec/reports
 test/tmp
+test/reports
 test/version_tmp
 tmp
 .idea

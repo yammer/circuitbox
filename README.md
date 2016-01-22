@@ -57,6 +57,10 @@ class ExampleServiceClient
       # number of requests within 1 minute before it calculates error rates
       volume_threshold: 10,
 
+      # the store you want to use to save the circuit state so it can be
+      # tracked, this needs to be Moneta compatible, and support increment
+      cache: Moneta.new(:Memory)
+
       # exceeding this rate will open the circuit
       error_threshold:  50,
 
@@ -74,6 +78,19 @@ Circuitbox.circuit(:yammer, {
   sleep_window: Proc.new { Configuration.get(:sleep_window) }
 })
 ```
+
+## Circuit Store (:cache)
+
+Holds all the relevant data to trip the circuit if a given number of requests
+fail in a specified period of time. The store is based on
+[Moneta](https://github.com/minad/moneta) so there are a lot of stores to choose
+from. There are some pre-requisits they need to satisfy so:
+
+- Need to support increment, this is true for most but not all available stores.
+- Need to support concurrent access if you share them. For example sharing a
+  KyotoCabinet store across process fails because the store is single writer
+  multiple readers, and all circuits sharing the store need to be able to write.
+
 
 ## Monitoring & Statistics
 
@@ -134,6 +151,74 @@ ActiveSupport::Notifications.subscribe('circuit_warning') do |name, start, finis
   Rails.logger.warning("#{circuit_name} - #{warning}")
 end
 
+```
+
+### Multi process Circuits
+
+`circuit_store` is backed by [Moneta](https://github.com/minad/moneta) which
+supports multiple backends. This can be configured by passing `cache:
+Moneta.new(:PStore, file: "myfile.store")` to use for example the built in
+PStore ruby library for persisted store, which can be shared cross process.
+
+Depending on your requirements different stores can make sense, see the
+benchmarks and [moneta
+feature](https://github.com/minad/moneta#backend-feature-matrix) matrix for
+details.
+
+```
+user     system      total        real
+memory:    1.440000   0.140000   1.580000 (  1.579244)
+lmdb:      4.330000   3.280000   7.610000 ( 13.086398)
+pstore:   23.680000   4.350000  28.030000 ( 28.094312)
+daybreak:  2.270000   0.450000   2.720000 (  2.626748)
+```
+
+You can run the benchmarks yourself by running `rake benchmark`.
+
+### Memory
+
+An in memory store, which is local to the process. This is not threadsafe so it
+is not useable with multithreaded webservers for example. It is always going to
+be the fastest option if no multi-process or thread is required, like in
+development on Webbrick.
+
+This is the default.
+
+```ruby
+Circuitbox.circuit :identifier, cache: Moneta.new(:Memory)
+```
+
+### LMDB
+
+An persisted directory backed store, which is thread and multi process save.
+depends on the `lmdb` gem. It is slower than Memory or Daybreak, but can be
+used in multi thread and multi process environments like like Puma.
+
+```ruby
+require "lmdb"
+Circuitbox.circuit :identifier, cache: Moneta.new(:LMDB, dir: "./", db: "mydb")
+```
+
+### PStore
+
+An persisted file backed store, which comes with the ruby
+[stdlib](http://ruby-doc.org/stdlib-2.3.0/libdoc/pstore/rdoc/PStore.html). It
+has no external dependecies and works on every ruby implementation. Due to it
+being file backed it is multi process save, good for development using Unicorn.
+
+```ruby
+Circuitbox.circuit :identifier, cache: Moneta.new(:PStore, file: "db.pstore")
+```
+
+### Daybreak
+
+Persisted, file backed key value store in pure ruby. It is process save and
+outperforms most other stores in circuitbox. This is recommended for production
+use with Unicorn. It depends on the `daybreak` gem.
+
+```ruby
+require "daybreak"
+Circuitbox.circuit :identifier, cache: Moneta.new(:Daybreak, file: "db.daybreak")
 ```
 
 ## Faraday
@@ -212,6 +297,8 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 
 ### version next
+- fix URI require missing (https://github.com/yammer/circuitbox/pull/42 @gottfrois)
+- configurable circuitbox store backend via Moneta supporting multi process circuits
 
 ### v0.10.4
 - Issue #39, keep the original backtrace for the wrapped exception around when
