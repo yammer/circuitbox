@@ -190,7 +190,7 @@ Circuitbox.circuit :identifier, cache: Moneta.new(:Memory)
 
 ### LMDB
 
-An persisted directory backed store, which is thread and multi process save.
+An persisted directory backed store, which is thread and multi process safe.
 depends on the `lmdb` gem. It is slower than Memory or Daybreak, but can be
 used in multi thread and multi process environments like like Puma.
 
@@ -204,7 +204,7 @@ Circuitbox.circuit :identifier, cache: Moneta.new(:LMDB, dir: "./", db: "mydb")
 An persisted file backed store, which comes with the ruby
 [stdlib](http://ruby-doc.org/stdlib-2.3.0/libdoc/pstore/rdoc/PStore.html). It
 has no external dependecies and works on every ruby implementation. Due to it
-being file backed it is multi process save, good for development using Unicorn.
+being file backed it is multi process safe, good for development using Unicorn.
 
 ```ruby
 Circuitbox.circuit :identifier, cache: Moneta.new(:PStore, file: "db.pstore")
@@ -212,7 +212,7 @@ Circuitbox.circuit :identifier, cache: Moneta.new(:PStore, file: "db.pstore")
 
 ### Daybreak
 
-Persisted, file backed key value store in pure ruby. It is process save and
+Persisted, file backed key value store in pure ruby. It is process safe and
 outperforms most other stores in circuitbox. This is recommended for production
 use with Unicorn. It depends on the `daybreak` gem.
 
