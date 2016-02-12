@@ -216,15 +216,13 @@ class Circuitbox
       end
     end
 
-=======
->>>>>>> [issue_15] remove internal stats system
     # For returning stale responses when the circuit is open
     def response_key(args)
       Digest::SHA1.hexdigest(storage_key(:cache, args.inspect.to_s))
     end
 
-    def count_storage_key(event, options = {})
-      storage_key(:count, align_time_on_minute, event, options)
+    def stat_storage_key(event, options = {})
+      storage_key(:stat, align_time_on_minute, event, options)
     end
 
 
