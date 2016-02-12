@@ -64,11 +64,11 @@ class Circuitbox
     def test_overridde_success_response
       env = { url: "url" }
       app = gimme
-      give(app).call(anything) { Faraday::Response.new(status: 400) }
-      error_response = lambda { |response| response.status >= 500 }
+      give(app).call(anything) { Faraday::Response.new(status: 500) }
+      error_response = lambda { |response|  false }
       response = FaradayMiddleware.new(app, open_circuit: error_response).call(env)
       assert_kind_of Faraday::Response, response
-      assert_equal response.status, 400
+      assert_equal response.status, 500
       assert response.finished?
       refute response.success?
     end
@@ -76,7 +76,29 @@ class Circuitbox
     def test_default_success_response
       env = { url: "url" }
       app = gimme
+      give(app).call(anything) { Faraday::Response.new(status: 500) }
+      response = FaradayMiddleware.new(app).call(env)
+      assert_kind_of Faraday::Response, response
+      assert_equal response.status, 503
+      assert response.finished?
+      refute response.success?
+    end
+
+    def test_default_open_circuit_does_not_trip_on_400
+      env = { url: "url" }
+      app = gimme
       give(app).call(anything) { Faraday::Response.new(status: 400) }
+      response = FaradayMiddleware.new(app).call(env)
+      assert_kind_of Faraday::Response, response
+      assert_equal response.status, 400
+      assert response.finished?
+      refute response.success?
+    end
+
+    def test_default_open_circuit_does_trip_on_nil
+      env = { url: "url" }
+      app = gimme
+      give(app).call(anything) { Faraday::Response.new(status: nil) }
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 503

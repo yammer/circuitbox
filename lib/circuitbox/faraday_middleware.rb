@@ -21,10 +21,18 @@ class Circuitbox
 
     attr_reader :opts
 
+    DEFAULT_CIRCUITBOX_OPTIONS = {
+      open_circuit: lambda do |response|
+        # response.status:
+        # nil -> connection could not be established, or failed very hard
+        # 5xx -> non recoverable server error, oposed to 4xx which are client errors
+        response.status.nil? || (500 <= response.status && response.status <= 599)
+      end
+    }
+
     def initialize(app, opts = {})
       @app = app
-      default_options = { open_circuit: lambda { |response| !response.success? } }
-      @opts = default_options.merge(opts)
+      @opts = DEFAULT_CIRCUITBOX_OPTIONS.merge(opts)
       super(app)
     end
 
@@ -101,5 +109,6 @@ class Circuitbox
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
       circuitbox.circuit id, circuit_breaker_options
     end
+
   end
 end
