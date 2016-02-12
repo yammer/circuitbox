@@ -27,9 +27,7 @@ def service
 end
 
 def run_flip_flopping circuit
-  before = circuit.open?
   circuit.run { service }
-  after = circuit.open?
   circuit.try_close_next_time if circuit.open?
 end
 
