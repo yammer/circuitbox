@@ -295,7 +295,6 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ```
 
 ## CHANGELOG
-
 ### version next
 
 ### v0.11.0

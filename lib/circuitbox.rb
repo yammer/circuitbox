@@ -16,7 +16,7 @@ require 'circuitbox/errors/open_circuit_error'
 require 'circuitbox/errors/service_failure_error'
 
 class Circuitbox
-  attr_accessor :circuits, :circuit_store, :stat_store
+  attr_accessor :circuits, :circuit_store
   cattr_accessor :configure
 
   def self.instance
@@ -42,14 +42,6 @@ class Circuitbox
 
   def self.circuit_store=(store)
     self.instance.circuit_store = store
-  end
-
-  def self.stat_store
-    self.instance.stat_store
-  end
-
-  def self.stat_store=(store)
-    self.instance.stat_store = store
   end
 
   def self.[](service_identifier, options = {})
