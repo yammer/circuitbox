@@ -222,7 +222,7 @@ class Circuitbox
     end
 
     def stat_storage_key(event, options = {})
-      storage_key(:stat, align_time_on_minute, event, options)
+      storage_key(:stats, align_time_on_minute, event, options)
     end
 
 
