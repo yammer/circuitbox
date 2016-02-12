@@ -4,7 +4,6 @@ require "typhoeus/adapters/faraday"
 require "pstore"
 
 class Circuitbox
-
   class CrossProcessTest < Minitest::Test
     include IntegrationHelpers
 
@@ -21,16 +20,17 @@ class Circuitbox
           circuit_breaker_options: { cache: Moneta.new(:PStore, file: dbfile) }
         c.adapter :typhoeus # support in_parallel
       end
-      @failure_url = "http://localhost:4713"
+      @failure_url = "http://127.0.0.1:4713"
 
       if !@@only_once
-        thread = Thread.new do
-          Rack::Handler::WEBrick.run(Proc.new { |env| ["Failure"] },
+        pid = fork do
+          Rack::Handler::WEBrick.run(lambda { |env| [500, {}, ["Failure"]] },
                                      Port: 4713,
                                      AccessLog: [],
                                      Logger: WEBrick::Log.new(DEV_NULL))
         end
-        Minitest.after_run { thread.exit }
+        sleep 0.5
+        Minitest.after_run { Process.kill "KILL", pid }
       end
     end
 
@@ -44,6 +44,7 @@ class Circuitbox
         con = Faraday.new do |c|
           c.use FaradayMiddleware, identifier: "circuitbox_test_cross_process",
             circuit_breaker_options: { cache: Moneta.new(:PStore, file: dbfile) }
+          c.adapter :typhoeus
         end
         open_circuit(con)
       end
