@@ -297,6 +297,13 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 ### version next
 
+### v1.0.0
+- support for cross process circuitbreakers by swapping the circuitbreaker store for a 
+  `Moneta` supported key value store.
+- Change `FaradayMiddleware` default behaviour to not open on `4xx` errors but just on `5xx`
+  server errors and connection errors
+- Remove stat store, which was largely unused
+
 ### v0.11.0
 - fix URI require missing (https://github.com/yammer/circuitbox/pull/42 @gottfrois)
 - configurable circuitbox store backend via Moneta supporting multi process circuits
