@@ -7,7 +7,6 @@ require 'moneta'
 
 require 'circuitbox/version'
 require 'circuitbox/memcache_store'
-require 'circuitbox/railtie' if defined?(Rails)
 require 'circuitbox/circuit_breaker'
 require 'circuitbox/notifier'
 
