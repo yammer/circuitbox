@@ -1,6 +1,6 @@
 # Circuitbox
 
-[![Build Status](https://travis-ci.org/yammer/circuitbox.svg?branch=master)](https://travis-ci.org/yammer/circuitbox)
+[![Build Status](https://travis-ci.org/yammer/circuitbox.svg?branch=master)](https://travis-ci.org/yammer/circuitbox) [![Gem Version](https://badge.fury.io/rb/circuitbox.svg)](https://badge.fury.io/rb/circuitbox)
 
 Circuitbox is a Ruby circuit breaker gem. It protects your application from failures of it's service dependencies. It wraps calls to external services and monitors for failures in one minute intervals. Once more than 10 requests have been made with a 50% failure rate, Circuitbox stops sending requests to that failing service for one minute. This helps your application gracefully degrade.
 Resources about the circuit breaker pattern:
