@@ -297,6 +297,10 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 ### version next
 
+### v1.0.1
+- Fix Rails integration, as version 1.0.0 removed the rails tasks integration, but missed
+  removing the related railtie.
+
 ### v1.0.0
 - support for cross process circuitbreakers by swapping the circuitbreaker store for a 
   `Moneta` supported key value store.
