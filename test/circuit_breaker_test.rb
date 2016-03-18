@@ -151,55 +151,29 @@ class CircuitBreakerTest < Minitest::Test
   end
 
   describe 'closing the circuit after sleep' do
-    class GodTime < SimpleDelegator
-      def now
-        self
-      end
-
-      def initialize(now=nil)
-        @now = now || Time.now
-        super(@now)
-      end
-
-      def __getobj__
-        @now
-      end
-
-      def __setobj__(obj)
-        @now = obj
-      end
-
-      def jump(interval)
-        __setobj__ @now + interval
-      end
-    end
-
     def cb_options
       {
-        sleep_window:     70,
-        time_window:      60,
+        sleep_window:     1,
+        time_window:      2,
         volume_threshold: 5,
-        error_threshold:  33,
-        timeout_seconds:  1,
-        time_class: @timer
+        error_threshold:  5,
+        timeout_seconds:  1
       }
     end
 
     def setup
-      @timer   = GodTime.new
       @circuit = Circuitbox::CircuitBreaker.new(:yammer, cb_options)
     end
 
-
     it 'close the circuit after sleeping time' do
       # lets open the circuit
-      10.times { @circuit.run { raise RequestFailureError } }
+      (cb_options[:error_threshold] + 1).times { @circuit.run { raise RequestFailureError } }
       run_count = 0
       @circuit.run { run_count += 1 }
       assert_equal 0, run_count, 'circuit is not open'
+      # it is + 2 on purpose, because + 1 is flaky here
+      sleep cb_options[:sleep_window] + 2
 
-      @timer.jump(cb_options[:sleep_window] + 1)
-      @circuit.try_close_next_time
       @circuit.run { run_count += 1 }
       assert_equal 1, run_count, 'circuit is not closed'
     end

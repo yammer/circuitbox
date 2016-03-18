@@ -218,8 +218,11 @@ use with Unicorn. It depends on the `daybreak` gem.
 
 ```ruby
 require "daybreak"
-Circuitbox.circuit :identifier, cache: Moneta.new(:Daybreak, file: "db.daybreak")
+Circuitbox.circuit :identifier, cache: Moneta.new(:Daybreak, file: "db.daybreak", expires: true)
 ```
+
+It is important for the store to have
+[expires](https://github.com/minad/moneta#backend-feature-matrix) support.
 
 ## Faraday
 
