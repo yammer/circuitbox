@@ -297,6 +297,10 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ## CHANGELOG
 ### version next
 
+### v1.0.2
+- Fix timeout issue [#51](https://github.com/yammer/circuitbox/issues/51)
+  [sebastian-juliu](https://github.com/sebastian-julius)
+
 ### v1.0.1
 - Fix Rails integration, as version 1.0.0 removed the rails tasks integration, but missed
   removing the related railtie.
