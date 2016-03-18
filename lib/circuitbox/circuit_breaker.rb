@@ -112,7 +112,7 @@ class Circuitbox
     def open!
       log_event :open
       logger.debug "[CIRCUIT] opening #{service} circuit"
-      circuit_store.store(storage_key(:asleep), true, expires_in: option_value(:sleep_window).seconds)
+      circuit_store.store(storage_key(:asleep), true, expires: option_value(:sleep_window))
       half_open!
       was_open!
     end
