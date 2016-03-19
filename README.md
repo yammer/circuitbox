@@ -299,6 +299,8 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 
 ## CHANGELOG
 ### version next
+
+### v1.0.3
 - fix timeout issue for default configuration, as default `:Memory` adapter does
   not natively support expires, we need to actually load it on demand.
 - fix memoization of `circuit_breaker_options` not actually doing memoization in
