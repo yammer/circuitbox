@@ -299,6 +299,10 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 
 ## CHANGELOG
 ### version next
+- fix timeout issue for default configuration, as default `:Memory` adapter does
+  not natively support expires, we need to actually load it on demand.
+- fix memoization of `circuit_breaker_options` not actually doing memoization in
+  `excon` and `faraday` middleware.
 
 ### v1.0.2
 - Fix timeout issue [#51](https://github.com/yammer/circuitbox/issues/51)
