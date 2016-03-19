@@ -63,7 +63,7 @@ class Circuitbox
     end
 
     def circuit_breaker_options
-      return @circuit_breaker_options if @current_adapter
+      return @circuit_breaker_options if @circuit_breaker_options
 
       @circuit_breaker_options = opts.fetch(:circuit_breaker_options, {})
       @circuit_breaker_options.merge!(
