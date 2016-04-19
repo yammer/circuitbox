@@ -1,54 +1,45 @@
 require 'test_helper'
 
-class Circuitbox::ExampleStore < ActiveSupport::Cache::MemoryStore; end
+class CircuitboxTest < Minitest::Test
 
-describe Circuitbox do
-  before { Circuitbox.reset }
-  after { Circuitbox.reset }
-
-  describe "Circuitbox.circuit_store" do
-    it "is configurable" do
-      example_store = Circuitbox::ExampleStore.new
-      Circuitbox.circuit_store = example_store
-      assert_equal example_store, Circuitbox[:yammer].circuit_store
-    end
+  def setup
+    Circuitbox.reset
   end
 
-  describe "Circuitbox[:service]" do
-    it "delegates to #circuit" do
-      Circuitbox.expects(:circuit).with(:yammer, {})
-      Circuitbox[:yammer]
-    end
-
-    it "creates a CircuitBreaker instance" do
-      assert Circuitbox[:yammer].is_a? Circuitbox::CircuitBreaker
-    end
+  def test_circuit_store_is_configurable
+    store = Moneta.new(:Memory, expires: true)
+    Circuitbox.circuit_store = store
+    assert_equal store, Circuitbox[:yammer].circuit_store
   end
 
-  describe "#circuit" do
-    it "returns the same circuit every time" do
-      assert_equal Circuitbox.circuit(:yammer).object_id, Circuitbox.circuit(:yammer).object_id
-    end
-
-    it "sets the circuit options the first time" do
-      circuit_one = Circuitbox.circuit(:yammer, :sleep_window => 1337)
-      circuit_two = Circuitbox.circuit(:yammer, :sleep_window => 2000)
-
-      assert_equal 1337, circuit_one.option_value(:sleep_window)
-      assert_equal 1337, circuit_two.option_value(:sleep_window)
-    end
+  def test_delegates_to_circuit
+    Circuitbox.expects(:circuit).with(:yammer, {})
+    Circuitbox[:yammer]
   end
 
-  describe "#parameter_to_service_name" do
-    it "parses out a service name from URI" do
-      service = Circuitbox.parameter_to_service_name("http://api.yammer.com/api/v1/messages")
-      assert_equal "api.yammer.com", service
-    end
-
-    it "uses the parameter as the service name if the parameter is not an URI" do
-      service = Circuitbox.parameter_to_service_name(:yammer)
-      assert_equal "yammer", service
-    end
+  def test_creates_a_circuit_breaker
+    assert Circuitbox[:yammer].is_a? Circuitbox::CircuitBreaker
   end
 
+  def test_returns_the_same_circuit_every_time
+    assert_equal Circuitbox.circuit(:yammer), Circuitbox.circuit(:yammer)
+  end
+
+  def test_sets_the_circuit_options_the_first_time_only
+    circuit_one = Circuitbox.circuit(:yammer, :sleep_window => 1337)
+    circuit_two = Circuitbox.circuit(:yammer, :sleep_window => 2000)
+
+    assert_equal 1337, circuit_one.option_value(:sleep_window)
+    assert_equal 1337, circuit_two.option_value(:sleep_window)
+  end
+  
+  def test_uses_parsed_uri_host_as_identifier_for_circuit
+    service = Circuitbox.parameter_to_service_name("http://api.yammer.com/api/v1/messages")
+    assert_equal "api.yammer.com", service
+  end
+
+  def test_uses_identifier_directly_for_circuit_if_it_is_not_an_uri
+    service = Circuitbox.parameter_to_service_name(:yammer)
+    assert_equal "yammer", service
+  end
 end
