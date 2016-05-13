@@ -10,18 +10,6 @@ class Circuitbox
       RequestFailed
     ]
 
-    class NullResponse < Excon::Response
-      def initialize(response, exception)
-        @original_response = response
-        @original_exception = exception
-        super(status: 503, response_headers: {})
-      end
-
-      def []=(key, value)
-        @data[key] = value
-      end
-    end
-
     attr_reader :opts
 
     def initialize(stack, opts = {})
@@ -32,11 +20,14 @@ class Circuitbox
     end
 
     def error_call(datum)
-      circuit(datum).run!(run_options(datum)) do
-        raise RequestFailed
+      unless datum[:error].is_a? Circuitbox::Error
+        circuit(datum).run!(run_options(datum)) do
+          raise datum[:error]
+        end
+      rescue Circuitbox::Error => e
+        data[:error] = e
       end
-    rescue Circuitbox::Error => exception
-      circuit_open_value(datum, datum[:response], exception)
+      @stack.error_call(datum)
     end
 
     def request_call(datum)
@@ -46,12 +37,11 @@ class Circuitbox
     end
 
     def response_call(datum)
-      circuit(datum).run!(run_options(datum)) do
+      # Note: Swallows the Circuitbox::Error, always returns response call
+      circuit(datum).run(run_options(datum)) do
         raise RequestFailed if open_circuit?(datum[:response])
       end
       @stack.response_call(datum)
-    rescue Circuitbox::Error => exception
-      circuit_open_value(datum, datum[:response], exception)
     end
 
     def identifier
@@ -81,10 +71,6 @@ class Circuitbox
       @circuitbox ||= opts.fetch(:circuitbox, Circuitbox)
     end
 
-    def circuit_open_value(env, response, exception)
-      env[:circuit_breaker_default_value] || default_value.call(response, exception)
-    end
-
     def circuit_breaker_options
       return @circuit_breaker_options if @circuit_breaker_options
 
@@ -92,20 +78,6 @@ class Circuitbox
       @circuit_breaker_options.merge!(
         exceptions: opts.fetch(:exceptions, DEFAULT_EXCEPTIONS)
       )
-    end
-
-    def default_value
-      return @default_value if @default_value
-
-      default = opts.fetch(:default_value) do
-        lambda { |response, exception| NullResponse.new(response, exception) }
-      end
-
-      @default_value = if default.respond_to?(:call)
-                         default
-                       else
-                         lambda { |*| default }
-                       end
     end
   end
 end
