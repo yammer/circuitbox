@@ -20,6 +20,7 @@ class Circuitbox
     # `timeout_seconds`   - seconds until it will timeout the request
     # `exceptions`        - exceptions other than Timeout::Error that count as failures
     # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
+    # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
     #
     def initialize(service, options = {})
       @service = service
@@ -30,7 +31,7 @@ class Circuitbox
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
 
-      @logger     = defined?(Rails) ? Rails.logger : Logger.new(STDOUT)
+      @logger     = options.fetch(:logger) { defined?(Rails) ? Rails.logger : Logger.new(STDOUT) }
       @time_class   = options.fetch(:time_class) { Time }
       sanitize_options
     end
