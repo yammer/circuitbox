@@ -301,7 +301,9 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ```
 
 ## CHANGELOG
-### version next
+### v1.1.0
+- ruby 2.2 support [#58](https://github.com/yammer/circuitbox/pull/58)
+- configurable logger [#58](https://github.com/yammer/circuitbox/pull/58)
 
 ### v1.0.3
 - fix timeout issue for default configuration, as default `:Memory` adapter does
