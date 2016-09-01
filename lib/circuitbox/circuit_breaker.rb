@@ -47,6 +47,7 @@ class Circuitbox
       if open?
         logger.debug "[CIRCUIT] open: skipping #{service}"
         open! unless open_flag?
+        skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
         close! if was_open?
@@ -168,6 +169,10 @@ class Circuitbox
 
     def failure!
       log_event :failure
+    end
+
+    def skipped!
+      log_event :skipped
     end
 
     # Store success/failure/open/close data in memcache

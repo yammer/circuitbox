@@ -231,6 +231,14 @@ class CircuitBreakerTest < Minitest::Test
     emulate_circuit_run(circuit, :failure, Timeout::Error)
   end
 
+  def test_records_response_skipped
+    circuit = Circuitbox::CircuitBreaker.new(:yammer)
+    circuit.stubs(:open? => true)
+    circuit.stubs(:log_event)
+    circuit.expects(:log_event).with(:skipped)
+    emulate_circuit_run(circuit, :failure, Timeout::Error)
+  end
+
   def test_records_response_success
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
     circuit.expects(:log_event).with(:success)
