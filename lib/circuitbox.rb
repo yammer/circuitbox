@@ -1,15 +1,12 @@
 require 'uri'
-require 'singleton'
-require 'active_support'
 require 'logger'
 require 'timeout'
 require 'moneta'
+require 'active_support/all'
 
 require 'circuitbox/version'
-require 'circuitbox/memcache_store'
 require 'circuitbox/circuit_breaker'
 require 'circuitbox/notifier'
-
 require 'circuitbox/errors/error'
 require 'circuitbox/errors/open_circuit_error'
 require 'circuitbox/errors/service_failure_error'

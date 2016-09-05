@@ -208,15 +208,6 @@ class Circuitbox
       end
     end
 
-    # Logs to Memcache.
-    def log_event_to_stat_store(key)
-      if stat_store.read(key, raw: true)
-        stat_store.increment(key)
-      else
-        stat_store.store(key, 1)
-      end
-    end
-
     # For returning stale responses when the circuit is open
     def response_key(args)
       Digest::SHA1.hexdigest(storage_key(:cache, args.inspect.to_s))
