@@ -169,14 +169,27 @@ feature](https://github.com/minad/moneta#backend-feature-matrix) matrix for
 details.
 
 ```
-user     system      total        real
-memory:    1.440000   0.140000   1.580000 (  1.579244)
-lmdb:      4.330000   3.280000   7.610000 ( 13.086398)
-pstore:   23.680000   4.350000  28.030000 ( 28.094312)
-daybreak:  2.270000   0.450000   2.720000 (  2.626748)
+$ bundle exec rake test:benchmark
+                               user     system      total        real
+memory:                    1.270000   0.100000   1.370000 (  1.370444)
+lmdb:                      3.250000   1.930000   5.180000 ( 11.398727)
+pstore:                    9.980000   2.290000  12.270000 ( 12.272267)
+daybreak:                  2.150000   0.490000   2.640000 (  2.560083)
+daybreak (no compaction):  2.150000   0.470000   2.620000 (  2.519427)
+
 ```
 
-You can run the benchmarks yourself by running `rake benchmark`.
+For easy use the recommended way is to use the builtin helpers to create the
+store.
+
+```ruby
+file = "/path/to/shared/db/file.daybreak"
+circuitbox = Circuitbox.circuit("my_circuit", cache: Circuitbox::Store.cross_process_store(file))
+```
+
+with this in place the circuit will share the stats across all the processes
+accessing the same file.
+
 
 ### Memory
 
@@ -217,12 +230,26 @@ Circuitbox.circuit :identifier, cache: Moneta.new(:PStore, file: "db.pstore")
 
 Persisted, file backed key value store in pure ruby. It is process safe and
 outperforms most other stores in circuitbox. This is recommended for production
-use with Unicorn. It depends on the `daybreak` gem.
+use with Unicorn. It depends on the `daybreak` gem. 
 
 ```ruby
 require "daybreak"
-Circuitbox.circuit :identifier, cache: Moneta.new(:Daybreak, file: "db.daybreak", expires: true)
+Circuitbox.circuit :identifier, cache: Circuitbox::Store.cross_process_store("./db.daybreak"))
 ```
+
+Since daybreak uses and append only file, it is important to compact the file
+every now and then, this is done by default every 1000 operations, but can be
+tuned by passing a lambda, which returns true if we should compact.
+
+```ruby
+Circuitbox.circuit :identifier, cache: Circuitbox::Store.cross_process_store(
+    "./db.daybreak"), ->(invocation_since_last_compact) { invocation_since_last_compact > 99 }
+    )
+```
+
+Also to make daybreak cross process work, it needs to load changes made by other
+processes this is also handled by the provided wrapper.
+
 
 It is important for the store to have
 [expires](https://github.com/minad/moneta#backend-feature-matrix) support.
@@ -301,6 +328,11 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 ```
 
 ## CHANGELOG
+
+### next
+- enable autocompaction on the cross process store
+- create helper method to more easily create a cross process store
+
 ### v1.1.0
 - ruby 2.2 support [#58](https://github.com/yammer/circuitbox/pull/58)
 - configurable logger [#58](https://github.com/yammer/circuitbox/pull/58)

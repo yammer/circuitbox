@@ -398,7 +398,6 @@ class CircuitBreakerTest < Minitest::Test
     def gimme_notifier(opts={})
       metric = opts.fetch(:metric,:error_rate)
       metric_value = opts.fetch(:metric_value, 0.0)
-      warning_msg = opts.fetch(:warning_msg, '')
       fake_notifier = gimme
       notified = false
       give(fake_notifier).notify(:open) { notified = true }

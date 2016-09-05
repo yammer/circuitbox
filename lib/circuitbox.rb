@@ -1,15 +1,16 @@
-require 'uri'
-require 'logger'
-require 'timeout'
-require 'moneta'
-require 'active_support/all'
+require "uri"
+require "logger"
+require "timeout"
+require "moneta"
+require "active_support/all"
 
-require 'circuitbox/version'
-require 'circuitbox/circuit_breaker'
-require 'circuitbox/notifier'
-require 'circuitbox/errors/error'
-require 'circuitbox/errors/open_circuit_error'
-require 'circuitbox/errors/service_failure_error'
+require "circuitbox/version"
+require "circuitbox/store"
+require "circuitbox/circuit_breaker"
+require "circuitbox/notifier"
+require "circuitbox/errors/error"
+require "circuitbox/errors/open_circuit_error"
+require "circuitbox/errors/service_failure_error"
 
 class Circuitbox
   attr_accessor :circuits, :circuit_store
@@ -33,7 +34,7 @@ class Circuitbox
   end
 
   def self.circuit_store
-    self.instance.circuit_store ||= Moneta.new(:Memory, expires: true)
+    self.instance.circuit_store ||= Store.in_process_store
   end
 
   def self.circuit_store=(store)

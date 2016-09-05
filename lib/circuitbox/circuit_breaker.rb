@@ -25,14 +25,14 @@ class Circuitbox
     def initialize(service, options = {})
       @service = service
       @circuit_options = options
-      @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
-      @notifier        = options.fetch(:notifier_class) { Notifier }
+      @circuit_store = options.fetch(:cache) { Circuitbox.circuit_store }
+      @notifier = options.fetch(:notifier_class) { Notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
 
-      @logger     = options.fetch(:logger) { defined?(Rails) ? Rails.logger : Logger.new(STDOUT) }
-      @time_class   = options.fetch(:time_class) { Time }
+      @logger = options.fetch(:logger) { defined?(Rails) ? Rails.logger : Logger.new(STDOUT) }
+      @time_class = options.fetch(:time_class) { Time }
       sanitize_options
     end
 
