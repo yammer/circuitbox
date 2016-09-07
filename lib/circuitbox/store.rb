@@ -43,9 +43,9 @@ class Circuitbox
       super
     end
 
-    def load(*)
+    def load(*args)
       backend.load
-      super
+      __getobj__.load(*args)
     end
 
     def [](key)
