@@ -263,7 +263,7 @@ c.use Circuitbox::FaradayMiddleware, exceptions: [Faraday::Error::TimeoutError]
   with either
   * a static value
   * a `lambda` which is passed the `original_response` and `original_error`.
-    `original_response` will be populated if Faraday returne an error response,
+    `original_response` will be populated if Faraday returns an error response,
     `original_error` will be populated if an error was thrown before Faraday
     returned a response.  (It will also accept a lambda with arity 1 that is
     only passed `original_response`.  This use is deprecated and will be removed
