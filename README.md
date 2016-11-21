@@ -53,8 +53,11 @@ class ExampleServiceClient
 
       # seconds the circuit stays open once it has passed the error threshold
       sleep_window:     300,
+      
+      # length of interval (in seconds) over which it calculates the error rate
+      time_window:      60,
 
-      # number of requests within 1 minute before it calculates error rates
+      # number of requests within `time_window` seconds before it calculates error rates
       volume_threshold: 10,
 
       # the store you want to use to save the circuit state so it can be
