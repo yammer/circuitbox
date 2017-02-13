@@ -17,8 +17,7 @@ class Circuitbox
     # `sleep_window`      - seconds to sleep the circuit
     # `volume_threshold`  - number of requests before error rate calculation occurs
     # `error_threshold`   - percentage of failed requests needed to trip circuit
-    # `timeout_seconds`   - seconds until it will timeout the request
-    # `exceptions`        - exceptions other than Timeout::Error that count as failures
+    # `exceptions`        - exceptions that count as failures
     # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
     # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
     #
@@ -29,7 +28,6 @@ class Circuitbox
       @notifier        = options.fetch(:notifier_class) { Notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
-      @exceptions = [Timeout::Error] if @exceptions.blank?
 
       @logger     = options.fetch(:logger) { defined?(Rails) ? Rails.logger : Logger.new(STDOUT) }
       @time_class   = options.fetch(:time_class) { Time }
@@ -53,12 +51,7 @@ class Circuitbox
         logger.debug "[CIRCUIT] closed: querying #{service}"
 
         begin
-          response = if exceptions.include? Timeout::Error
-            timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-            timeout (timeout_seconds) { yield }
-          else
-            yield
-          end
+          response = yield
 
           logger.debug "[CIRCUIT] closed: #{service} querie success"
           success!
@@ -70,7 +63,7 @@ class Circuitbox
         end
       end
 
-      return response
+      response
     end
 
     def run(run_options = {})
@@ -235,10 +228,6 @@ class Circuitbox
       end
 
       return key
-    end
-
-    def timeout(timeout_seconds, &block)
-      Timeout::timeout(timeout_seconds) { block.call }
     end
 
     def self.reset
