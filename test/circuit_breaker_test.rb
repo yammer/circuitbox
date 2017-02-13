@@ -26,7 +26,6 @@ class CircuitBreakerTest < Minitest::Test
                                                 sleep_window: 300,
                                                 volume_threshold: 5,
                                                 error_threshold: 33,
-                                                timeout_seconds: 1,
                                                 exceptions: [Timeout::Error])
     end
 
@@ -148,7 +147,6 @@ class CircuitBreakerTest < Minitest::Test
                                                 time_window: 2,
                                                 volume_threshold: 5,
                                                 error_threshold: 5,
-                                                timeout_seconds: 1,
                                                 exceptions: [Timeout::Error])
     end
 
