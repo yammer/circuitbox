@@ -1,8 +1,7 @@
 class Circuitbox
   class Notifier
-    def initialize(service, partition=nil)
-      @service   = service
-      @partition = partition
+    def initialize(service)
+      @service = service
     end
 
     def notify(event)
@@ -22,9 +21,7 @@ class Circuitbox
 
     private
     def circuit_name
-      circuit_name = @service.to_s
-      circuit_name += ":#{@partition}" if @partition
-      circuit_name
+      @service.to_s
     end
 
     def notification_available?

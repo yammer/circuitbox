@@ -1,6 +1,6 @@
 class Circuitbox
   class CircuitBreaker
-    attr_accessor :service, :circuit_options, :exceptions, :partition,
+    attr_accessor :service, :circuit_options, :exceptions,
                   :logger, :circuit_store, :notifier
 
     DEFAULTS = {
@@ -42,8 +42,6 @@ class Circuitbox
     end
 
     def run!(run_options = {})
-      @partition = run_options.delete(:partition) # sorry for this hack.
-
       if open?
         logger.debug "[CIRCUIT] open: skipping #{service}"
         open! unless open_flag?
@@ -177,12 +175,12 @@ class Circuitbox
 
     # Store success/failure/open/close data in memcache
     def log_event(event)
-      notifier.new(service,partition).notify(event)
+      notifier.new(service).notify(event)
       log_event_to_process(event)
     end
 
     def log_metrics(error_rate, failures, successes)
-      n = notifier.new(service,partition)
+      n = notifier.new(service)
       n.metric_gauge(:error_rate, error_rate)
       n.metric_gauge(:failure_count, failures)
       n.metric_gauge(:success_count, successes)
@@ -192,7 +190,7 @@ class Circuitbox
       sleep_window = option_value(:sleep_window)
       time_window  = option_value(:time_window)
       if sleep_window < time_window
-        notifier.new(service,partition).notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
+        notifier.new(service).notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
         @circuit_options[:sleep_window] = option_value(:time_window)
       end
     end
@@ -232,14 +230,7 @@ class Circuitbox
 
     def storage_key(*args)
       options = args.extract_options!
-
-      key = if options[:without_partition]
-        "circuits:#{service}:#{args.join(":")}"
-      else
-        "circuits:#{service}:#{partition}:#{args.join(":")}"
-      end
-
-      return key
+      "circuits:#{service}:#{args.join(':')}"
     end
 
     def timeout(timeout_seconds, &block)
