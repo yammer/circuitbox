@@ -53,7 +53,7 @@ class ExampleServiceClient
 
       # seconds the circuit stays open once it has passed the error threshold
       sleep_window:     300,
-      
+
       # length of interval (in seconds) over which it calculates the error rate
       time_window:      60,
 
@@ -66,9 +66,6 @@ class ExampleServiceClient
 
       # exceeding this rate will open the circuit
       error_threshold:  50,
-
-      # seconds before the circuit times out
-      timeout_seconds:  1
 
       # Logger to use
       logger: Logger.new(STDOUT)

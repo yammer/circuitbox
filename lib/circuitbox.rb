@@ -1,6 +1,5 @@
 require 'uri'
 require 'logger'
-require 'timeout'
 require 'moneta'
 require 'active_support/all'
 
