@@ -1,3 +1,3 @@
 class Circuitbox
-VERSION='1.1.1'
+  VERSION = '2.0.0.alpha'.freeze
 end

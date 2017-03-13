@@ -53,7 +53,7 @@ class ExampleServiceClient
 
       # seconds the circuit stays open once it has passed the error threshold
       sleep_window:     300,
-      
+
       # length of interval (in seconds) over which it calculates the error rate
       time_window:      60,
 
@@ -97,12 +97,6 @@ from. There are some pre-requisits they need to satisfy so:
   KyotoCabinet store across process fails because the store is single writer
   multiple readers, and all circuits sharing the store need to be able to write.
 
-
-## Monitoring & Statistics
-
-You can also run `rake circuits:stats SERVICE={service_name}` to see successes, failures and opened circuits.
-Add `PARTITION={partition_key}` to see the circuit for a particular partition.
-The stats are aggregated into 1 minute intervals.
 
 ## Notifications
 
