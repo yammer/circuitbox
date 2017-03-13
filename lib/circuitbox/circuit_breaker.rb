@@ -26,8 +26,9 @@ class Circuitbox
       @service = service
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
-      @notifier        = options.fetch(:notifier_class) { Notifier }
       @execution_timer = options.fetch(:execution_timer) { SimpleTimer }
+      notifier_class = options.fetch(:notifier_class) { Notifier }
+      @notifier = notifier_class.new(service)
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
@@ -177,22 +178,21 @@ class Circuitbox
 
     # Store success/failure/open/close data in memcache
     def log_event(event)
-      notifier.new(service).notify(event)
+      notifier.notify(event)
       log_event_to_process(event)
     end
 
     def log_metrics(error_rate, failures, successes)
-      n = notifier.new(service)
-      n.metric_gauge(:error_rate, error_rate)
-      n.metric_gauge(:failure_count, failures)
-      n.metric_gauge(:success_count, successes)
+      notifier.metric_gauge(:error_rate, error_rate)
+      notifier.metric_gauge(:failure_count, failures)
+      notifier.metric_gauge(:success_count, successes)
     end
 
     def sanitize_options
       sleep_window = option_value(:sleep_window)
       time_window  = option_value(:time_window)
       if sleep_window < time_window
-        notifier.new(service).notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
+        notifier.notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
         @circuit_options[:sleep_window] = option_value(:time_window)
       end
     end
