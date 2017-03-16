@@ -68,6 +68,7 @@ class ExampleServiceClient
       error_threshold:  50,
 
       # seconds before the circuit times out
+      # if set to nil no timeout is used
       timeout_seconds:  1
 
       # Logger to use

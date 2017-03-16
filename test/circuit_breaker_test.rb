@@ -198,6 +198,12 @@ class CircuitBreakerTest < Minitest::Test
     emulate_circuit_run(circuit, :success, StandardError)
   end
 
+  def test_should_not_use_timeout_class_if_timeout_window_nil
+    circuit = Circuitbox::CircuitBreaker.new(:yammer, timeout_seconds: nil)
+    circuit.expects(:timeout).never
+    emulate_circuit_run(circuit, :success, 'success')
+  end
+
   def test_should_return_response_if_it_doesnt_timeout
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
     response = emulate_circuit_run(circuit, :success, "success")
