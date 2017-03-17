@@ -62,16 +62,16 @@ class ExampleServiceClient
 
       # the store you want to use to save the circuit state so it can be
       # tracked, this needs to be Moneta compatible, and support increment
-      cache: Moneta.new(:Memory)
+      cache: Moneta.new(:Memory),
 
       # exceeding this rate will open the circuit
       error_threshold:  50,
 
       # seconds before the circuit times out
-      timeout_seconds:  1
+      timeout_seconds:  1,
 
       # Logger to use
-      logger: Logger.new(STDOUT)
+      logger: Logger.new(STDOUT),
     })
   end
 end
