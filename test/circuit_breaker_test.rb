@@ -403,19 +403,45 @@ class CircuitBreakerTest < Minitest::Test
       assert notifier.notified?, 'no notification sent'
     end
 
+    def test_send_execution_time_metric
+      notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
+      circuit.run { 'success' }
+      assert notifier.metric_sent?, 'no execution time metric sent'
+    end
+
+    def test_no_execution_time_metric_on_error_execution
+      notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
+      circuit.run { raise Timeout::Error }
+      assert !notifier.metric_sent?, 'execution time metric sent'
+    end
+
+    def test_no_execution_time_metric_when_circuit_open
+      notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
+      10.times { circuit.run { raise Timeout::Error }}
+      assert !notifier.metric_sent?, 'execution time metric sent'
+    end
+
     def gimme_notifier(opts={})
       metric = opts.fetch(:metric,:error_rate)
       metric_value = opts.fetch(:metric_value, 0.0)
       warning_msg = opts.fetch(:warning_msg, '')
       fake_notifier = gimme
       notified = false
+      metric_sent = false
       give(fake_notifier).notify(:open) { notified = true }
       give(fake_notifier).notify(:close) { notified = true }
       give(fake_notifier).notify_warning(Gimme::Matchers::Anything.new) { notified = true }
-      give(fake_notifier).metric_gauge(metric, metric_value) { notified = true }
+      give(fake_notifier).metric_gauge(metric, metric_value) do
+        notified = true
+        metric_sent = true
+      end
       fake_notifier_class = gimme
       give(fake_notifier_class).new(:yammer) { fake_notifier }
       give(fake_notifier_class).notified? { notified }
+      give(fake_notifier_class).metric_sent? { metric_sent }
       give(fake_notifier_class).clear_notified! { notified = false }
       fake_notifier_class
     end
