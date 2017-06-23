@@ -414,14 +414,14 @@ class CircuitBreakerTest < Minitest::Test
       notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
       circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
       circuit.run { raise Timeout::Error }
-      assert !notifier.metric_sent?, 'execution time metric sent'
+      refute notifier.metric_sent?, 'execution time metric sent'
     end
 
     def test_no_execution_time_metric_when_circuit_open
       notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
       circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
       10.times { circuit.run { raise Timeout::Error }}
-      assert !notifier.metric_sent?, 'execution time metric sent'
+      refute notifier.metric_sent?, 'execution time metric sent'
     end
 
     def gimme_notifier(opts={})
