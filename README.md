@@ -72,6 +72,9 @@ class ExampleServiceClient
 
       # Logger to use
       logger: Logger.new(STDOUT),
+      
+      # To measure circuit execution time (default to false)
+      notify_circuit_execution_time: true
     })
   end
 end

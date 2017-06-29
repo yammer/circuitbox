@@ -52,15 +52,17 @@ class Circuitbox
         logger.debug "[CIRCUIT] closed: querying #{service}"
 
         begin
-          t1 = Time.now
+          start_time = Time.now.to_i
           response = if exceptions.include? Timeout::Error
             timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
             timeout (timeout_seconds) { yield }
           else
             yield
           end
-          t2 = Time.now
-          log_circuit_execution_time(t2 - t1)
+          end_time = Time.now.to_i
+          if circuit_options[:notify_circuit_execution_time]
+            log_circuit_execution_time(start_time - end_time)
+          end
           logger.debug "[CIRCUIT] closed: #{service} querie success"
           success!
         rescue *exceptions => exception
