@@ -1,8 +1,4 @@
-class MonotonicTimer
-  def initialize(time_unit = :millisecond)
-    @time_unit = time_unit
-  end
-
+class MonotonicTimer < NullTimer
   def time(notifier, metric_name)
     before = Process.clock_gettime(Process::CLOCK_MONOTONIC, @time_unit)
     result = yield
