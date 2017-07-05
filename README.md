@@ -73,12 +73,8 @@ class ExampleServiceClient
       # Logger to use
       logger: Logger.new(STDOUT),
       
-      # To measure circuit execution time (default to false)
-      notify_circuit_execution_time: true,
-      
-      # Customized Time class
-      # Your time class needs to support `now` and `-` method.
-      time_class: Time
+      # Customized Timer object
+      execution_timer: MonotonicTimer.new # Use NullTimer.new if you don't want to time circuit execution
     })
   end
 end

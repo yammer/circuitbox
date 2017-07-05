@@ -403,30 +403,30 @@ class CircuitBreakerTest < Minitest::Test
       assert notifier.notified?, 'no notification sent'
     end
 
-    def test_not_notify_circuit_execution_time_when_not_specified
+    def test_not_notify_circuit_execution_time_on_null_timer
       notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier, execution_timer: NullTimer.new)
       circuit.run { 'success' }
       refute notifier.metric_sent?, 'execution time metric sent'
     end
 
     def test_send_execution_time_metric
       notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier, notify_circuit_execution_time: true)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
       circuit.run { 'success' }
       assert notifier.metric_sent?, 'no execution time metric sent'
     end
 
     def test_no_execution_time_metric_on_error_execution
       notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier, notify_circuit_execution_time: true)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
       circuit.run { raise Timeout::Error }
       refute notifier.metric_sent?, 'execution time metric sent'
     end
 
     def test_no_execution_time_metric_when_circuit_open
       notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier, notify_circuit_execution_time: true)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier_class: notifier)
       circuit.send(:open!)
       circuit.run { raise Timeout::Error }
       refute notifier.metric_sent?, 'execution time metric sent'

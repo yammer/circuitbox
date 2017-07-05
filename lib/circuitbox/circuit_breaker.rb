@@ -1,7 +1,7 @@
 class Circuitbox
   class CircuitBreaker
     attr_accessor :service, :circuit_options, :exceptions,
-                  :logger, :circuit_store, :notifier, :time_class
+                  :logger, :circuit_store, :notifier, :time_class, :execution_timer
 
     DEFAULTS = {
       sleep_window:     300,
@@ -27,6 +27,7 @@ class Circuitbox
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
       @notifier        = options.fetch(:notifier_class) { Notifier }
+      @execution_timer = options.fetch(:execution_timer) { MonotonicTimer.new }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
@@ -52,16 +53,13 @@ class Circuitbox
         logger.debug "[CIRCUIT] closed: querying #{service}"
 
         begin
-          start_time = time_class.now.to_f
-          response = if exceptions.include? Timeout::Error
-            timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-            timeout (timeout_seconds) { yield }
-          else
-            yield
-          end
-          end_time = time_class.now.to_f
-          if circuit_options[:notify_circuit_execution_time]
-            log_circuit_execution_time(start_time - end_time)
+          response = execution_timer.time(notifier.new(service), :execution_time) do
+            if exceptions.include? Timeout::Error
+              timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
+              timeout (timeout_seconds) { yield }
+            else
+              yield
+            end
           end
           logger.debug "[CIRCUIT] closed: #{service} querie success"
           success!
@@ -188,11 +186,6 @@ class Circuitbox
       n.metric_gauge(:error_rate, error_rate)
       n.metric_gauge(:failure_count, failures)
       n.metric_gauge(:success_count, successes)
-    end
-
-    def log_circuit_execution_time(time)
-      n = notifier.new(service)
-      n.metric_gauge(:execution_time, time)
     end
 
     def sanitize_options
