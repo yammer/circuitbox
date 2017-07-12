@@ -1,5 +1,5 @@
-class SimpleTimer < NullTimer
-  def time(notifier, metric_name)
+class SimpleTimer
+  def self.time(notifier, metric_name)
     before = Time.now.to_f
     result = yield
     after = Time.now.to_f

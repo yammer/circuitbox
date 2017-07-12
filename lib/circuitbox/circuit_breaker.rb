@@ -27,7 +27,7 @@ class Circuitbox
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
       @notifier        = options.fetch(:notifier_class) { Notifier }
-      @execution_timer = options.fetch(:execution_timer) { SimpleTimer.new }
+      @execution_timer = options.fetch(:execution_timer) { SimpleTimer }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?

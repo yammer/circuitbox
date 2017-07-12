@@ -74,9 +74,9 @@ class ExampleServiceClient
       logger: Logger.new(STDOUT),
       
       # Customized Timer object
-      # Use NullTimer.new if you don't want to time circuit execution
-      # Use MonotonicTimer.new to avoid bad time metrics on system time resync
-      execution_timer: SimpleTimer.new 
+      # Use NullTimer if you don't want to time circuit execution
+      # Use MonotonicTimer to avoid bad time metrics on system time resync
+      execution_timer: SimpleTimer 
     })
   end
 end
