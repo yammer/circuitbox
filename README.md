@@ -72,6 +72,11 @@ class ExampleServiceClient
 
       # Logger to use
       logger: Logger.new(STDOUT),
+      
+      # Customized Timer object
+      # Use NullTimer if you don't want to time circuit execution
+      # Use MonotonicTimer to avoid bad time metrics on system time resync
+      execution_timer: SimpleTimer 
     })
   end
 end
@@ -139,6 +144,7 @@ end
 - `failure_count`
 - `success_count`
 - `error_rate`
+- `execution_time` # execution time will only be notified when circuit is closed and block is successfully executed without timeout or errors.
 
 **warnings:**
 in case of misconfiguration, circuitbox will fire a circuitbox_warning

@@ -1,7 +1,7 @@
 class Circuitbox
   class CircuitBreaker
     attr_accessor :service, :circuit_options, :exceptions,
-                  :logger, :circuit_store, :notifier
+                  :logger, :circuit_store, :notifier, :time_class, :execution_timer
 
     DEFAULTS = {
       sleep_window:     300,
@@ -27,6 +27,7 @@ class Circuitbox
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
       @notifier        = options.fetch(:notifier_class) { Notifier }
+      @execution_timer = options.fetch(:execution_timer) { SimpleTimer }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
@@ -52,13 +53,14 @@ class Circuitbox
         logger.debug "[CIRCUIT] closed: querying #{service}"
 
         begin
-          response = if exceptions.include? Timeout::Error
-            timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-            timeout (timeout_seconds) { yield }
-          else
-            yield
+          response = execution_timer.time(notifier.new(service), :execution_time) do
+            if exceptions.include? Timeout::Error
+              timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
+              timeout (timeout_seconds) { yield }
+            else
+              yield
+            end
           end
-
           logger.debug "[CIRCUIT] closed: #{service} querie success"
           success!
         rescue *exceptions => exception
@@ -223,7 +225,7 @@ class Circuitbox
 
     # return time representation in seconds
     def align_time_on_minute(time=nil)
-      time      ||= @time_class.now.to_i
+      time      ||= time_class.now.to_i
       time_window = option_value(:time_window)
       time - ( time % time_window ) # remove rest of integer division
     end
