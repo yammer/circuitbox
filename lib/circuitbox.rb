@@ -13,7 +13,7 @@ require 'circuitbox/errors/open_circuit_error'
 require 'circuitbox/errors/service_failure_error'
 
 class Circuitbox
-  attr_accessor :circuits, :circuit_store
+  attr_accessor :circuits, :circuit_store, :notifier
   cattr_accessor :configure
 
   def self.instance
@@ -39,6 +39,14 @@ class Circuitbox
 
   def self.circuit_store=(store)
     self.instance.circuit_store = store
+  end
+
+  def self.default_notifier
+    self.instance.notifier ||= Notifier.new
+  end
+
+  def self.default_notifier=(notifier)
+    self.instance.notifier = notifier
   end
 
   def self.[](service_identifier, options = {})

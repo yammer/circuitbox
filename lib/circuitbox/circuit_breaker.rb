@@ -23,12 +23,11 @@ class Circuitbox
     # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
     #
     def initialize(service, options = {})
-      @service = service
+      @service = service.to_s
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
       @execution_timer = options.fetch(:execution_timer) { SimpleTimer }
-      notifier_class = options.fetch(:notifier_class) { Notifier }
-      @notifier = notifier_class.new(service)
+      @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
@@ -54,7 +53,7 @@ class Circuitbox
         logger.debug "[CIRCUIT] closed: querying #{service}"
 
         begin
-          response = execution_timer.time(notifier.new(service), :execution_time) do
+          response = execution_timer.time(service, notifier, :execution_time) do
             if exceptions.include? Timeout::Error
               timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
               timeout (timeout_seconds) { yield }
@@ -178,21 +177,21 @@ class Circuitbox
 
     # Store success/failure/open/close data in memcache
     def log_event(event)
-      notifier.notify(event)
+      notifier.notify(service, event)
       log_event_to_process(event)
     end
 
     def log_metrics(error_rate, failures, successes)
-      notifier.metric_gauge(:error_rate, error_rate)
-      notifier.metric_gauge(:failure_count, failures)
-      notifier.metric_gauge(:success_count, successes)
+      notifier.metric_gauge(service, :error_rate, error_rate)
+      notifier.metric_gauge(service, :failure_count, failures)
+      notifier.metric_gauge(service, :success_count, successes)
     end
 
     def sanitize_options
       sleep_window = option_value(:sleep_window)
       time_window  = option_value(:time_window)
       if sleep_window < time_window
-        notifier.notify_warning("sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
+        notifier.notify_warning(service, "sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
         @circuit_options[:sleep_window] = option_value(:time_window)
       end
     end

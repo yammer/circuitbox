@@ -1,5 +1,5 @@
 class NullTimer
-  def self.time(notifier, metric_name)
+  def self.time(service, notifier, metric_name)
     yield
   end
 end
