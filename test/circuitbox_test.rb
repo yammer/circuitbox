@@ -12,6 +12,12 @@ class CircuitboxTest < Minitest::Test
     assert_equal store, Circuitbox[:yammer].circuit_store
   end
 
+  def test_default_notifier_is_configurable
+    notifier = gimme
+    Circuitbox.default_notifier = notifier
+    assert_equal notifier, Circuitbox.default_notifier
+  end
+
   def test_delegates_to_circuit
     Circuitbox.expects(:circuit).with(:yammer, {})
     Circuitbox[:yammer]
@@ -32,7 +38,7 @@ class CircuitboxTest < Minitest::Test
     assert_equal 1337, circuit_one.option_value(:sleep_window)
     assert_equal 1337, circuit_two.option_value(:sleep_window)
   end
-  
+
   def test_uses_parsed_uri_host_as_identifier_for_circuit
     service = Circuitbox.parameter_to_service_name("http://api.yammer.com/api/v1/messages")
     assert_equal "api.yammer.com", service
