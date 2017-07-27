@@ -1,5 +1,5 @@
 require 'test_helper'
-require 'circuitbox/timer/null_timer'
+require 'circuitbox/timer/null'
 
 class CircuitBreakerTest < Minitest::Test
   class ConnectionError < StandardError; end;
@@ -406,7 +406,8 @@ class CircuitBreakerTest < Minitest::Test
 
     def test_not_notify_circuit_execution_time_on_null_timer
       notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier: notifier, execution_timer: NullTimer)
+      timer = Circuitbox::Timer::Null.new
+      circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier: notifier, execution_timer: timer)
       circuit.run { 'success' }
       refute notifier.metric_sent?, 'execution time metric sent'
     end
