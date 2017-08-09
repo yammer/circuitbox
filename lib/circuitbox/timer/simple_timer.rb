@@ -3,7 +3,7 @@ class SimpleTimer
     before = Time.now.to_f
     result = yield
     after = Time.now.to_f
-    notifier.metric_gauge(service, metric_name, before - after)
+    notifier.metric_gauge(service, metric_name, after - before)
     result
   end
 end
