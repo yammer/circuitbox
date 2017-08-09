@@ -26,7 +26,7 @@ class Circuitbox
       @service = service.to_s
       @circuit_options = options
       @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
-      @execution_timer = options.fetch(:execution_timer) { SimpleTimer }
+      @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
