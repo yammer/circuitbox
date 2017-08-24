@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/yammer/circuitbox.svg?branch=master)](https://travis-ci.org/yammer/circuitbox) [![Gem Version](https://badge.fury.io/rb/circuitbox.svg)](https://badge.fury.io/rb/circuitbox)
 
-Circuitbox is a Ruby circuit breaker gem. It protects your application from failures of it's service dependencies. It wraps calls to external services and monitors for failures in one minute intervals. Once more than 10 requests have been made with a 50% failure rate, Circuitbox stops sending requests to that failing service for one minute. This helps your application gracefully degrade.
+Circuitbox is a Ruby circuit breaker gem. It protects your application from failures of its service dependencies. It wraps calls to external services and monitors for failures in one minute intervals. Once more than 10 requests have been made with a 50% failure rate, Circuitbox stops sending requests to that failing service for one minute. This helps your application gracefully degrade.
 Resources about the circuit breaker pattern:
 * [http://martinfowler.com/bliki/CircuitBreaker.html](http://martinfowler.com/bliki/CircuitBreaker.html)
 * [https://github.com/Netflix/Hystrix/wiki/How-it-Works#CircuitBreaker](https://github.com/Netflix/Hystrix/wiki/How-it-Works#CircuitBreaker)
@@ -16,7 +16,7 @@ end
 ```
 
 Circuitbox will return nil for failed requests and open circuits.
-If your HTTP client has it's own conditions for failure, you can pass an `exceptions` option.
+If your HTTP client has its own conditions for failure, you can pass an `exceptions` option.
 
 ```ruby
 class ExampleServiceClient
@@ -209,7 +209,7 @@ Circuitbox.circuit :identifier, cache: Moneta.new(:LMDB, dir: "./", db: "mydb")
 
 An persisted file backed store, which comes with the ruby
 [stdlib](http://ruby-doc.org/stdlib-2.3.0/libdoc/pstore/rdoc/PStore.html). It
-has no external dependecies and works on every ruby implementation. Due to it
+has no external dependencies and works on every ruby implementation. Due to it
 being file backed it is multi process safe, good for development using Unicorn.
 
 ```ruby
@@ -359,7 +359,7 @@ c.use Circuitbox::FaradayMiddleware, open_circuit: lambda { |response| response.
 
 ### v0.10
 - configuration option for faraday middleware for what should be considered to open the circuit [enrico-scalavio](https://github.com/enrico-scalavino)
-- fix for issue 16, support of in_parallel requests in faraday middlware which were opening the circuit.
+- fix for issue 16, support of in_parallel requests in faraday middleware which were opening the circuit.
 - deprecate the __run_option__ `:storage_key`
 
 ### v0.9
