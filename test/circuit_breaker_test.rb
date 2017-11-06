@@ -234,7 +234,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_skipped
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open? => true)
+    circuit.stubs(:should_open? => true)
     circuit.stubs(:log_event)
     circuit.expects(:log_event).with(:skipped)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
@@ -262,7 +262,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_puts_circuit_to_sleep_once_opened
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open? => true)
+    circuit.stubs(:should_open? => true)
 
     assert !circuit.send(:open_flag?)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
