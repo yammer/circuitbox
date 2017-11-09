@@ -115,6 +115,37 @@ class CircuitBreakerTest < Minitest::Test
     end
   end
 
+  class CacheExpiration < Minitest::Test
+    class ExpiringCache < Moneta::Adapters::Memory
+      def initialize(expiring_key, initial_value)
+        super()
+        @expiring_key = expiring_key
+        store(expiring_key, initial_value)
+      end
+
+      def load(key, options = {})
+        if key == @expiring_key
+          @expiring_key = nil # only override the first call
+          value = super
+          delete(key)
+          return value
+        end
+        super
+      end
+    end
+
+    def setup
+      Circuitbox::CircuitBreaker.reset
+      @circuit = Circuitbox::CircuitBreaker.new(:yammer, cache: ExpiringCache.new('circuits:yammer:asleep', true))
+    end
+
+    def test_key_expiration_closes_circuit
+      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run! {} }
+      assert_equal 'success', @circuit.run! { 'success' }
+    end
+  end
+
+
   class Exceptions < Minitest::Test
     class SentinalError < StandardError; end
 
