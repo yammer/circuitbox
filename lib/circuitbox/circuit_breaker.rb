@@ -43,9 +43,10 @@ class Circuitbox
     end
 
     def run!(run_options = {})
-      if open?
+      currently_open = open_flag?
+      if currently_open || should_open?
         logger.debug "[CIRCUIT] open: skipping #{service}"
-        open! unless open_flag?
+        open! unless currently_open
         skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
@@ -85,7 +86,7 @@ class Circuitbox
     def open?
       if open_flag?
         true
-      elsif passed_volume_threshold? && passed_rate_threshold?
+      elsif should_open?
         true
       else
         false
@@ -111,6 +112,10 @@ class Circuitbox
     end
 
   private
+    def should_open?
+      passed_volume_threshold? && passed_rate_threshold?
+    end
+
     def open!
       log_event :open
       logger.debug "[CIRCUIT] opening #{service} circuit"

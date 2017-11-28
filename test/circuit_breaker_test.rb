@@ -115,6 +115,37 @@ class CircuitBreakerTest < Minitest::Test
     end
   end
 
+  class CacheExpiration < Minitest::Test
+    class ExpiringCache < Moneta::Adapters::Memory
+      def initialize(expiring_key, initial_value)
+        super()
+        @expiring_key = expiring_key
+        store(expiring_key, initial_value)
+      end
+
+      def load(key, options = {})
+        if key == @expiring_key
+          @expiring_key = nil # only override the first call
+          value = super
+          delete(key)
+          return value
+        end
+        super
+      end
+    end
+
+    def setup
+      Circuitbox::CircuitBreaker.reset
+      @circuit = Circuitbox::CircuitBreaker.new(:yammer, cache: ExpiringCache.new('circuits:yammer:asleep', true))
+    end
+
+    def test_key_expiration_closes_circuit
+      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run! {} }
+      assert_equal 'success', @circuit.run! { 'success' }
+    end
+  end
+
+
   class Exceptions < Minitest::Test
     class SentinalError < StandardError; end
 
@@ -234,7 +265,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_skipped
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open? => true)
+    circuit.stubs(:should_open? => true)
     circuit.stubs(:log_event)
     circuit.expects(:log_event).with(:skipped)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
@@ -262,7 +293,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_puts_circuit_to_sleep_once_opened
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open? => true)
+    circuit.stubs(:should_open? => true)
 
     assert !circuit.send(:open_flag?)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
