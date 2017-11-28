@@ -93,10 +93,6 @@ class Circuitbox
       end
     end
 
-    def should_open?
-      passed_volume_threshold? && passed_rate_threshold?
-    end
-
     def error_rate(failures = failure_count, success = success_count)
       all_count = failures + success
       return 0.0 unless all_count > 0
@@ -116,6 +112,10 @@ class Circuitbox
     end
 
   private
+    def should_open?
+      passed_volume_threshold? && passed_rate_threshold?
+    end
+
     def open!
       log_event :open
       logger.debug "[CIRCUIT] opening #{service} circuit"
