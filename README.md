@@ -42,8 +42,26 @@ Using the `run!` method will throw an exception when the circuit is open or the 
   end
 ```
 
+## Global Configuration
+Circuitbox has defaults for circuit_store, notifier, timer, and logger.
+This can be configured through ```Circuitbox.configure```.
+The circuit cache used by ```Circuitbox.circuit``` will be cleared after running ```Circuitbox.configure```.
+This means when accessing the circuit through ```Circuitbox.circuit``` any custom configuration options should always be given.
 
-## Configuration
+Any circuit created manually through ```Circuitbox::CircuitBreaker``` before updating the configuration
+will need to be recreated to pick up the new defaults.
+
+```ruby
+  Circuitbox.configure do |config|
+    config.default_circuit_store = Moneta.new(:memory, expires: true),
+    config.default_notifier = Notifier.new,
+    config.default_timer = Timer::Simple.new,
+    config.default_logger = Rails.logger
+  end
+```
+
+
+## Per-Circuit Configuration
 
 ```ruby
 class ExampleServiceClient
@@ -62,6 +80,7 @@ class ExampleServiceClient
 
       # the store you want to use to save the circuit state so it can be
       # tracked, this needs to be Moneta compatible, and support increment
+      # this overrides what is set in the global configuration
       cache: Moneta.new(:Memory),
 
       # exceeding this rate will open the circuit
@@ -71,12 +90,19 @@ class ExampleServiceClient
       timeout_seconds:  1,
 
       # Logger to use
+      # This overrides what is set in the global configuration
       logger: Logger.new(STDOUT),
       
       # Customized Timer object
       # Use NullTimer if you don't want to time circuit execution
       # Use MonotonicTimer to avoid bad time metrics on system time resync
-      execution_timer: SimpleTimer 
+      # This overrides what is set in the global configuration
+      execution_timer: SimpleTimer,
+
+      # Customized notifier
+      # overrides the default
+      # this overrides what is set in the global configuration
+      notifier: Notifier.new
     })
   end
 end
