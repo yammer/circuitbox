@@ -6,7 +6,8 @@ class Circuitbox
   module Configuration
     attr_writer :default_circuit_store,
                 :default_notifier,
-                :default_timer
+                :default_timer,
+                :default_logger
 
     def configure
       yield self
@@ -24,6 +25,14 @@ class Circuitbox
 
     def default_timer
       @default_timer ||= Timer::Simple.new
+    end
+
+    def default_logger
+      @default_logger ||= if defined?(Rails)
+                            Rails.logger
+                          else
+                            Logger.new(STDOUT)
+                          end
     end
 
   private

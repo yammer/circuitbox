@@ -32,7 +32,7 @@ class Circuitbox
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
 
-      @logger     = options.fetch(:logger) { defined?(Rails) ? Rails.logger : Logger.new(STDOUT) }
+      @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class   = options.fetch(:time_class) { Time }
       sanitize_options
     end

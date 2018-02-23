@@ -11,7 +11,7 @@ class CircuitboxTest < Minitest::Test
     Circuitbox.configure { }
   end
 
-  def test_circuit_store_is_configurable
+  def test_default_circuit_store_is_configurable
     store = Moneta.new(:Memory, expires: true)
     Circuitbox.default_circuit_store = store
     assert_equal store, Circuitbox[:yammer].circuit_store
@@ -21,6 +21,12 @@ class CircuitboxTest < Minitest::Test
     notifier = gimme
     Circuitbox.default_notifier = notifier
     assert_equal notifier, Circuitbox.default_notifier
+  end
+
+  def test_default_logger_is_configurable
+    logger = Logger.new(STDOUT)
+    Circuitbox.default_logger = logger
+    assert_equal logger, Circuitbox.default_logger
   end
 
   def test_delegates_to_circuit
