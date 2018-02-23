@@ -3,12 +3,17 @@ require 'test_helper'
 class CircuitboxTest < Minitest::Test
 
   def setup
-    Circuitbox.reset
+    Circuitbox.send(:clear_cached_circuits!)
+  end
+
+  def test_configure_block_clears_cached_circuits
+    Circuitbox.expects(:clear_cached_circuits!)
+    Circuitbox.configure { }
   end
 
   def test_circuit_store_is_configurable
     store = Moneta.new(:Memory, expires: true)
-    Circuitbox.circuit_store = store
+    Circuitbox.default_circuit_store = store
     assert_equal store, Circuitbox[:yammer].circuit_store
   end
 

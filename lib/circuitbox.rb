@@ -1,7 +1,6 @@
 require 'uri'
 require 'logger'
 require 'timeout'
-require 'moneta'
 require 'active_support/all'
 
 require 'circuitbox/version'
@@ -11,71 +10,29 @@ require 'circuitbox/timer/simple'
 require 'circuitbox/errors/error'
 require 'circuitbox/errors/open_circuit_error'
 require 'circuitbox/errors/service_failure_error'
+require_relative 'circuitbox/configuration'
 
 class Circuitbox
-  attr_accessor :circuits, :circuit_store, :notifier, :timer
-  cattr_accessor :configure
+  class << self
+    include Configuration
 
-  def self.instance
-    @@instance ||= new
-  end
-
-  def initialize
-    self.instance_eval(&@@configure) if @@configure
-  end
-
-  def self.configure(&block)
-    @@configure = block if block
-  end
-
-  def self.reset
-    @@instance = nil
-    @@configure = nil
-  end
-
-  def self.circuit_store
-    self.instance.circuit_store ||= Moneta.new(:Memory, expires: true)
-  end
-
-  def self.circuit_store=(store)
-    self.instance.circuit_store = store
-  end
-
-  def self.default_notifier
-    self.instance.notifier ||= Notifier.new
-  end
-
-  def self.default_notifier=(notifier)
-    self.instance.notifier = notifier
-  end
-
-  def self.default_timer
-    self.instance.timer ||= Timer::Simple.new
-  end
-
-  def self.default_timer=(timer)
-    self.instance.timer = timer
-  end
-
-  def self.[](service_identifier, options = {})
-    self.circuit(service_identifier, options)
-  end
-
-  def self.circuit(service_identifier, options = {})
-    service_name = self.parameter_to_service_name(service_identifier)
-
-    self.instance.circuits ||= Hash.new
-    self.instance.circuits[service_name] ||= CircuitBreaker.new(service_name, options)
-
-    if block_given?
-      self.instance.circuits[service_name].run { yield }
-    else
-      self.instance.circuits[service_name]
+    def [](service_identifier, options = {})
+      circuit(service_identifier, options)
     end
-  end
 
-  def self.parameter_to_service_name(param)
-    uri = URI(param.to_s)
-    uri.host.present? ? uri.host : param.to_s
+    def circuit(service_identifier, options = {})
+      service_name = parameter_to_service_name(service_identifier)
+
+      circuit = (cached_circuits[service_name] ||= CircuitBreaker.new(service_name, options))
+
+      return circuit unless block_given?
+
+      circuit.run { yield }
+    end
+
+    def parameter_to_service_name(param)
+      uri = URI(param.to_s)
+      uri.host.present? ? uri.host : param.to_s
+    end
   end
 end

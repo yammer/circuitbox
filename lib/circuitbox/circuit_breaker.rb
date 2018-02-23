@@ -25,7 +25,7 @@ class Circuitbox
     def initialize(service, options = {})
       @service = service.to_s
       @circuit_options = options
-      @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
+      @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
       @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
@@ -242,10 +242,5 @@ class Circuitbox
     def timeout(timeout_seconds, &block)
       Timeout::timeout(timeout_seconds) { block.call }
     end
-
-    def self.reset
-      Circuitbox.reset
-    end
-
   end
 end
