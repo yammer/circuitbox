@@ -92,7 +92,7 @@ class ExampleServiceClient
       # Logger to use
       # This overrides what is set in the global configuration
       logger: Logger.new(STDOUT),
-      
+
       # Customized Timer object
       # Use NullTimer if you don't want to time circuit execution
       # Use MonotonicTimer to avoid bad time metrics on system time resync
