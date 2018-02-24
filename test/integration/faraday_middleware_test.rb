@@ -20,6 +20,7 @@ class Circuitbox
       if !@@only_once
         FakeServer.create(4711, ['200', {'Content-Type' => 'text/plain'}, ["Success!"]])
         FakeServer.create(4712, ['500', {'Content-Type' => 'text/plain'}, ["Failure!"]])
+        @@only_once = true
       end
     end
 
