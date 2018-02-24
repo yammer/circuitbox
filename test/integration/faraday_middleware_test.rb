@@ -24,7 +24,7 @@ class Circuitbox
     end
 
     def teardown
-      Circuitbox.reset
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
     end
 
     def test_circuit_does_not_open_for_below_threshhold_failed_requests
