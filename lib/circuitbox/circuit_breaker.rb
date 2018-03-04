@@ -96,7 +96,7 @@ class Circuitbox
     def error_rate(failures = failure_count, success = success_count)
       all_count = failures + success
       return 0.0 unless all_count > 0
-      failure_count.to_f / all_count.to_f * 100
+      (failures / all_count.to_f) * 100
     end
 
     def failure_count
