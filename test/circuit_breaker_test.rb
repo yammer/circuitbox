@@ -308,23 +308,6 @@ class CircuitBreakerTest < Minitest::Test
     assert circuit.open?
   end
 
-  def test_open_checks_if_volume_threshold_has_passed
-    circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open_flag? => false)
-
-    circuit.expects(:passed_volume_threshold?).once
-    circuit.open?
-  end
-
-  def test_open_checks_error_rate_threshold
-    circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open_flag? => false,
-                  :passed_volume_threshold? => true)
-
-    circuit.expects(:passed_rate_threshold?).once
-    circuit.open?
-  end
-
   def test_open_is_false_if_awake_and_under_rate_threshold
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
     circuit.stubs(:open_flag? => false,
@@ -332,15 +315,6 @@ class CircuitBreakerTest < Minitest::Test
                   :passed_rate_threshold => false)
 
     assert !circuit.open?
-  end
-
-  def test_error_rate_threshold_calculation
-    circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:failure_count => 3, :success_count => 2)
-    assert circuit.send(:passed_rate_threshold?)
-
-    circuit.stubs(:failure_count => 2, :success_count => 3)
-    assert !circuit.send(:passed_rate_threshold?)
   end
 
   def test_logs_and_retrieves_success_events
