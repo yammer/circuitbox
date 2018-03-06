@@ -221,7 +221,6 @@ class Circuitbox
       storage_key(:stats, align_time_on_minute, event, options)
     end
 
-
     # return time representation in seconds
     def align_time_on_minute(time=nil)
       time      ||= time_class.now.to_i
