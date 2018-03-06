@@ -217,11 +217,6 @@ class Circuitbox
       end
     end
 
-    # For returning stale responses when the circuit is open
-    def response_key(args)
-      Digest::SHA1.hexdigest(storage_key(:cache, args.inspect.to_s))
-    end
-
     def stat_storage_key(event, options = {})
       storage_key(:stats, align_time_on_minute, event, options)
     end
