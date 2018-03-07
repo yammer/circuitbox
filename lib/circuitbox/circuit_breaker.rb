@@ -62,7 +62,7 @@ class Circuitbox
               yield
             end
           end
-          logger.debug "[CIRCUIT] closed: #{service} querie success"
+          logger.debug "[CIRCUIT] closed: #{service} query success"
           success!
         rescue *exceptions => exception
           logger.debug "[CIRCUIT] closed: detected #{service} failure"
