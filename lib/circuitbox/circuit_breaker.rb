@@ -25,14 +25,14 @@ class Circuitbox
     def initialize(service, options = {})
       @service = service.to_s
       @circuit_options = options
-      @circuit_store   = options.fetch(:cache) { Circuitbox.circuit_store }
+      @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
       @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
       @exceptions = [Timeout::Error] if @exceptions.blank?
 
-      @logger     = options.fetch(:logger) { defined?(Rails) ? Rails.logger : Logger.new(STDOUT) }
+      @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class   = options.fetch(:time_class) { Time }
       sanitize_options
     end
@@ -62,7 +62,7 @@ class Circuitbox
               yield
             end
           end
-          logger.debug "[CIRCUIT] closed: #{service} querie success"
+          logger.debug "[CIRCUIT] closed: #{service} query success"
           success!
         rescue *exceptions => exception
           logger.debug "[CIRCUIT] closed: detected #{service} failure"
@@ -236,10 +236,5 @@ class Circuitbox
     def timeout(timeout_seconds, &block)
       Timeout::timeout(timeout_seconds) { block.call }
     end
-
-    def self.reset
-      Circuitbox.reset
-    end
-
   end
 end

@@ -5,7 +5,7 @@ class CircuitBreakerTest < Minitest::Test
   class ConnectionError < StandardError; end;
 
   def setup
-    Circuitbox::CircuitBreaker.reset
+    Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
   end
 
   def test_sleep_window_is_forced_to_equal_time_window
@@ -21,7 +21,7 @@ class CircuitBreakerTest < Minitest::Test
 
   class Ratio < Minitest::Test
     def setup
-      Circuitbox::CircuitBreaker.reset
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 sleep_window: 300,
                                                 volume_threshold: 5,
@@ -135,7 +135,6 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def setup
-      Circuitbox::CircuitBreaker.reset
       @circuit = Circuitbox::CircuitBreaker.new(:yammer, cache: ExpiringCache.new('circuits:yammer:asleep', true))
     end
 
@@ -150,7 +149,7 @@ class CircuitBreakerTest < Minitest::Test
     class SentinalError < StandardError; end
 
     def setup
-      Circuitbox::CircuitBreaker.reset
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
       @circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [SentinalError])
     end
 
@@ -172,7 +171,7 @@ class CircuitBreakerTest < Minitest::Test
 
   class CloseAfterSleep < Minitest::Test
     def setup
-      Circuitbox::CircuitBreaker.reset
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 sleep_window: 1,
                                                 time_window: 2,
@@ -200,7 +199,7 @@ class CircuitBreakerTest < Minitest::Test
 
   class HalfOpenState < Minitest::Test
     def setup
-      Circuitbox::CircuitBreaker.reset
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
       @circuit = Circuitbox::CircuitBreaker.new(:yammer)
     end
 
@@ -377,7 +376,7 @@ class CircuitBreakerTest < Minitest::Test
 
   class Notifications < Minitest::Test
     def setup
-      Circuitbox::CircuitBreaker.reset
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
     end
 
     def test_notification_on_open
