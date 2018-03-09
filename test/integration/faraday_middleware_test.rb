@@ -20,11 +20,12 @@ class Circuitbox
       if !@@only_once
         FakeServer.create(4711, ['200', {'Content-Type' => 'text/plain'}, ["Success!"]])
         FakeServer.create(4712, ['500', {'Content-Type' => 'text/plain'}, ["Failure!"]])
+        @@only_once = true
       end
     end
 
     def teardown
-      Circuitbox.reset
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
     end
 
     def test_circuit_does_not_open_for_below_threshhold_failed_requests
