@@ -135,7 +135,7 @@ class Circuitbox
     end
 
     def was_open?
-      circuit_store[storage_key(:was_open)].present?
+      circuit_store.key?(storage_key(:was_open))
     end
     ### END
 
@@ -144,11 +144,11 @@ class Circuitbox
     end
 
     def open_flag?
-      circuit_store[storage_key(:asleep)].present?
+      circuit_store.key?(storage_key(:asleep))
     end
 
     def half_open?
-      circuit_store[storage_key(:half_open)].present?
+      circuit_store.key?(storage_key(:half_open))
     end
 
     def passed_volume_threshold?
