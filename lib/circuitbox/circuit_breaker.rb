@@ -117,7 +117,7 @@ class Circuitbox
     end
 
     def open!
-      log_event :open
+      notify_event :open
       logger.debug "[CIRCUIT] opening #{service} circuit"
       circuit_store.store(storage_key(:asleep), true, expires: option_value(:sleep_window))
       half_open!
@@ -126,7 +126,7 @@ class Circuitbox
 
     ### BEGIN - all this is just here to produce a close notification
     def close!
-      log_event :close
+      notify_event :close
       circuit_store.delete(storage_key(:was_open))
     end
 
@@ -168,22 +168,27 @@ class Circuitbox
     end
 
     def success!
-      log_event :success
+      notify_and_increment_event :success
       circuit_store.delete(storage_key(:half_open))
     end
 
     def failure!
-      log_event :failure
+      notify_and_increment_event :failure
     end
 
     def skipped!
-      log_event :skipped
+      notify_event :skipped
     end
 
-    # Store success/failure/open/close data in memcache
-    def log_event(event)
+    # Send event notification to notifier
+    def notify_event(event)
       notifier.notify(service, event)
-      log_event_to_process(event)
+    end
+
+    # Send notification and increment stat store
+    def notify_and_increment_event(event)
+      notify_event(event)
+      circuit_store.increment(stat_storage_key(event))
     end
 
     def log_metrics(error_rate, failures, successes)
@@ -204,17 +209,6 @@ class Circuitbox
     # When there is a successful response within a count interval, clear the failures.
     def clear_failures!
       circuit_store.store(stat_storage_key(:failure), 0, raw: true)
-    end
-
-    # Logs to process memory.
-    def log_event_to_process(event)
-      key = stat_storage_key(event)
-      if circuit_store.load(key, raw: true)
-        circuit_store.increment(key)
-      else
-        # yes we want a string here, as the underlying stores impement this as a native type.
-        circuit_store.store(key, "1", raw: true)
-      end
     end
 
     def stat_storage_key(event)
