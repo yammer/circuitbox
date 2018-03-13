@@ -258,21 +258,21 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_failure
     circuit = Circuitbox::CircuitBreaker.new(:yammer, :exceptions => [Timeout::Error])
-    circuit.expects(:log_event).with(:failure)
+    circuit.expects(:notify_and_increment_event).with(:failure)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
   end
 
   def test_records_response_skipped
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
     circuit.stubs(:should_open? => true)
-    circuit.stubs(:log_event)
-    circuit.expects(:log_event).with(:skipped)
+    circuit.stubs(:notify_event)
+    circuit.expects(:notify_event).with(:skipped)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
   end
 
   def test_records_response_success
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.expects(:log_event).with(:success)
+    circuit.expects(:notify_and_increment_event).with(:success)
     emulate_circuit_run(circuit, :success, "success")
   end
 
@@ -345,33 +345,33 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_logs_and_retrieves_success_events
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    5.times { circuit.send(:log_event, :success) }
-    assert_equal 5, circuit.send(:success_count)
+    5.times { circuit.send(:notify_and_increment_event, :success) }
+    assert_equal 5, circuit.success_count
   end
 
   def test_logs_and_retrieves_failure_events
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    5.times { circuit.send(:log_event, :failure) }
-    assert_equal 5, circuit.send(:failure_count)
+    5.times { circuit.send(:notify_and_increment_event, :failure) }
+    assert_equal 5, circuit.failure_count
   end
 
   def test_logs_events_by_minute
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
 
     Timecop.travel(Time.now.change(sec: 5))
-    4.times { circuit.send(:log_event, :success) }
-    assert_equal 4, circuit.send(:success_count)
+    4.times { circuit.send(:notify_and_increment_event, :success) }
+    assert_equal 4, circuit.success_count
 
     Timecop.travel(1.minute.from_now)
-    7.times { circuit.send(:log_event, :success) }
-    assert_equal 7, circuit.send(:success_count)
+    7.times { circuit.send(:notify_and_increment_event, :success) }
+    assert_equal 7, circuit.success_count
 
     Timecop.travel(30.seconds.from_now)
-    circuit.send(:log_event, :success)
-    assert_equal 8, circuit.send(:success_count)
+    circuit.send(:notify_and_increment_event, :success)
+    assert_equal 8, circuit.success_count
 
     Timecop.travel(50.seconds.from_now)
-    assert_equal 0, circuit.send(:success_count)
+    assert_equal 0, circuit.success_count
   end
 
   class Notifications < Minitest::Test
