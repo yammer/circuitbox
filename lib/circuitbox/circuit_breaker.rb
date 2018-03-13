@@ -206,11 +206,6 @@ class Circuitbox
       end
     end
 
-    # When there is a successful response within a count interval, clear the failures.
-    def clear_failures!
-      circuit_store.store(stat_storage_key(:failure), 0, raw: true)
-    end
-
     def stat_storage_key(event)
       "#{storage_key('stats'.freeze)}:#{align_time_to_window}:#{event}"
     end
