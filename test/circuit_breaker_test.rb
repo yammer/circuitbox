@@ -123,7 +123,7 @@ class CircuitBreakerTest < Minitest::Test
         store(expiring_key, initial_value)
       end
 
-      def load(key, options = {})
+      def key?(key, options = {})
         if key == @expiring_key
           @expiring_key = nil # only override the first call
           value = super
