@@ -217,20 +217,19 @@ class Circuitbox
       end
     end
 
-    def stat_storage_key(event, options = {})
-      storage_key(:stats, align_time_on_minute, event, options)
+    def stat_storage_key(event)
+      "#{storage_key('stats'.freeze)}:#{align_time_to_window}:#{event}"
     end
 
     # return time representation in seconds
-    def align_time_on_minute(time=nil)
-      time      ||= time_class.now.to_i
+    def align_time_to_window
+      time = time_class.now.to_i
       time_window = option_value(:time_window)
-      time - ( time % time_window ) # remove rest of integer division
+      time - (time % time_window) # remove rest of integer division
     end
 
-    def storage_key(*args)
-      options = args.extract_options!
-      "circuits:#{service}:#{args.join(':')}"
+    def storage_key(key)
+      "circuits:#{service}:#{key}"
     end
 
     def timeout(timeout_seconds, &block)
