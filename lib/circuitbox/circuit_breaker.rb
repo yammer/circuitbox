@@ -120,8 +120,15 @@ class Circuitbox
 
       log_metrics(rate, failures, successes)
 
-      failures + successes > option_value(:volume_threshold) &&
-        rate >= option_value(:error_threshold)
+      passed_volume_threshold?(failures, successes) && passed_rate_threshold?(rate)
+    end
+
+    def passed_volume_threshold?(failures, successes)
+      failures + successes > option_value(:volume_threshold)
+    end
+
+    def passed_rate_threshold?(rate)
+      rate >= option_value(:error_threshold)
     end
 
     def open!
