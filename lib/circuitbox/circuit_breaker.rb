@@ -1,7 +1,7 @@
 class Circuitbox
   class CircuitBreaker
-    attr_accessor :service, :circuit_options, :exceptions,
-                  :logger, :circuit_store, :notifier, :time_class, :execution_timer
+    attr_reader :service, :circuit_options, :exceptions,
+                :logger, :circuit_store, :notifier, :time_class, :execution_timer
 
     DEFAULTS = {
       sleep_window:     300,
