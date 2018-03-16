@@ -8,8 +8,8 @@ class Circuitbox
       volume_threshold: 5,
       error_threshold:  50,
       timeout_seconds:  1,
-      time_window:      60,
-    }
+      time_window:      60
+    }.freeze
 
     #
     # Configuration options
@@ -24,7 +24,7 @@ class Circuitbox
     #
     def initialize(service, options = {})
       @service = service.to_s
-      @circuit_options = options
+      @circuit_options = DEFAULTS.merge(options)
       @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
       @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
@@ -33,12 +33,12 @@ class Circuitbox
       @exceptions = [Timeout::Error] if @exceptions.blank?
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
-      @time_class   = options.fetch(:time_class) { Time }
+      @time_class = options.fetch(:time_class) { Time }
       sanitize_options
     end
 
     def option_value(name)
-      value = circuit_options.fetch(name) { DEFAULTS.fetch(name) }
+      value = circuit_options[name]
       value.is_a?(Proc) ? value.call : value
     end
 
