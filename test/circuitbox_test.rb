@@ -1,20 +1,26 @@
 require 'test_helper'
 
 class CircuitboxTest < Minitest::Test
-
   def setup
     Circuitbox.send(:clear_cached_circuits!)
   end
 
+  def teardown
+    Circuitbox.default_notifier = nil
+    Circuitbox.default_logger = nil
+    Circuitbox.default_circuit_store = nil
+    Circuitbox.default_timer = nil
+  end
+
   def test_configure_block_clears_cached_circuits
     Circuitbox.expects(:clear_cached_circuits!)
-    Circuitbox.configure { }
+    Circuitbox.configure {}
   end
 
   def test_default_circuit_store_is_configurable
-    store = Moneta.new(:Memory, expires: true)
+    store = gimme
     Circuitbox.default_circuit_store = store
-    assert_equal store, Circuitbox[:yammer].circuit_store
+    assert_equal store, Circuitbox.default_circuit_store
   end
 
   def test_default_notifier_is_configurable
@@ -24,9 +30,15 @@ class CircuitboxTest < Minitest::Test
   end
 
   def test_default_logger_is_configurable
-    logger = Logger.new(STDOUT)
+    logger = gimme
     Circuitbox.default_logger = logger
     assert_equal logger, Circuitbox.default_logger
+  end
+
+  def test_default_timer_is_configurable
+    timer = gimme
+    Circuitbox.default_timer = timer
+    assert_equal timer, Circuitbox.default_timer
   end
 
   def test_delegates_to_circuit
@@ -43,8 +55,8 @@ class CircuitboxTest < Minitest::Test
   end
 
   def test_sets_the_circuit_options_the_first_time_only
-    circuit_one = Circuitbox.circuit(:yammer, :sleep_window => 1337)
-    circuit_two = Circuitbox.circuit(:yammer, :sleep_window => 2000)
+    circuit_one = Circuitbox.circuit(:yammer, sleep_window: 1337)
+    circuit_two = Circuitbox.circuit(:yammer, sleep_window: 2000)
 
     assert_equal 1337, circuit_one.option_value(:sleep_window)
     assert_equal 1337, circuit_two.option_value(:sleep_window)
