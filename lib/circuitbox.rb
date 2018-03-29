@@ -16,23 +16,16 @@ class Circuitbox
   class << self
     include Configuration
 
-    def [](service_identifier, options = {})
-      circuit(service_identifier, options)
+    def [](service_name, options = {})
+      circuit(service_name, options)
     end
 
-    def circuit(service_identifier, options = {})
-      service_name = parameter_to_service_name(service_identifier)
-
+    def circuit(service_name, options = {})
       circuit = (cached_circuits[service_name] ||= CircuitBreaker.new(service_name, options))
 
       return circuit unless block_given?
 
       circuit.run { yield }
-    end
-
-    def parameter_to_service_name(param)
-      uri = URI(param.to_s)
-      uri.host.present? ? uri.host : param.to_s
     end
   end
 end

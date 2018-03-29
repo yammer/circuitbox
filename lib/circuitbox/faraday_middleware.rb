@@ -53,7 +53,10 @@ class Circuitbox
     end
 
     def identifier
-      @identifier ||= opts.fetch(:identifier, ->(env) { env[:url] })
+      # It's possible for the URL object to not have a host at the time the middleware
+      # is run. To not break circuitbox by creating a circuit with a nil service name
+      # we can get the string representation of the URL object and use that as the service name.
+      @identifier ||= opts.fetch(:identifier, ->(env) { env[:url].host || env[:url].to_s })
     end
 
     private
@@ -109,6 +112,5 @@ class Circuitbox
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
       circuitbox.circuit id, circuit_breaker_options
     end
-
   end
 end
