@@ -1,15 +1,15 @@
 class Circuitbox
   class CircuitBreaker
-    attr_accessor :service, :circuit_options, :exceptions,
-                  :logger, :circuit_store, :notifier, :time_class, :execution_timer
+    attr_reader :service, :circuit_options, :exceptions,
+                :logger, :circuit_store, :notifier, :time_class, :execution_timer
 
     DEFAULTS = {
       sleep_window:     300,
       volume_threshold: 5,
       error_threshold:  50,
       timeout_seconds:  1,
-      time_window:      60,
-    }
+      time_window:      60
+    }.freeze
 
     #
     # Configuration options
@@ -24,7 +24,7 @@ class Circuitbox
     #
     def initialize(service, options = {})
       @service = service.to_s
-      @circuit_options = options
+      @circuit_options = DEFAULTS.merge(options)
       @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
       @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
@@ -33,12 +33,12 @@ class Circuitbox
       @exceptions = [Timeout::Error] if @exceptions.blank?
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
-      @time_class   = options.fetch(:time_class) { Time }
+      @time_class = options.fetch(:time_class) { Time }
       sanitize_options
     end
 
     def option_value(name)
-      value = circuit_options.fetch(name) { DEFAULTS.fetch(name) }
+      value = circuit_options[name]
       value.is_a?(Proc) ? value.call : value
     end
 
@@ -57,7 +57,7 @@ class Circuitbox
           response = execution_timer.time(service, notifier, :execution_time) do
             if exceptions.include? Timeout::Error
               timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-              timeout (timeout_seconds) { yield }
+              timeout(timeout_seconds) { yield }
             else
               yield
             end
@@ -220,8 +220,8 @@ class Circuitbox
       "circuits:#{service}:#{key}"
     end
 
-    def timeout(timeout_seconds, &block)
-      Timeout::timeout(timeout_seconds) { block.call }
+    def timeout(timeout_seconds)
+      Timeout::timeout(timeout_seconds) { yield }
     end
   end
 end
