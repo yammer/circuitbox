@@ -55,7 +55,7 @@ class Circuitbox
     end
 
     def identifier
-      @identifier ||= opts.fetch(:identifier, ->(env) { env[:path] })
+      @identifier ||= opts.fetch(:identifier, ->(env) { env[:host] })
     end
 
     def exceptions

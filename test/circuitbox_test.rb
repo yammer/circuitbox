@@ -49,14 +49,4 @@ class CircuitboxTest < Minitest::Test
     assert_equal 1337, circuit_one.option_value(:sleep_window)
     assert_equal 1337, circuit_two.option_value(:sleep_window)
   end
-
-  def test_uses_parsed_uri_host_as_identifier_for_circuit
-    service = Circuitbox.parameter_to_service_name("http://api.yammer.com/api/v1/messages")
-    assert_equal "api.yammer.com", service
-  end
-
-  def test_uses_identifier_directly_for_circuit_if_it_is_not_an_uri
-    service = Circuitbox.parameter_to_service_name(:yammer)
-    assert_equal "yammer", service
-  end
 end

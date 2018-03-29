@@ -112,8 +112,23 @@ class Circuitbox
     end
 
   private
+
     def should_open?
-      passed_volume_threshold? && passed_rate_threshold?
+      failures = failure_count
+      successes = success_count
+      rate = error_rate(failures, successes)
+
+      log_metrics(rate, failures, successes)
+
+      passed_volume_threshold?(failures, successes) && passed_rate_threshold?(rate)
+    end
+
+    def passed_volume_threshold?(failures, successes)
+      failures + successes > option_value(:volume_threshold)
+    end
+
+    def passed_rate_threshold?(rate)
+      rate >= option_value(:error_threshold)
     end
 
     def open!
@@ -149,22 +164,6 @@ class Circuitbox
 
     def half_open?
       circuit_store.key?(storage_key(:half_open))
-    end
-
-    def passed_volume_threshold?
-      success_count + failure_count > option_value(:volume_threshold)
-    end
-
-    def passed_rate_threshold?
-      read_and_log_error_rate >= option_value(:error_threshold)
-    end
-
-    def read_and_log_error_rate
-      failures = failure_count
-      success  = success_count
-      rate = error_rate(failures, success)
-      log_metrics(rate, failures, success)
-      rate
     end
 
     def success!

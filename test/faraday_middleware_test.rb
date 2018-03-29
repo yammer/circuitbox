@@ -13,8 +13,8 @@ class Circuitbox
     end
 
     def test_default_identifier
-      env = { url: "sential" }
-      assert_equal "sential", FaradayMiddleware.new(app).identifier.call(env)
+      env = { url: URI('http://yammer.com/') }
+      assert_equal 'yammer.com', FaradayMiddleware.new(app).identifier.call(env)
     end
 
     def test_overwrite_identifier
@@ -24,8 +24,8 @@ class Circuitbox
 
     def test_overwrite_default_value_generator_lambda
       stub_circuitbox
-      env = { url: "url" }
-      give(circuitbox).circuit("url", anything) { circuit }
+      env = { url: URI('http://yammer.com/') }
+      give(circuitbox).circuit('yammer.com', anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
       default_value_generator = lambda { |response| :sential }
       middleware = FaradayMiddleware.new(app,
@@ -36,8 +36,8 @@ class Circuitbox
 
     def test_default_value_generator_lambda_passed_error
       stub_circuitbox
-      env = { url: "url" }
-      give(circuitbox).circuit("url", anything) { circuit }
+      env = { url: URI('http://yammer.com/') }
+      give(circuitbox).circuit('yammer.com', anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error.new("error text") }
       default_value_generator = lambda { |_,error| error.message }
       middleware = FaradayMiddleware.new(app,
@@ -48,8 +48,8 @@ class Circuitbox
 
     def test_overwrite_default_value_generator_static_value
       stub_circuitbox
-      env = { url: "url" }
-      give(circuitbox).circuit("url", anything) { circuit }
+      env = { url: URI('http://yammer.com/') }
+      give(circuitbox).circuit('yammer.com', anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox, default_value: :sential)
       assert_equal :sential, middleware.call(env)
@@ -62,7 +62,7 @@ class Circuitbox
     end
 
     def test_overridde_success_response
-      env = { url: "url" }
+      env = { url: URI('http://yammer.com/') }
       app = gimme
       give(app).call(anything) { Faraday::Response.new(status: 500) }
       error_response = lambda { |response|  false }
@@ -74,7 +74,7 @@ class Circuitbox
     end
 
     def test_default_success_response
-      env = { url: "url" }
+      env = { url: URI('http://yammer.com/') }
       app = gimme
       give(app).call(anything) { Faraday::Response.new(status: 500) }
       response = FaradayMiddleware.new(app).call(env)
@@ -85,7 +85,7 @@ class Circuitbox
     end
 
     def test_default_open_circuit_does_not_trip_on_400
-      env = { url: "url" }
+      env = { url: URI('http://yammer.com/') }
       app = gimme
       give(app).call(anything) { Faraday::Response.new(status: 400) }
       response = FaradayMiddleware.new(app).call(env)
@@ -96,7 +96,7 @@ class Circuitbox
     end
 
     def test_default_open_circuit_does_trip_on_nil
-      env = { url: "url" }
+      env = { url: URI('http://yammer.com/') }
       app = gimme
       give(app).call(anything) { Faraday::Response.new(status: nil) }
       response = FaradayMiddleware.new(app).call(env)
@@ -114,8 +114,8 @@ class Circuitbox
     def test_pass_circuit_breaker_run_options
       stub_circuitbox
       give(circuit).run!(:sential)
-      give(circuitbox).circuit("url", anything) { circuit }
-      env = { url: "url", circuit_breaker_run_options: :sential }
+      give(circuitbox).circuit('yammer.com', anything) { circuit }
+      env = { url: URI('http://yammer.com/'), circuit_breaker_run_options: :sential }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       middleware.call(env)
       verify(circuit, 1.times).run!(:sential)
@@ -123,23 +123,23 @@ class Circuitbox
 
     def test_pass_circuit_breaker_options
       stub_circuitbox
-      env = { url: "url" }
+      env = { url: URI('http://yammer.com/') }
       expected_circuit_breaker_options = {
         sential: :sential,
         exceptions: FaradayMiddleware::DEFAULT_EXCEPTIONS
       }
-      give(circuitbox).circuit("url", expected_circuit_breaker_options) { circuit }
+      give(circuitbox).circuit('yammer.com', expected_circuit_breaker_options) { circuit }
       options = { circuitbox: circuitbox, circuit_breaker_options: { sential: :sential } }
       middleware = FaradayMiddleware.new(app, options)
       middleware.call(env)
 
-      verify(circuitbox, 1.times).circuit("url", expected_circuit_breaker_options)
+      verify(circuitbox, 1.times).circuit('yammer.com', expected_circuit_breaker_options)
     end
 
     def test_overwrite_circuitbreaker_default_value
       stub_circuitbox
-      env = { url: "url", circuit_breaker_default_value: :sential }
-      give(circuitbox).circuit("url", anything) { circuit }
+      env = { url: URI('http://yammer.com/'), circuit_breaker_default_value: :sential }
+      give(circuitbox).circuit('yammer.com', anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.call(env), :sential
@@ -147,18 +147,18 @@ class Circuitbox
 
     def test_return_value_closed_circuit
       stub_circuitbox
-      env = { url: "url" }
+      env = { url: URI('http://yammer.com/') }
       give(circuit).run!(anything) { :sential }
-      give(circuitbox).circuit("url", anything) { circuit }
+      give(circuitbox).circuit('yammer.com', anything) { circuit }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.call(env), :sential
     end
 
     def test_return_null_response_for_open_circuit
       stub_circuitbox
-      env = { url: "url" }
+      env = { url: URI('http://yammer.com/') }
       give(circuit).run!(anything) { raise Circuitbox::Error }
-      give(circuitbox).circuit("url", anything) { circuit }
+      give(circuitbox).circuit('yammer.com', anything) { circuit }
       response = FaradayMiddleware.new(app, circuitbox: circuitbox).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 503
