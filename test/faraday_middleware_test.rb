@@ -11,7 +11,7 @@ class Circuitbox
 
     def setup
       @app = gimme
-      #Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
     end
 
     def test_default_identifier
