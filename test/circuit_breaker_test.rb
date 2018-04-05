@@ -2,7 +2,7 @@ require 'test_helper'
 require 'circuitbox/timer/null'
 
 class CircuitBreakerTest < Minitest::Test
-  class ConnectionError < StandardError; end;
+  class ConnectionError < StandardError; end
 
   def setup
     Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
@@ -61,7 +61,7 @@ class CircuitBreakerTest < Minitest::Test
       end
 
       # one success
-      @circuit.run { 'success'}
+      @circuit.run { 'success' }
       assert_equal 5, @circuit.failure_count, 'the total count of failures is not 5'
 
       5.times do
@@ -348,21 +348,29 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_logs_events_by_minute
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
+    current_time = Time.new(2015, 7, 29)
 
-    Timecop.travel(Time.now.change(sec: 5))
-    4.times { circuit.send(:notify_and_increment_event, :success) }
-    assert_equal 4, circuit.success_count
+    Timecop.freeze(current_time) do
+      4.times { circuit.send(:notify_and_increment_event, :success) }
+      assert_equal 4, circuit.success_count
+    end
 
-    Timecop.travel(1.minute.from_now)
-    7.times { circuit.send(:notify_and_increment_event, :success) }
-    assert_equal 7, circuit.success_count
+    # one minute after current_time
+    Timecop.freeze(current_time + 60) do
+      7.times { circuit.send(:notify_and_increment_event, :success) }
+      assert_equal 7, circuit.success_count
+    end
 
-    Timecop.travel(30.seconds.from_now)
-    circuit.send(:notify_and_increment_event, :success)
-    assert_equal 8, circuit.success_count
+    # one minute 30 seconds after current_time
+    Timecop.freeze(current_time + 90) do
+      circuit.send(:notify_and_increment_event, :success)
+      assert_equal 8, circuit.success_count
+    end
 
-    Timecop.travel(50.seconds.from_now)
-    assert_equal 0, circuit.success_count
+    # two minutes 20 seconds after current_time
+    Timecop.freeze(current_time + 140) do
+      assert_equal 0, circuit.success_count
+    end
   end
 
   class Notifications < Minitest::Test
