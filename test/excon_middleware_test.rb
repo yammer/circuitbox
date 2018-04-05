@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 require 'circuitbox/excon_middleware'
 
@@ -5,11 +7,11 @@ class SentialException < StandardError; end
 
 class Circuitbox
   class ExconMiddlewareTest < Minitest::Test
-
     attr_reader :app
 
     def setup
       @app = gimme
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
     end
 
     def test_default_identifier
@@ -18,8 +20,8 @@ class Circuitbox
     end
 
     def test_overwrite_identifier
-      middleware = ExconMiddleware.new(app, identifier: "sential")
-      assert_equal middleware.identifier, "sential"
+      middleware = ExconMiddleware.new(app, identifier: 'sential')
+      assert_equal middleware.identifier, 'sential'
     end
 
     def test_overwrite_default_value_generator_lambda
@@ -27,10 +29,10 @@ class Circuitbox
       env = { host: 'yammer.com' }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
       give(circuit).run!(anything) { raise Circuitbox::Error }
-      default_value_generator = lambda { |_, _| :sential }
+      default_value_generator = ->(_, _) { :sential }
       middleware = ExconMiddleware.new(app,
-                                         circuitbox: circuitbox,
-                                         default_value: default_value_generator)
+                                       circuitbox: circuitbox,
+                                       default_value: default_value_generator)
       assert_equal :sential, middleware.error_call(env)
     end
 
@@ -51,7 +53,7 @@ class Circuitbox
 
     def test_overridde_success_response
       env = { host: 'yammer.com', response: { status: 400 } }
-      error_response = lambda { |r| r[:status] >= 500 }
+      error_response = ->(response) { response[:status] >= 500 }
       give(app).response_call(anything) { Excon::Response.new(status: 400) }
       mw = ExconMiddleware.new(app, open_circuit: error_response)
       response = mw.response_call(env)
@@ -63,7 +65,6 @@ class Circuitbox
       env = { host: 'yammer.com', response: { status: 400 } }
       app = gimme
       give(app).response_call(anything) { Excon::Response.new(status: 400) }
-      response = nil
 
       mw = ExconMiddleware.new(app)
       response = mw.response_call(env)

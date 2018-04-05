@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 require 'circuitbox/faraday_middleware'
 
@@ -5,11 +7,11 @@ class SentialException < StandardError; end
 
 class Circuitbox
   class FaradayMiddlewareTest < Minitest::Test
-
     attr_reader :app
 
     def setup
       @app = gimme
+      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
     end
 
     def test_default_identifier
@@ -18,8 +20,8 @@ class Circuitbox
     end
 
     def test_overwrite_identifier
-      middleware = FaradayMiddleware.new(app, identifier: "sential")
-      assert_equal middleware.identifier, "sential"
+      middleware = FaradayMiddleware.new(app, identifier: 'sential')
+      assert_equal middleware.identifier, 'sential'
     end
 
     def test_overwrite_default_value_generator_lambda
@@ -38,12 +40,12 @@ class Circuitbox
       stub_circuitbox
       env = { url: URI('http://yammer.com/') }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run!(anything) { raise Circuitbox::Error.new("error text") }
-      default_value_generator = lambda { |_,error| error.message }
+      give(circuit).run!(anything) { raise Circuitbox::Error, 'error text' }
+      default_value_generator = ->(_, error) { error.message }
       middleware = FaradayMiddleware.new(app,
                                          circuitbox: circuitbox,
                                          default_value: default_value_generator)
-      assert_equal "error text", middleware.call(env)
+      assert_equal 'error text', middleware.call(env)
     end
 
     def test_overwrite_default_value_generator_static_value
@@ -65,7 +67,7 @@ class Circuitbox
       env = { url: URI('http://yammer.com/') }
       app = gimme
       give(app).call(anything) { Faraday::Response.new(status: 500) }
-      error_response = lambda { |response|  false }
+      error_response = ->(_) { false }
       response = FaradayMiddleware.new(app, open_circuit: error_response).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 500
