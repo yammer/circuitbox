@@ -181,14 +181,23 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_circuit_closes_after_sleep_time_window
-      open_circuit!
+      current_time = Time.new(2015, 7, 29)
       run_count = 0
-      @circuit.run { run_count += 1 }
-      assert_equal 0, run_count, 'circuit has not opened prior'
-      # it is + 2 on purpose, because + 1 is flaky here
-      sleep @circuit.option_value(:sleep_window) + 2
 
-      @circuit.run { run_count += 1 }
+      Timecop.freeze(current_time) do
+        open_circuit!
+        @circuit.run { run_count += 1 }
+      end
+
+      assert_equal 0, run_count, 'circuit has not opened prior'
+
+      # it is + 2 on purpose, because + 1 is flaky here
+      approximate_sleep_window = @circuit.option_value(:sleep_window) + 2
+
+      Timecop.freeze(current_time + approximate_sleep_window) do
+        @circuit.run { run_count += 1 }
+      end
+
       assert_equal 1, run_count, 'circuit did not close after sleep'
     end
 
