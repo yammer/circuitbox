@@ -231,8 +231,8 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_should_return_response_if_it_doesnt_timeout
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    response = emulate_circuit_run(circuit, :success, "success")
-    assert_equal "success", response
+    response = emulate_circuit_run(circuit, :success, 'success')
+    assert_equal 'success', response
   end
 
   def test_timeout_seconds_run_options_overrides_circuit_options
@@ -242,14 +242,14 @@ class CircuitBreakerTest < Minitest::Test
   end
 
   def test_catches_connection_error_failures_if_defined
-    circuit = Circuitbox::CircuitBreaker.new(:yammer, :exceptions => [ConnectionError])
+    circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [ConnectionError])
     response = emulate_circuit_run(circuit, :failure, ConnectionError)
-    assert_equal nil, response
+    assert_nil response
   end
 
   def test_doesnt_catch_out_of_scope_exceptions
     sentinal = Class.new(StandardError)
-    circuit = Circuitbox::CircuitBreaker.new(:yammer, :exceptions => [ConnectionError, Timeout::Error])
+    circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [ConnectionError, Timeout::Error])
 
     assert_raises(sentinal) do
       emulate_circuit_run(circuit, :failure, sentinal)
@@ -257,14 +257,14 @@ class CircuitBreakerTest < Minitest::Test
   end
 
   def test_records_response_failure
-    circuit = Circuitbox::CircuitBreaker.new(:yammer, :exceptions => [Timeout::Error])
+    circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
     circuit.expects(:notify_and_increment_event).with(:failure)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
   end
 
   def test_records_response_skipped
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:should_open? => true)
+    circuit.stubs(should_open?: true)
     circuit.stubs(:notify_event)
     circuit.expects(:notify_event).with(:skipped)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
@@ -273,26 +273,26 @@ class CircuitBreakerTest < Minitest::Test
   def test_records_response_success
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
     circuit.expects(:notify_and_increment_event).with(:success)
-    emulate_circuit_run(circuit, :success, "success")
+    emulate_circuit_run(circuit, :success, 'success')
   end
 
   def test_does_not_send_request_if_circuit_is_open
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open? => true)
+    circuit.stubs(open?: true)
     circuit.expects(:yield).never
     response = emulate_circuit_run(circuit, :failure, Timeout::Error)
-    assert_equal nil, response
+    assert_nil response
   end
 
   def test_returns_nil_response_on_failed_request
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
     response = emulate_circuit_run(circuit, :failure, Timeout::Error)
-    assert_equal nil, response
+    assert_nil response
   end
 
   def test_puts_circuit_to_sleep_once_opened
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:should_open? => true)
+    circuit.stubs(should_open?: true)
 
     assert !circuit.send(:open_flag?)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
@@ -304,7 +304,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_open_is_true_if_open_flag
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open_flag? => true)
+    circuit.stubs(open_flag?: true)
     assert circuit.open?
   end
 
@@ -327,9 +327,9 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_open_is_false_if_awake_and_under_rate_threshold
     circuit = Circuitbox::CircuitBreaker.new(:yammer)
-    circuit.stubs(:open_flag? => false,
-                  :passed_volume_threshold? => false,
-                  :passed_rate_threshold => false)
+    circuit.stubs(open_flag?: false,
+                  passed_volume_threshold?: false,
+                  passed_rate_threshold: false)
 
     assert !circuit.open?
   end
@@ -381,16 +381,16 @@ class CircuitBreakerTest < Minitest::Test
     def test_notification_on_open
       notifier = gimme_notifier
       circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier: notifier)
-      10.times { circuit.run { raise Timeout::Error }}
+      10.times { circuit.run { raise Timeout::Error } }
       assert notifier.notified?, 'no notification sent'
     end
 
     def test_notification_on_close
       notifier = gimme_notifier
       circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier: notifier)
-      5.times { circuit.run { raise Timeout::Error }}
+      5.times { circuit.run { raise Timeout::Error } }
       notifier.clear_notified!
-      10.times { circuit.run { 'success' }}
+      10.times { circuit.run { 'success' } }
       assert notifier.notified?, 'no notification sent'
     end
 
@@ -415,21 +415,21 @@ class CircuitBreakerTest < Minitest::Test
     def test_notifies_on_success_rate_calculation
       notifier = gimme_notifier(metric: :error_rate, metric_value: 0.0)
       circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier: notifier)
-      10.times { circuit.run { "success" } }
-      assert notifier.notified?, "no notification sent"
+      10.times { circuit.run { 'success' } }
+      assert notifier.notified?, 'no notification sent'
     end
 
     def test_notifies_on_error_rate_calculation
       notifier = gimme_notifier(metric: :failure_count, metric_value: 1)
       circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier: notifier)
-      10.times { circuit.run { raise Timeout::Error  }}
+      10.times { circuit.run { raise Timeout::Error } }
       assert notifier.notified?, 'no notification sent'
     end
 
     def test_success_count_on_error_rate_calculation
       notifier = gimme_notifier(metric: :success_count, metric_value: 6)
       circuit = Circuitbox::CircuitBreaker.new(:yammer, notifier: notifier)
-      10.times { circuit.run { 'success' }}
+      10.times { circuit.run { 'success' } }
       assert notifier.notified?, 'no notification sent'
     end
 
@@ -463,11 +463,10 @@ class CircuitBreakerTest < Minitest::Test
       refute notifier.metric_sent?, 'execution time metric sent'
     end
 
-    def gimme_notifier(opts={})
+    def gimme_notifier(opts = {})
       service = opts.fetch(:service, 'yammer').to_s
       metric = opts.fetch(:metric, :error_rate)
       metric_value = opts.fetch(:metric_value, 0.0)
-      warning_msg = opts.fetch(:warning_msg, '')
       fake_notifier = gimme
       notified = false
       metric_sent = false
