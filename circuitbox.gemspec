@@ -3,8 +3,6 @@ lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'circuitbox/version'
 
-ruby_2_2_2_plus = Gem::Version.new(RUBY_VERSION) >= Gem::Version.new("2.2.2")
-
 Gem::Specification.new do |spec|
   spec.name          = "circuitbox"
   spec.version       = Circuitbox::VERSION
@@ -22,11 +20,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
-  if ruby_2_2_2_plus
-    spec.add_development_dependency "rack"
-  else
-    spec.add_development_dependency "rack", '< 2'
-  end
+  spec.add_development_dependency "rack"
   spec.add_development_dependency "gimme"
   spec.add_development_dependency "minitest"
   spec.add_development_dependency "mocha"
@@ -39,10 +33,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "lmdb"
   spec.add_development_dependency "daybreak"
 
-  if ruby_2_2_2_plus
-    spec.add_dependency "activesupport"
-  else
-    spec.add_dependency "activesupport", '< 5'
-  end
+  spec.add_dependency "activesupport"
   spec.add_dependency "moneta"
 end
