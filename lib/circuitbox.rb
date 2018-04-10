@@ -3,13 +3,11 @@ require 'logger'
 require 'timeout'
 require 'active_support/all'
 
-require 'circuitbox/version'
-require 'circuitbox/circuit_breaker'
-require 'circuitbox/notifier'
-require 'circuitbox/timer/simple'
-require 'circuitbox/errors/error'
-require 'circuitbox/errors/open_circuit_error'
-require 'circuitbox/errors/service_failure_error'
+require_relative 'circuitbox/version'
+require_relative 'circuitbox/circuit_breaker'
+require_relative 'circuitbox/errors/error'
+require_relative 'circuitbox/errors/open_circuit_error'
+require_relative 'circuitbox/errors/service_failure_error'
 require_relative 'circuitbox/configuration'
 
 class Circuitbox
