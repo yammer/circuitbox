@@ -72,15 +72,13 @@ class Circuitbox
         end
       end
 
-      return response
+      response
     end
 
     def run(run_options = {})
-      begin
-        run!(run_options, &Proc.new)
-      rescue Circuitbox::Error
-        nil
-      end
+      run!(run_options, &Proc.new)
+    rescue Circuitbox::Error
+      nil
     end
 
     def open?
