@@ -16,7 +16,7 @@ class Circuitbox
     end
 
     def default_circuit_store
-      @default_circuit_store ||= Moneta.new(:Memory, expires: true)
+      @default_circuit_store ||= Moneta.new(:Memory, expires: true, threadsafe: true)
     end
 
     def default_notifier
