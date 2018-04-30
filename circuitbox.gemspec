@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rack"
   spec.add_development_dependency "gimme"
   spec.add_development_dependency "minitest"
+  spec.add_development_dependency 'minitest-excludes'
   spec.add_development_dependency "mocha"
   spec.add_development_dependency "typhoeus"
   spec.add_development_dependency "timecop"
@@ -33,6 +34,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "lmdb"
   spec.add_development_dependency "daybreak"
 
-  spec.add_dependency "activesupport"
   spec.add_dependency "moneta"
 end

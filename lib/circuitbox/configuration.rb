@@ -1,6 +1,7 @@
 require 'moneta'
 require_relative 'timer/simple'
-require_relative 'notifier'
+require_relative 'notifier/active_support'
+require_relative 'notifier/null'
 
 class Circuitbox
   module Configuration
@@ -20,7 +21,11 @@ class Circuitbox
     end
 
     def default_notifier
-      @default_notifier ||= Notifier.new
+      @default_notifier ||= if defined?(ActiveSupport::Notifications)
+                              Notifier::ActiveSupport.new
+                            else
+                              Notifier::Null.new
+                            end
     end
 
     def default_timer

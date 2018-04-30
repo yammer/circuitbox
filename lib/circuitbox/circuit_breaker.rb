@@ -30,7 +30,7 @@ class Circuitbox
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
       @exceptions = options.fetch(:exceptions) { [] }
-      @exceptions = [Timeout::Error] if @exceptions.blank?
+      @exceptions = [Timeout::Error] if @exceptions.empty?
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }

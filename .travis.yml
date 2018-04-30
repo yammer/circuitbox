@@ -1,5 +1,9 @@
 language: ruby
 sudo: false
+gemfile: ci/Gemfile
+env:
+  - ACTIVE_SUPPORT=true
+  - NO_ACTIVE_SUPPORT=true
 rvm:
   - 2.2.10
   - 2.3.7

@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require 'minitest/excludes'
 require 'mocha/minitest'
 require 'timecop'
 require 'gimme'

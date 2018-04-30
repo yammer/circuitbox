@@ -1,0 +1,7 @@
+source 'https://rubygems.org'
+
+if ENV['ACTIVE_SUPPORT']
+  gem 'activesupport'
+end
+
+gemspec(path: '../')

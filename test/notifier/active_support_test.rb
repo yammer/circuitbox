@@ -1,9 +1,12 @@
 require 'test_helper'
-require 'circuitbox/notifier'
-require 'active_support/notifications'
+
+if ENV['ACTIVE_SUPPORT']
+  require 'active_support/notifications'
+  require 'circuitbox/notifier/active_support'
+end
 
 
-class NotifierTest < Minitest::Test
+class NotifierActiveSupportTest < Minitest::Test
   def test_sends_notification_on_notify
     ActiveSupport::Notifications.expects(:instrument).with("circuit_open", circuit: 'yammer')
     Circuitbox::Notifier.new.notify('yammer', :open)
