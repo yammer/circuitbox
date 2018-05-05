@@ -169,6 +169,10 @@ class CircuitBreakerTest < Minitest::Test
     rescue Circuitbox::ServiceFailureError => service_failure_error
       assert_instance_of SentinalError, service_failure_error.original
     end
+
+    def test_raises_argument_error_when_exceptions_is_not_an_array
+      assert_raises(ArgumentError) { Circuitbox::CircuitBreaker.new(:yammer, exceptions: nil) }
+    end
   end
 
   class CloseAfterSleep < Minitest::Test
