@@ -58,7 +58,7 @@ class Circuitbox
           response = execution_timer.time(service, notifier, :execution_time) do
             if exceptions.include? Timeout::Error
               timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-              timeout(timeout_seconds) { yield }
+              Timeout::timeout(timeout_seconds) { yield }
             else
               yield
             end
@@ -217,10 +217,6 @@ class Circuitbox
 
     def storage_key(key)
       "circuits:#{service}:#{key}"
-    end
-
-    def timeout(timeout_seconds)
-      Timeout::timeout(timeout_seconds) { yield }
     end
   end
 end
