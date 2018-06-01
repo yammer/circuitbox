@@ -39,10 +39,22 @@ class Circuitbox
     def call(request_env)
       service_response = nil
       circuit(request_env).run!(run_options(request_env)) do
-        @app.call(request_env).on_complete do |env|
-          service_response = Faraday::Response.new(env)
-          raise RequestFailed if open_circuit?(service_response)
+        begin
+          @app.call(request_env).on_complete do |env|
+            service_response = Faraday::Response.new(env)
+            detect_failure!(service_response)
+          end
+
+        # When raise_error middleware is used, convert it to a normal response
+        rescue Faraday::ClientError => ex
+          service_response = Faraday::Response.new(
+            status: ex.response[:status],
+            body: ex.response[:body],
+            response_headers: ex.response[:headers],
+          )
+          detect_failure!(service_response)
         end
+
       end
     rescue Circuitbox::Error => ex
       circuit_open_value(request_env, service_response, ex)
@@ -60,6 +72,10 @@ class Circuitbox
     end
 
     private
+
+    def detect_failure!(service_response)
+      raise RequestFailed if open_circuit?(service_response)
+    end
 
     def run_options(env)
       env[:circuit_breaker_run_options] || {}
