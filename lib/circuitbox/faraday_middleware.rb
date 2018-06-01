@@ -66,26 +66,21 @@ class Circuitbox
     end
 
     def circuit_breaker_options
-      return @circuit_breaker_options if @circuit_breaker_options
-
-      @circuit_breaker_options = opts.fetch(:circuit_breaker_options, {})
-      @circuit_breaker_options.merge!(
-        exceptions: opts.fetch(:exceptions, DEFAULT_EXCEPTIONS)
-      )
+      @circuit_breaker_options ||= begin
+        options = opts.fetch(:circuit_breaker_options, {})
+        options.merge!(
+          exceptions: opts.fetch(:exceptions, DEFAULT_EXCEPTIONS)
+        )
+      end
     end
 
     def default_value
-      return @default_value if @default_value
-
-      default = opts.fetch(:default_value) do
-        lambda { |service_response, exception| NullResponse.new(service_response, exception) }
+      @default_value ||= begin
+        default = opts.fetch(:default_value) do
+          lambda { |service_response, exception| NullResponse.new(service_response, exception) }
+        end
+        default.respond_to?(:call) ? default : lambda { |*| default }
       end
-
-      @default_value = if default.respond_to?(:call)
-                         default
-                       else
-                         lambda { |*| default }
-                       end
     end
 
     def open_circuit?(response)
