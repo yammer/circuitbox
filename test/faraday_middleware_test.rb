@@ -65,8 +65,7 @@ class Circuitbox
 
     def test_overridde_success_response
       env = { url: URI('http://yammer.com/') }
-      app = gimme
-      give(app).call(anything) { Faraday::Response.new(status: 500) }
+      give(@app).call(anything) { Faraday::Response.new(status: 500) }
       error_response = ->(_) { false }
       response = FaradayMiddleware.new(app, open_circuit: error_response).call(env)
       assert_kind_of Faraday::Response, response
@@ -75,10 +74,46 @@ class Circuitbox
       refute response.success?
     end
 
+    def test_success_does_not_open
+      env = { url: URI('http://yammer.com/') }
+      give(@app).call(anything) { Faraday::Response.new(status: 200) }
+      middleware = FaradayMiddleware.new(app)
+      middleware.expects(:circuit_open_value).never
+      middleware.call(env)
+    end
+
+    def test_failure_opens
+      env = { url: URI('http://yammer.com/') }
+      give(@app).call(anything) { Faraday::Response.new(status: 500) }
+      middleware = FaradayMiddleware.new(app)
+      middleware.expects(:circuit_open_value).with(
+        env,
+        instance_of(Faraday::Response),
+        instance_of(Circuitbox::ServiceFailureError)
+      )
+      middleware.call(env)
+    end
+
+    def test_failure_exception_opens
+      env = { url: URI('http://yammer.com/') }
+      app = mock()
+      raise_middleware = mock()
+      app.stubs(:call).returns(raise_middleware)
+      response_env = { status: 500, headers: { foo: 'bar' }, body: 'abc' }
+      raise_middleware.stubs(:on_complete).raises(Faraday::ClientError, response_env)
+
+      middleware = FaradayMiddleware.new(app)
+      middleware.expects(:circuit_open_value).with(
+        env,
+        instance_of(Faraday::Response),
+        instance_of(Circuitbox::ServiceFailureError)
+      )
+      middleware.call(env)
+    end
+
     def test_default_success_response
       env = { url: URI('http://yammer.com/') }
-      app = gimme
-      give(app).call(anything) { Faraday::Response.new(status: 500) }
+      give(@app).call(anything) { Faraday::Response.new(status: 500) }
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 503
@@ -88,8 +123,7 @@ class Circuitbox
 
     def test_default_open_circuit_does_not_trip_on_400
       env = { url: URI('http://yammer.com/') }
-      app = gimme
-      give(app).call(anything) { Faraday::Response.new(status: 400) }
+      give(@app).call(anything) { Faraday::Response.new(status: 400) }
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 400
@@ -99,8 +133,7 @@ class Circuitbox
 
     def test_default_open_circuit_does_trip_on_nil
       env = { url: URI('http://yammer.com/') }
-      app = gimme
-      give(app).call(anything) { Faraday::Response.new(status: nil) }
+      give(@app).call(anything) { Faraday::Response.new(status: nil) }
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 503
