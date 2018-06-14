@@ -114,3 +114,5 @@ class Circuitbox
     end
   end
 end
+
+Faraday::Middleware.register_middleware circuitbox: Circuitbox::FaradayMiddleware
