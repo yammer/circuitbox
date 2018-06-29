@@ -186,7 +186,7 @@ class Circuitbox
     # Send notification and increment stat store
     def notify_and_increment_event(event)
       notify_event(event)
-      circuit_store.increment(stat_storage_key(event))
+      circuit_store.increment(stat_storage_key(event), 1, expires: (option_value(:time_window) * 2))
     end
 
     def log_metrics(error_rate, failures, successes)
