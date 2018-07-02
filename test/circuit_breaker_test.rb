@@ -234,13 +234,19 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_should_use_timeout_class_if_exceptions_are_not_defined
     circuit = Circuitbox::CircuitBreaker.new(:yammer, timeout_seconds: 45)
-    circuit.expects(:timeout).with(45).once
+    Timeout.expects(:timeout).with(45).once
     emulate_circuit_run(circuit, :success, StandardError)
   end
 
   def test_should_not_use_timeout_class_if_custom_exceptions_are_defined
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [ConnectionError])
-    circuit.expects(:timeout).never
+    Timeout.expects(:timeout).never
+    emulate_circuit_run(circuit, :success, StandardError)
+  end
+
+  def test_should_not_use_timeout_if_use_unsafe_timeout_false
+    circuit = Circuitbox::CircuitBreaker.new(:yammer, use_unsafe_timeout: false)
+    Timeout.expects(:timeout).never
     emulate_circuit_run(circuit, :success, StandardError)
   end
 
@@ -252,7 +258,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_timeout_seconds_run_options_overrides_circuit_options
     circuit = Circuitbox::CircuitBreaker.new(:yammer, timeout_seconds: 60)
-    circuit.expects(:timeout).with(30).once
+    Timeout.expects(:timeout).with(30).once
     circuit.run(timeout_seconds: 30) { true }
   end
 

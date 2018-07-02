@@ -14,13 +14,14 @@ class Circuitbox
     #
     # Configuration options
     #
-    # `sleep_window`      - seconds to sleep the circuit
-    # `volume_threshold`  - number of requests before error rate calculation occurs
-    # `error_threshold`   - percentage of failed requests needed to trip circuit
-    # `timeout_seconds`   - seconds until it will timeout the request
-    # `exceptions`        - exceptions other than Timeout::Error that count as failures
-    # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
-    # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
+    # `sleep_window`       - seconds to sleep the circuit
+    # `volume_threshold`   - number of requests before error rate calculation occurs
+    # `error_threshold`    - percentage of failed requests needed to trip circuit
+    # `timeout_seconds`    - seconds until it will timeout the request
+    # `exceptions`         - exceptions other than Timeout::Error that count as failures
+    # `time_window`        - interval of time used to calculate error_rate (in seconds) - default is 60s
+    # `logger`             - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
+    # `use_unsafe_timeout` - Use ruby timeout if exceptions also contain Timeout::Error - default true
     #
     def initialize(service, options = {})
       @service = service.to_s
@@ -32,6 +33,8 @@ class Circuitbox
       @exceptions = options.fetch(:exceptions) { [] }
       raise ArgumentError, 'exceptions need to be an array'.freeze unless @exceptions.is_a?(Array)
       @exceptions = [Timeout::Error] if @exceptions.empty?
+      use_unsafe_timeout = options.fetch(:use_unsafe_timeout, true)
+      @should_use_ruby_timeout = @exceptions.include?(Timeout::Error) && use_unsafe_timeout
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
@@ -56,9 +59,9 @@ class Circuitbox
 
         begin
           response = execution_timer.time(service, notifier, :execution_time) do
-            if exceptions.include? Timeout::Error
+            if @should_use_ruby_timeout
               timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-              timeout(timeout_seconds) { yield }
+              Timeout::timeout(timeout_seconds) { yield }
             else
               yield
             end
@@ -217,10 +220,6 @@ class Circuitbox
 
     def storage_key(key)
       "circuits:#{service}:#{key}"
-    end
-
-    def timeout(timeout_seconds)
-      Timeout::timeout(timeout_seconds) { yield }
     end
   end
 end
