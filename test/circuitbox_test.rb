@@ -49,18 +49,20 @@ class CircuitboxTest < Minitest::Test
   end
 
   def test_creates_a_circuit_breaker
-    assert Circuitbox[:yammer].is_a? Circuitbox::CircuitBreaker
+    assert Circuitbox[:yammer, exceptions: [Timeout::Error]].is_a? Circuitbox::CircuitBreaker
   end
 
   def test_returns_the_same_circuit_every_time
-    assert_equal Circuitbox.circuit(:yammer), Circuitbox.circuit(:yammer)
+    assert_equal Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]),
+                 Circuitbox.circuit(:yammer, exceptions: [Timeout::Error])
   end
 
   def test_sets_the_circuit_options_the_first_time_only
-    circuit_one = Circuitbox.circuit(:yammer, sleep_window: 1337)
-    circuit_two = Circuitbox.circuit(:yammer, sleep_window: 2000)
+    circuit_one = Circuitbox.circuit(:yammer, exceptions: [Timeout::Error], sleep_window: 1337)
+    circuit_two = Circuitbox.circuit(:yammer, exceptions: [StandardError], sleep_window: 2000)
 
     assert_equal 1337, circuit_one.option_value(:sleep_window)
     assert_equal 1337, circuit_two.option_value(:sleep_window)
+    assert_equal [Timeout::Error], circuit_two.exceptions
   end
 end

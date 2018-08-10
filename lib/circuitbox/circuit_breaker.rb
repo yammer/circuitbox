@@ -17,7 +17,7 @@ class Circuitbox
     # `sleep_window`      - seconds to sleep the circuit
     # `volume_threshold`  - number of requests before error rate calculation occurs
     # `error_threshold`   - percentage of failed requests needed to trip circuit
-    # `exceptions`        - exceptions other than Timeout::Error that count as failures
+    # `exceptions`        - exceptions that count as failures
     # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
     # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
     #
@@ -28,9 +28,8 @@ class Circuitbox
       @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
-      @exceptions = options.fetch(:exceptions) { [] }
+      @exceptions = options.fetch(:exceptions)
       raise ArgumentError, 'exceptions need to be an array'.freeze unless @exceptions.is_a?(Array)
-      @exceptions = [Timeout::Error] if @exceptions.empty?
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
