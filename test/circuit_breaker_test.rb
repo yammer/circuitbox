@@ -27,8 +27,7 @@ class CircuitBreakerTest < Minitest::Test
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 sleep_window: 300,
                                                 volume_threshold: 5,
-                                                error_threshold: 33,
-                                                timeout_seconds: 1)
+                                                error_threshold: 33)
     end
 
     def test_open_circuit_on_100_percent_failure
@@ -182,8 +181,7 @@ class CircuitBreakerTest < Minitest::Test
                                                 sleep_window: 1,
                                                 time_window: 2,
                                                 volume_threshold: 5,
-                                                error_threshold: 5,
-                                                timeout_seconds: 1)
+                                                error_threshold: 5)
     end
 
     def test_circuit_closes_after_sleep_time_window
@@ -233,15 +231,13 @@ class CircuitBreakerTest < Minitest::Test
   end
 
   def test_should_use_timeout_class_if_exceptions_are_not_defined
-    circuit = Circuitbox::CircuitBreaker.new(:yammer, timeout_seconds: 45)
-    circuit.expects(:timeout).with(45).once
-    emulate_circuit_run(circuit, :success, StandardError)
+    circuit = Circuitbox::CircuitBreaker.new(:yammer)
+    assert_equal [Timeout::Error], circuit.exceptions
   end
 
   def test_should_not_use_timeout_class_if_custom_exceptions_are_defined
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [ConnectionError])
-    circuit.expects(:timeout).never
-    emulate_circuit_run(circuit, :success, StandardError)
+    assert_equal [ConnectionError], circuit.exceptions
   end
 
   def test_should_return_response_if_it_doesnt_timeout
