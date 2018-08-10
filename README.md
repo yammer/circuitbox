@@ -10,7 +10,7 @@ Resources about the circuit breaker pattern:
 ## Usage
 
 ```ruby
-Circuitbox[:your_service] do
+Circuitbox[:your_service, exceptions: [Net::ReadTimeout]] do
   Net::HTTP.get URI('http://example.com/api/messages')
 end
 ```
@@ -67,6 +67,7 @@ will need to be recreated to pick up the new defaults.
 class ExampleServiceClient
   def circuit
     Circuitbox.circuit(:your_service, {
+      # exceptions circuitbox tracks for counting failures (required)
       exceptions:       [YourCustomException],
 
       # seconds the circuit stays open once it has passed the error threshold
@@ -85,9 +86,6 @@ class ExampleServiceClient
 
       # exceeding this rate will open the circuit
       error_threshold:  50,
-
-      # seconds before the circuit times out
-      timeout_seconds:  1,
 
       # Logger to use
       # This overrides what is set in the global configuration
@@ -112,7 +110,8 @@ You can also pass a Proc as an option value which will evaluate each time the ci
 
 ```ruby
 Circuitbox.circuit(:yammer, {
-  sleep_window: Proc.new { Configuration.get(:sleep_window) }
+  sleep_window: Proc.new { Configuration.get(:sleep_window) },
+  exceptions: [Net::ReadTimeout]
 })
 ```
 
@@ -148,7 +147,7 @@ ActiveSupport::Notifications.subscribe('circuit_close') do |name, start, finish,
   circuit_name = payload[:circuit]
   Rails.logger.info("Close circuit for: #{circuit_name}")
 end
-````
+```
 
 **generate metrics:**
 
@@ -217,7 +216,7 @@ development on Webbrick.
 This is the default.
 
 ```ruby
-Circuitbox.circuit :identifier, cache: Moneta.new(:Memory)
+Circuitbox.circuit :identifier, exceptions: [Net::ReadTimeout], cache: Moneta.new(:Memory)
 ```
 
 ### LMDB
@@ -228,7 +227,7 @@ used in multi thread and multi process environments like like Puma.
 
 ```ruby
 require "lmdb"
-Circuitbox.circuit :identifier, cache: Moneta.new(:LMDB, dir: "./", db: "mydb")
+Circuitbox.circuit :identifier, exceptions: [Net::ReadTimeout], cache: Moneta.new(:LMDB, dir: "./", db: "mydb")
 ```
 
 ### PStore
@@ -239,7 +238,7 @@ has no external dependencies and works on every ruby implementation. Due to it
 being file backed it is multi process safe, good for development using Unicorn.
 
 ```ruby
-Circuitbox.circuit :identifier, cache: Moneta.new(:PStore, file: "db.pstore")
+Circuitbox.circuit :identifier, exceptions: [Net::ReadTimeout], cache: Moneta.new(:PStore, file: "db.pstore")
 ```
 
 ### Daybreak
@@ -250,7 +249,7 @@ use with Unicorn. It depends on the `daybreak` gem.
 
 ```ruby
 require "daybreak"
-Circuitbox.circuit :identifier, cache: Moneta.new(:Daybreak, file: "db.daybreak", expires: true)
+Circuitbox.circuit :identifier, exceptions: [Net::ReadTimeout], cache: Moneta.new(:Daybreak, file: "db.daybreak", expires: true)
 ```
 
 It is important for the store to have
@@ -280,7 +279,7 @@ By default the Faraday middleware returns a `503` response when the circuit is
 open, but this as many other things can be configured via middleware options
 
 * `exceptions` pass a list of exceptions for the Circuitbreaker to catch,
-  defaults to Timeout and Request failures
+  defaults to Faraday::Error::TimeoutError and Request failures
 
 ```ruby
 c.use Circuitbox::FaradayMiddleware, exceptions: [Faraday::Error::TimeoutError]
