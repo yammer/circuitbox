@@ -28,7 +28,7 @@ class Circuitbox
       stub_circuitbox
       env = { url: URI('http://yammer.com/') }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run!(anything) { raise Circuitbox::Error }
+      give(circuit).run! { raise Circuitbox::Error }
       default_value_generator = lambda { |response| :sential }
       middleware = FaradayMiddleware.new(app,
                                          circuitbox: circuitbox,
@@ -40,7 +40,7 @@ class Circuitbox
       stub_circuitbox
       env = { url: URI('http://yammer.com/') }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run!(anything) { raise Circuitbox::Error, 'error text' }
+      give(circuit).run! { raise Circuitbox::Error, 'error text' }
       default_value_generator = ->(_, error) { error.message }
       middleware = FaradayMiddleware.new(app,
                                          circuitbox: circuitbox,
@@ -52,7 +52,7 @@ class Circuitbox
       stub_circuitbox
       env = { url: URI('http://yammer.com/') }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run!(anything) { raise Circuitbox::Error }
+      give(circuit).run! { raise Circuitbox::Error }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox, default_value: :sential)
       assert_equal :sential, middleware.call(env)
     end
@@ -113,16 +113,6 @@ class Circuitbox
       assert_includes middleware.exceptions, SentialException
     end
 
-    def test_pass_circuit_breaker_run_options
-      stub_circuitbox
-      give(circuit).run!(:sential)
-      give(circuitbox).circuit('yammer.com', anything) { circuit }
-      env = { url: URI('http://yammer.com/'), circuit_breaker_run_options: :sential }
-      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
-      middleware.call(env)
-      verify(circuit, 1.times).run!(:sential)
-    end
-
     def test_pass_circuit_breaker_options
       stub_circuitbox
       env = { url: URI('http://yammer.com/') }
@@ -142,7 +132,7 @@ class Circuitbox
       stub_circuitbox
       env = { url: URI('http://yammer.com/'), circuit_breaker_default_value: :sential }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run!(anything) { raise Circuitbox::Error }
+      give(circuit).run! { raise Circuitbox::Error }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.call(env), :sential
     end
@@ -150,7 +140,7 @@ class Circuitbox
     def test_return_value_closed_circuit
       stub_circuitbox
       env = { url: URI('http://yammer.com/') }
-      give(circuit).run!(anything) { :sential }
+      give(circuit).run! { :sential }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
       middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.call(env), :sential
@@ -159,7 +149,7 @@ class Circuitbox
     def test_return_null_response_for_open_circuit
       stub_circuitbox
       env = { url: URI('http://yammer.com/') }
-      give(circuit).run!(anything) { raise Circuitbox::Error }
+      give(circuit).run! { raise Circuitbox::Error }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
       response = FaradayMiddleware.new(app, circuitbox: circuitbox).call(env)
       assert_kind_of Faraday::Response, response

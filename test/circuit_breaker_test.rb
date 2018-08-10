@@ -246,12 +246,6 @@ class CircuitBreakerTest < Minitest::Test
     assert_equal 'success', response
   end
 
-  def test_timeout_seconds_run_options_overrides_circuit_options
-    circuit = Circuitbox::CircuitBreaker.new(:yammer, timeout_seconds: 60)
-    circuit.expects(:timeout).with(30).once
-    circuit.run(timeout_seconds: 30) { true }
-  end
-
   def test_catches_connection_error_failures_if_defined
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [ConnectionError])
     response = emulate_circuit_run(circuit, :failure, ConnectionError)

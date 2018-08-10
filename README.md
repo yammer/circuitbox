@@ -308,13 +308,6 @@ c.use Circuitbox::FaradayMiddleware, default_value: lambda { |response, error| .
 c.use Circuitbox::FaradayMiddleware, identifier: "service_name_circuit"
 ```
 
-* `circuit_breaker_run_options` options passed to the circuit run method, see
-  the main circuitbreaker for those.
-
-```ruby
-conn.get("/api", circuit_breaker_run_options: {})
-```
-
 * `circuit_breaker_options` options to initialize the circuit with defaults to
   `{ volume_threshold: 10, exceptions: Circuitbox::FaradayMiddleware::DEFAULT_EXCEPTIONS }`
 
