@@ -7,7 +7,6 @@ class Circuitbox
       sleep_window:     300,
       volume_threshold: 5,
       error_threshold:  50,
-      timeout_seconds:  1,
       time_window:      60
     }.freeze
 
@@ -17,8 +16,7 @@ class Circuitbox
     # `sleep_window`      - seconds to sleep the circuit
     # `volume_threshold`  - number of requests before error rate calculation occurs
     # `error_threshold`   - percentage of failed requests needed to trip circuit
-    # `timeout_seconds`   - seconds until it will timeout the request
-    # `exceptions`        - exceptions other than Timeout::Error that count as failures
+    # `exceptions`        - exceptions that count as failures
     # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
     # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
     #
@@ -29,9 +27,13 @@ class Circuitbox
       @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
-      @exceptions = options.fetch(:exceptions) { [] }
+      if @circuit_options[:timeout_seconds]
+        warn('timeout_seconds was removed in circuitbox 2.0. '\
+             'Check the upgrade guide at https://github.com/yammer/circuitbox'.freeze)
+      end
+
+      @exceptions = options.fetch(:exceptions)
       raise ArgumentError, 'exceptions need to be an array'.freeze unless @exceptions.is_a?(Array)
-      @exceptions = [Timeout::Error] if @exceptions.empty?
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
@@ -43,7 +45,7 @@ class Circuitbox
       value.is_a?(Proc) ? value.call : value
     end
 
-    def run!(run_options = {})
+    def run!
       currently_open = open_flag?
       if currently_open || should_open?
         logger.debug "[CIRCUIT] open: skipping #{service}"
@@ -56,12 +58,7 @@ class Circuitbox
 
         begin
           response = execution_timer.time(service, notifier, :execution_time) do
-            if exceptions.include? Timeout::Error
-              timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-              timeout(timeout_seconds) { yield }
-            else
-              yield
-            end
+            yield
           end
           logger.debug "[CIRCUIT] closed: #{service} query success"
           success!
@@ -76,8 +73,8 @@ class Circuitbox
       response
     end
 
-    def run(run_options = {})
-      run!(run_options, &Proc.new)
+    def run
+      run! { yield }
     rescue Circuitbox::Error
       nil
     end
@@ -217,10 +214,6 @@ class Circuitbox
 
     def storage_key(key)
       "circuits:#{service}:#{key}"
-    end
-
-    def timeout(timeout_seconds)
-      Timeout::timeout(timeout_seconds) { yield }
     end
   end
 end

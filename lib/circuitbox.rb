@@ -1,6 +1,5 @@
 require 'uri'
 require 'logger'
-require 'timeout'
 
 require_relative 'circuitbox/version'
 require_relative 'circuitbox/circuit_breaker'
