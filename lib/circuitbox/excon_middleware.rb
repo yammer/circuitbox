@@ -32,7 +32,7 @@ class Circuitbox
     end
 
     def error_call(datum)
-      circuit(datum).run!(run_options(datum)) do
+      circuit(datum).run! do
         raise RequestFailed
       end
     rescue Circuitbox::Error => exception
@@ -40,13 +40,13 @@ class Circuitbox
     end
 
     def request_call(datum)
-      circuit(datum).run!(run_options(datum)) do
+      circuit(datum).run! do
         @stack.request_call(datum)
       end
     end
 
     def response_call(datum)
-      circuit(datum).run!(run_options(datum)) do
+      circuit(datum).run! do
         raise RequestFailed if open_circuit?(datum[:response])
       end
       @stack.response_call(datum)
@@ -67,10 +67,6 @@ class Circuitbox
     def circuit(datum)
       id = identifier.respond_to?(:call) ? identifier.call(datum) : identifier
       circuitbox.circuit id, circuit_breaker_options
-    end
-
-    def run_options(datum)
-      opts.merge(datum)[:circuit_breaker_run_options] || {}
     end
 
     def open_circuit?(response)
