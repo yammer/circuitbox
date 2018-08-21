@@ -7,7 +7,6 @@ class Circuitbox
       sleep_window:     300,
       volume_threshold: 5,
       error_threshold:  50,
-      timeout_seconds:  1,
       time_window:      60
     }.freeze
 
@@ -27,6 +26,11 @@ class Circuitbox
       @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
       @execution_timer = options.fetch(:execution_timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
+
+      if @circuit_options[:timeout_seconds]
+        warn('timeout_seconds was removed in circuitbox 2.0. '\
+             'Check the upgrade guide at https://github.com/yammer/circuitbox'.freeze)
+      end
 
       @exceptions = options.fetch(:exceptions)
       raise ArgumentError, 'exceptions need to be an array'.freeze unless @exceptions.is_a?(Array)
