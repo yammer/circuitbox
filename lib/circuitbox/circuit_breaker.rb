@@ -4,7 +4,7 @@ class Circuitbox
                 :logger, :circuit_store, :notifier, :time_class, :execution_timer
 
     DEFAULTS = {
-      sleep_window:     300,
+      sleep_window:     90,
       volume_threshold: 5,
       error_threshold:  50,
       time_window:      60
