@@ -10,14 +10,6 @@ class CircuitBreakerTest < Minitest::Test
     Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
   end
 
-  def test_sleep_window_is_forced_to_equal_time_window
-    circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                             sleep_window: 1,
-                                             time_window: 10,
-                                             exceptions: [Timeout::Error])
-    assert_equal circuit.option_value(:sleep_window), circuit.option_value(:time_window)
-  end
-
   def test_goes_into_half_open_state_on_sleep
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
     circuit.send(:open!)
@@ -413,12 +405,15 @@ class CircuitBreakerTest < Minitest::Test
 
     def test_warning_when_sleep_window_is_shorter_than_time_window
       notifier = gimme_notifier
-      Circuitbox::CircuitBreaker.new(:yammer,
-                                     notifier: notifier,
-                                     sleep_window: 1,
-                                     time_window: 10,
-                                     exceptions: [Timeout::Error])
+      _, error = capture_io do
+        Circuitbox::CircuitBreaker.new(:yammer,
+                                       notifier: notifier,
+                                       sleep_window: 1,
+                                       time_window: 10,
+                                       exceptions: [Timeout::Error])
+      end
       assert notifier.notified?, 'no notification sent'
+      assert_match(/Circuit: yammer.+sleep_window: 1.+time_window: 10.+/, error)
     end
 
     def test_does_not_warn_on_sleep_window_being_correctly_sized
