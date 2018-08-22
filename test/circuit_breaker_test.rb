@@ -176,7 +176,7 @@ class CircuitBreakerTest < Minitest::Test
     def setup
       Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                                sleep_window: 1,
+                                                sleep_window: 2,
                                                 time_window: 2,
                                                 volume_threshold: 5,
                                                 error_threshold: 5,
@@ -194,8 +194,9 @@ class CircuitBreakerTest < Minitest::Test
 
       assert_equal 0, run_count, 'circuit has not opened prior'
 
-      # it is + 2 on purpose, because + 1 is flaky here
-      approximate_sleep_window = @circuit.option_value(:sleep_window) + 2
+      # We need to be past the sleep window for the circuit to close
+      # which is why we are adding 1 second to the sleep window
+      approximate_sleep_window = @circuit.option_value(:sleep_window) + 1
 
       Timecop.freeze(current_time + approximate_sleep_window) do
         @circuit.run { run_count += 1 }
