@@ -37,7 +37,7 @@ class Circuitbox
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
-      sanitize_options
+      check_sleep_window
     end
 
     def option_value(name)
@@ -192,12 +192,14 @@ class Circuitbox
       notifier.metric_gauge(service, :success_count, successes)
     end
 
-    def sanitize_options
+    def check_sleep_window
       sleep_window = option_value(:sleep_window)
       time_window  = option_value(:time_window)
       if sleep_window < time_window
-        notifier.notify_warning(service, "sleep_window:#{sleep_window} is shorter than time_window:#{time_window}, the error_rate could not be reset properly after a sleep. sleep_window as been set to equal time_window.")
-        @circuit_options[:sleep_window] = option_value(:time_window)
+        warning_message = "sleep_window: #{sleep_window} is shorter than time_window: #{time_window}, "\
+                          "the error_rate would not be reset after a sleep."
+        notifier.notify_warning(service, warning_message)
+        warn("Circuit: #{service}, Warning: #{warning_message}")
       end
     end
 
