@@ -63,7 +63,7 @@ class Circuitbox
         logger.debug(circuit_closed_querying_message)
 
         begin
-          response = execution_timer.time(service, notifier, :execution_time) do
+          response = execution_timer.time(service, notifier, 'execution_time') do
             yield
           end
           logger.debug(circuit_closed_query_success_message)
@@ -191,9 +191,9 @@ class Circuitbox
     end
 
     def log_metrics(error_rate, failures, successes)
-      notifier.metric_gauge(service, :error_rate, error_rate)
-      notifier.metric_gauge(service, :failure_count, failures)
-      notifier.metric_gauge(service, :success_count, successes)
+      notifier.metric_gauge(service, 'error_rate', error_rate)
+      notifier.metric_gauge(service, 'failure_count', failures)
+      notifier.metric_gauge(service, 'success_count', successes)
     end
 
     def check_sleep_window
