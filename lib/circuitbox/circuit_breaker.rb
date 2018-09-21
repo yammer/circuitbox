@@ -208,7 +208,7 @@ class Circuitbox
     end
 
     def stat_storage_key(event)
-      "#{storage_key('stats'.freeze)}:#{align_time_to_window}:#{event}"
+      "circuits:#{service}:stats:#{align_time_to_window}:#{event}"
     end
 
     # return time representation in seconds
