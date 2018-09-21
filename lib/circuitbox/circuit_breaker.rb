@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'circuit_breaker/logger_messages'
 
 class Circuitbox
@@ -33,11 +35,11 @@ class Circuitbox
 
       if @circuit_options[:timeout_seconds]
         warn('timeout_seconds was removed in circuitbox 2.0. '\
-             'Check the upgrade guide at https://github.com/yammer/circuitbox'.freeze)
+             'Check the upgrade guide at https://github.com/yammer/circuitbox')
       end
 
       @exceptions = options.fetch(:exceptions)
-      raise ArgumentError, 'exceptions need to be an array'.freeze unless @exceptions.is_a?(Array)
+      raise ArgumentError, 'exceptions need to be an array' unless @exceptions.is_a?(Array)
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
@@ -100,15 +102,15 @@ class Circuitbox
     end
 
     def failure_count
-      circuit_store.load(stat_storage_key(:failure), raw: true).to_i
+      circuit_store.load(stat_storage_key('failure'), raw: true).to_i
     end
 
     def success_count
-      circuit_store.load(stat_storage_key(:success), raw: true).to_i
+      circuit_store.load(stat_storage_key('success'), raw: true).to_i
     end
 
     def try_close_next_time
-      circuit_store.delete(storage_key(:asleep))
+      circuit_store.delete(storage_key('asleep'))
     end
 
   private
@@ -132,51 +134,49 @@ class Circuitbox
     end
 
     def open!
-      notify_event :open
-      logger.debug(circuit_opening_message)
-      circuit_store.store(storage_key(:asleep), true, expires: option_value(:sleep_window))
+
       half_open!
       was_open!
     end
 
     ### BEGIN - all this is just here to produce a close notification
     def close!
-      notify_event :close
-      circuit_store.delete(storage_key(:was_open))
+      notify_event('close')
+      circuit_store.delete(storage_key('was_open'))
     end
 
     def was_open!
-      circuit_store.store(storage_key(:was_open), true)
+      circuit_store.store(storage_key('was_open'), true)
     end
 
     def was_open?
-      circuit_store.key?(storage_key(:was_open))
+      circuit_store.key?(storage_key('was_open'))
     end
     ### END
 
     def half_open!
-      circuit_store.store(storage_key(:half_open), true)
+      circuit_store.store(storage_key('half_open'), true)
     end
 
     def open_flag?
-      circuit_store.key?(storage_key(:asleep))
+      circuit_store.key?(storage_key('asleep'))
     end
 
     def half_open?
-      circuit_store.key?(storage_key(:half_open))
+      circuit_store.key?(storage_key('half_open'))
     end
 
     def success!
-      notify_and_increment_event :success
-      circuit_store.delete(storage_key(:half_open))
+      notify_and_increment_event('success')
+      circuit_store.delete(storage_key('half_open'))
     end
 
     def failure!
-      notify_and_increment_event :failure
+      notify_and_increment_event('failure')
     end
 
     def skipped!
-      notify_event :skipped
+      notify_event('skipped')
     end
 
     # Send event notification to notifier
