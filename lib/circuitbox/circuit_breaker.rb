@@ -1,5 +1,9 @@
+require_relative 'circuit_breaker/logger_messages'
+
 class Circuitbox
   class CircuitBreaker
+    include LoggerMessages
+
     attr_reader :service, :circuit_options, :exceptions,
                 :logger, :circuit_store, :notifier, :time_class, :execution_timer
 
@@ -48,22 +52,22 @@ class Circuitbox
     def run!
       currently_open = open_flag?
       if currently_open || should_open?
-        logger.debug "[CIRCUIT] open: skipping #{service}"
+        logger.debug(circuit_open_message)
         open! unless currently_open
         skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
         close! if was_open?
-        logger.debug "[CIRCUIT] closed: querying #{service}"
+        logger.debug(circuit_closed_querying_message)
 
         begin
           response = execution_timer.time(service, notifier, :execution_time) do
             yield
           end
-          logger.debug "[CIRCUIT] closed: #{service} query success"
+          logger.debug(circuit_closed_query_success_message)
           success!
         rescue *exceptions => exception
-          logger.debug "[CIRCUIT] closed: detected #{service} failure"
+          logger.debug(circuit_closed_failure_message)
           failure!
           open! if half_open?
           raise Circuitbox::ServiceFailureError.new(service, exception)
@@ -129,7 +133,7 @@ class Circuitbox
 
     def open!
       notify_event :open
-      logger.debug "[CIRCUIT] opening #{service} circuit"
+      logger.debug(circuit_opening_message)
       circuit_store.store(storage_key(:asleep), true, expires: option_value(:sleep_window))
       half_open!
       was_open!
