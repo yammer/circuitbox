@@ -19,6 +19,6 @@ class NotifierActiveSupportTest < Minitest::Test
 
   def test_sends_metric_as_notification
     ActiveSupport::Notifications.expects(:instrument).with("circuit_gauge", { circuit: 'yammer', gauge: 'ratio', value: 12})
-    Circuitbox::Notifier::ActiveSupport.new.metric_gauge('yammer', :ratio, 12)
+    Circuitbox::Notifier::ActiveSupport.new.metric_gauge('yammer', 'ratio', 12)
   end
 end
