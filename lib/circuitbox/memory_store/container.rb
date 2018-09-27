@@ -13,7 +13,7 @@ class Circuitbox
       end
 
       def expired?
-        @expires_after.positive? && @expires_after < current_second
+        @expires_after > 0 && @expires_after < current_second
       end
 
       def expires_after(seconds = 0)
