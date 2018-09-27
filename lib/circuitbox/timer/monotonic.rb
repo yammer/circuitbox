@@ -8,8 +8,8 @@ class Circuitbox
       def time(service, notifier, metric_name)
         before = Process.clock_gettime(Process::CLOCK_MONOTONIC, @time_unit)
         result = yield
-        after = Process.clock_gettime(Process::CLOCK_MONOTONIC, @time_unit)
-        notifier.metric_gauge(service, metric_name, after - before)
+        total_time = Process.clock_gettime(Process::CLOCK_MONOTONIC, @time_unit) - before
+        notifier.metric_gauge(service, metric_name, total_time)
         result
       end
     end
