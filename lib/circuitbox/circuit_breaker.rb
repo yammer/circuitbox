@@ -134,7 +134,9 @@ class Circuitbox
     end
 
     def open!
-
+      notify_event('open')
+      logger.debug(circuit_opening_message)
+      circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
       half_open!
       was_open!
     end
