@@ -12,7 +12,7 @@ class Circuitbox
       end
 
       def metric_gauge(circuit_name, gauge, value)
-        ::ActiveSupport::Notifications.instrument('circuit_gauge', circuit: circuit_name, gauge: gauge.to_s, value: value)
+        ::ActiveSupport::Notifications.instrument('circuit_gauge', circuit: circuit_name, gauge: gauge, value: value)
       end
     end
   end

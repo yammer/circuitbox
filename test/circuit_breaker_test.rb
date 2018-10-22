@@ -264,7 +264,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_failure
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.expects(:notify_and_increment_event).with(:failure)
+    circuit.expects(:notify_and_increment_event).with('failure')
     emulate_circuit_run(circuit, :failure, Timeout::Error)
   end
 
@@ -272,13 +272,13 @@ class CircuitBreakerTest < Minitest::Test
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
     circuit.stubs(should_open?: true)
     circuit.stubs(:notify_event)
-    circuit.expects(:notify_event).with(:skipped)
+    circuit.expects(:notify_event).with('skipped')
     emulate_circuit_run(circuit, :failure, Timeout::Error)
   end
 
   def test_records_response_success
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.expects(:notify_and_increment_event).with(:success)
+    circuit.expects(:notify_and_increment_event).with('success')
     emulate_circuit_run(circuit, :success, 'success')
   end
 
@@ -342,13 +342,13 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_logs_and_retrieves_success_events
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    5.times { circuit.send(:notify_and_increment_event, :success) }
+    5.times { circuit.send(:notify_and_increment_event, 'success') }
     assert_equal 5, circuit.success_count
   end
 
   def test_logs_and_retrieves_failure_events
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    5.times { circuit.send(:notify_and_increment_event, :failure) }
+    5.times { circuit.send(:notify_and_increment_event, 'failure') }
     assert_equal 5, circuit.failure_count
   end
 
@@ -357,19 +357,19 @@ class CircuitBreakerTest < Minitest::Test
     current_time = Time.new(2015, 7, 29)
 
     Timecop.freeze(current_time) do
-      4.times { circuit.send(:notify_and_increment_event, :success) }
+      4.times { circuit.send(:notify_and_increment_event, 'success') }
       assert_equal 4, circuit.success_count
     end
 
     # one minute after current_time
     Timecop.freeze(current_time + 60) do
-      7.times { circuit.send(:notify_and_increment_event, :success) }
+      7.times { circuit.send(:notify_and_increment_event, 'success') }
       assert_equal 7, circuit.success_count
     end
 
     # one minute 30 seconds after current_time
     Timecop.freeze(current_time + 90) do
-      circuit.send(:notify_and_increment_event, :success)
+      circuit.send(:notify_and_increment_event, 'success')
       assert_equal 8, circuit.success_count
     end
 
@@ -428,7 +428,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_notifies_on_success_rate_calculation
-      notifier = gimme_notifier(metric: :error_rate, metric_value: 0.0)
+      notifier = gimme_notifier(metric: 'error_rate', metric_value: 0.0)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
@@ -437,7 +437,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_notifies_on_error_rate_calculation
-      notifier = gimme_notifier(metric: :failure_count, metric_value: 1)
+      notifier = gimme_notifier(metric: 'failure_count', metric_value: 1)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
@@ -446,7 +446,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_success_count_on_error_rate_calculation
-      notifier = gimme_notifier(metric: :success_count, metric_value: 6)
+      notifier = gimme_notifier(metric: 'success_count', metric_value: 6)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
@@ -455,7 +455,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_not_notify_circuit_execution_time_on_null_timer
-      notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
+      notifier = gimme_notifier(metric: 'execution_time', metric_value: Gimme::Matchers::Anything.new)
       timer = Circuitbox::Timer::Null.new
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
@@ -466,7 +466,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_send_execution_time_metric
-      notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
+      notifier = gimme_notifier(metric: 'execution_time', metric_value: Gimme::Matchers::Anything.new)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
@@ -475,7 +475,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_no_execution_time_metric_on_error_execution
-      notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
+      notifier = gimme_notifier(metric: 'execution_time', metric_value: Gimme::Matchers::Anything.new)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
@@ -484,7 +484,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_no_execution_time_metric_when_circuit_open
-      notifier = gimme_notifier(metric: :execution_time, metric_value: Gimme::Matchers::Anything.new)
+      notifier = gimme_notifier(metric: 'execution_time', metric_value: Gimme::Matchers::Anything.new)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
@@ -495,13 +495,13 @@ class CircuitBreakerTest < Minitest::Test
 
     def gimme_notifier(opts = {})
       service = opts.fetch(:service, 'yammer').to_s
-      metric = opts.fetch(:metric, :error_rate)
+      metric = opts.fetch(:metric, 'error_rate')
       metric_value = opts.fetch(:metric_value, 0.0)
       fake_notifier = gimme
       notified = false
       metric_sent = false
-      give(fake_notifier).notify(service, :open) { notified = true }
-      give(fake_notifier).notify(service, :close) { notified = true }
+      give(fake_notifier).notify(service, 'open') { notified = true }
+      give(fake_notifier).notify(service, 'close') { notified = true }
       give(fake_notifier).notify_warning(service, Gimme::Matchers::Anything.new) { notified = true }
       give(fake_notifier).metric_gauge(service, metric, metric_value) do
         notified = true
