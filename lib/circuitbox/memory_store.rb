@@ -21,8 +21,9 @@ class Circuitbox
     end
 
     def increment(key, amount = 1, opts = {})
+      seconds_to_expire = opts.fetch(:expires, 0)
+
       @mutex.synchronize do
-        seconds_to_expire = opts.fetch(:expires, 0)
         existing_container = fetch_container(key)
 
         # reusing the existing container is a small optmization
