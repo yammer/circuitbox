@@ -16,9 +16,11 @@ class Circuitbox
       end
 
       def run
-        return unless compact_after < current_second
+        compaction_attempted_at = current_second
 
-        @store.delete_if { |_, value| value.expired? }
+        return unless compact_after < compaction_attempted_at
+
+        @store.delete_if { |_, value| value.expired_at?(compaction_attempted_at) }
 
         set_next_compaction_time
       end

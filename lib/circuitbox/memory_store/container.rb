@@ -16,6 +16,10 @@ class Circuitbox
         @expires_after > 0 && @expires_after < current_second
       end
 
+      def expired_at?(clock_second)
+        @expires_after > 0 && @expires_after < clock_second
+      end
+
       def expires_after(seconds = 0)
         @expires_after = seconds.zero? ? seconds : current_second + seconds
       end
