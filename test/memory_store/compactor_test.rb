@@ -36,12 +36,14 @@ class MemoryStoreCompactorTest < Minitest::Test
 
   def test_run_checks_if_value_is_expired_when_compacting
     value_mock = mock
-    value_mock.expects(:expired_at?).returns(true)
     store = { 'test' => value_mock }
 
     compactor = Circuitbox::MemoryStore::Compactor.new(store: store, frequency: 2)
 
-    compactor.stubs(:current_second).returns(compactor.compact_after + 1)
+    current_second_value = compactor.compact_after + 1
+
+    compactor.stubs(:current_second).returns(current_second_value)
+    value_mock.expects(:expired_at?).with(current_second_value).returns(true)
 
     compactor.run
   end
