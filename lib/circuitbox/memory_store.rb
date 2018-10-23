@@ -7,7 +7,7 @@ class Circuitbox
   class MemoryStore
     include MonotonicTime
 
-    def initialize(compaction_frequency: 10)
+    def initialize(compaction_frequency: 60)
       @store = {}
       @mutex = Mutex.new
       @compactor = Compactor.new(store: @store, frequency: compaction_frequency)
