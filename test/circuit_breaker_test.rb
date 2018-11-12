@@ -34,7 +34,7 @@ class CircuitBreakerTest < Minitest::Test
           raise Timeout::Error
         end
       end
-      assert_equal 6, run_counter, 'the circuit did not open after 6 failures (5 failures + 10%)'
+      assert_equal 5, run_counter, 'the circuit did not open after 5 failures'
     end
 
     def test_keep_circuit_closed_on_success
@@ -179,7 +179,7 @@ class CircuitBreakerTest < Minitest::Test
                                                 sleep_window: 2,
                                                 time_window: 2,
                                                 volume_threshold: 5,
-                                                error_threshold: 5,
+                                                error_threshold: 50,
                                                 exceptions: [Timeout::Error])
     end
 
@@ -189,6 +189,7 @@ class CircuitBreakerTest < Minitest::Test
 
       Timecop.freeze(current_time) do
         open_circuit!
+        # should_open? calculation happens when run is called here
         @circuit.run { run_count += 1 }
       end
 
@@ -206,7 +207,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def open_circuit!
-      (@circuit.option_value(:error_threshold) + 1).times { @circuit.run { raise Timeout::Error } }
+      @circuit.option_value(:volume_threshold).times { @circuit.run { raise Timeout::Error } }
     end
   end
 

@@ -126,7 +126,7 @@ class Circuitbox
     end
 
     def passed_volume_threshold?(failures, successes)
-      failures + successes > option_value(:volume_threshold)
+      failures + successes >= option_value(:volume_threshold)
     end
 
     def passed_rate_threshold?(rate)

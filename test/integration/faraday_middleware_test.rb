@@ -29,7 +29,7 @@ class Circuitbox
     end
 
     def test_circuit_does_not_open_for_below_threshhold_failed_requests
-      5.times { connection.get(failure_url) }
+      4.times { connection.get(failure_url) }
       assert_equal connection.get(success_url).status, 200
     end
 
