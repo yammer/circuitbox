@@ -56,7 +56,6 @@ class Circuitbox
       currently_open = open_flag?
       if currently_open || should_open?
         open! unless currently_open
-        logger.debug(circuit_open_message)
         skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
@@ -66,11 +65,9 @@ class Circuitbox
           response = execution_timer.time(service, notifier, 'execution_time') do
             yield
           end
-          logger.debug(circuit_success_message)
           success!
           close! if half_open?
         rescue *exceptions => exception
-          logger.debug(circuit_failure_message)
           failure!
           open! if half_open?
           raise Circuitbox::ServiceFailureError.new(service, exception)
@@ -173,14 +170,17 @@ class Circuitbox
 
     def success!
       notify_and_increment_event('success')
+      logger.debug(circuit_success_message)
     end
 
     def failure!
       notify_and_increment_event('failure')
+      logger.debug(circuit_failure_message)
     end
 
     def skipped!
       notify_event('skipped')
+      logger.debug(circuit_skipped_message)
     end
 
     # Send event notification to notifier
