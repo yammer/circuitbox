@@ -55,22 +55,22 @@ class Circuitbox
     def run!
       currently_open = open_flag?
       if currently_open || should_open?
-        logger.debug(circuit_open_message)
         open! unless currently_open
+        logger.debug(circuit_open_message)
         skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
-        logger.debug(circuit_closed_querying_message)
+        logger.debug(circuit_running_message)
 
         begin
           response = execution_timer.time(service, notifier, 'execution_time') do
             yield
           end
-          logger.debug(circuit_closed_query_success_message)
+          logger.debug(circuit_success_message)
           success!
           close! if half_open?
         rescue *exceptions => exception
-          logger.debug(circuit_closed_failure_message)
+          logger.debug(circuit_failure_message)
           failure!
           open! if half_open?
           raise Circuitbox::ServiceFailureError.new(service, exception)
@@ -145,7 +145,7 @@ class Circuitbox
       # Running event and logger outside of the synchronize block to allow other threads
       # that may be waiting to become unblocked
       notify_event('open')
-      logger.debug(circuit_opening_message)
+      logger.debug(circuit_opened_message)
     end
 
     def close!
@@ -156,6 +156,7 @@ class Circuitbox
       # Running event outside of the synchronize block to allow other threads
       # that may be waiting to become unblocked
       notify_event('close')
+      logger.debug(circuit_closed_message)
     end
 
     def half_open!
