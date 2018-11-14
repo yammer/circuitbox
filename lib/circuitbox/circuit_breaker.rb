@@ -43,6 +43,7 @@ class Circuitbox
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
+      @state_change_mutex = Mutex.new
       check_sleep_window
     end
 
@@ -59,7 +60,6 @@ class Circuitbox
         skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
-        close! if was_open?
         logger.debug(circuit_closed_querying_message)
 
         begin
@@ -68,6 +68,7 @@ class Circuitbox
           end
           logger.debug(circuit_closed_query_success_message)
           success!
+          close! if half_open?
         rescue *exceptions => exception
           logger.debug(circuit_closed_failure_message)
           failure!
@@ -134,27 +135,28 @@ class Circuitbox
     end
 
     def open!
+      @state_change_mutex.synchronize do
+        return if open_flag?
+
+        circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
+        half_open!
+      end
+
+      # Running event and logger outside of the synchronize block to allow other threads
+      # that may be waiting to become unblocked
       notify_event('open')
       logger.debug(circuit_opening_message)
-      circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
-      half_open!
-      was_open!
     end
 
-    ### BEGIN - all this is just here to produce a close notification
     def close!
+      @state_change_mutex.synchronize do
+        return unless !open_flag? && circuit_store.delete(storage_key('half_open'))
+      end
+
+      # Running event outside of the synchronize block to allow other threads
+      # that may be waiting to become unblocked
       notify_event('close')
-      circuit_store.delete(storage_key('was_open'))
     end
-
-    def was_open!
-      circuit_store.store(storage_key('was_open'), true)
-    end
-
-    def was_open?
-      circuit_store.key?(storage_key('was_open'))
-    end
-    ### END
 
     def half_open!
       circuit_store.store(storage_key('half_open'), true)
@@ -170,7 +172,6 @@ class Circuitbox
 
     def success!
       notify_and_increment_event('success')
-      circuit_store.delete(storage_key('half_open'))
     end
 
     def failure!

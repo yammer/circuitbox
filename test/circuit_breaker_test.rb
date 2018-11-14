@@ -214,20 +214,102 @@ class CircuitBreakerTest < Minitest::Test
   class HalfOpenState < Minitest::Test
     def setup
       Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
-      @circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
+      @circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                                sleep_window: 2,
+                                                time_window: 2,
+                                                volume_threshold: 2,
+                                                error_threshold: 50,
+                                                exceptions: [Timeout::Error])
+    end
+
+    def test_when_in_half_open_state_circuit_open_does_not_send_close_notification
+      current_time = Time.new(2015, 7, 29)
+
+      open_circuit(current_time)
+
+      @circuit.stubs(:notify_event)
+      @circuit.expects(:notify_event).with('close').never
+
+      Timecop.freeze(current_time + 3) do
+        @circuit.run do
+          raise Timeout::Error
+        end
+      end
     end
 
     def test_when_in_half_open_state_circuit_opens_on_failure
-      @circuit.stubs(half_open?: true)
+      current_time = Time.new(2015, 7, 29)
+
+      open_circuit(current_time)
+
       @circuit.expects(:open!)
-      @circuit.run { raise Timeout::Error }
+
+      Timecop.freeze(current_time + 3) do
+        @circuit.run do
+          raise Timeout::Error
+        end
+      end
     end
 
     def test_when_in_half_open_state_circuit_closes_on_success
-      @circuit.send(:half_open!)
-      @circuit.run { 'success' }
-      refute @circuit.send(:half_open?)
-      refute @circuit.send(:open?)
+      current_time = Time.new(2015, 7, 29)
+
+      open_circuit(current_time)
+
+      Timecop.freeze(current_time + 3) do
+        @circuit.run { }
+
+        assert_equal false, @circuit.send(:half_open?)
+        assert_equal false, @circuit.open?
+      end
+    end
+
+    def test_when_in_half_open_state_circuit_sends_close_notification_on_success
+      current_time = Time.new(2015, 7, 29)
+
+      open_circuit(current_time)
+
+      @circuit.stubs(:notify_event)
+      @circuit.expects(:notify_event).with('close')
+
+      Timecop.freeze(current_time + 3) do
+        @circuit.run { }
+      end
+    end
+
+    def open_circuit(run_at)
+      Timecop.freeze(run_at) do
+        3.times { @circuit.run { raise Timeout::Error } }
+
+        assert @circuit.open?
+      end
+    end
+  end
+
+  def test_success_does_not_clear_half_open_when_circuit_is_open
+    current_time = Time.new(2015, 7, 29)
+    circuit_ran = false
+    circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                             sleep_window: 2,
+                                             time_window: 2,
+                                             volume_threshold: 2,
+                                             error_threshold: 50,
+                                             exceptions: [Timeout::Error])
+
+    Timecop.freeze(current_time) do
+      4.times { circuit.run { raise Timeout::Error } }
+
+      assert circuit.send(:half_open?)
+
+      # since we're testing a threading issue without running multiple threads
+      # we need the circuit to run the first time
+      circuit.stubs(:open_flag?).returns(false, true)
+      circuit.expects(:should_open?).returns(false)
+
+      circuit.run { circuit_ran = true }
+
+      assert circuit_ran
+      assert circuit.send(:half_open?), 'Half open state removed while circuit is open'
     end
   end
 
