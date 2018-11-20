@@ -3,24 +3,28 @@
 class Circuitbox
   class CircuitBreaker
     module LoggerMessages
-      def circuit_open_message
-        @circuit_open_message ||= "[CIRCUIT] open: skipping #{service}"
+      def circuit_skipped_message
+        @circuit_open_message ||= "[CIRCUIT] #{service}: skipped"
       end
 
-      def circuit_closed_querying_message
-        @circuit_closed_querying_message ||= "[CIRCUIT] closed: querying #{service}"
+      def circuit_running_message
+        @circuit_running_message ||= "[CIRCUIT] #{service}: running"
       end
 
-      def circuit_closed_query_success_message
-        @circuit_closed_query_success_message ||= "[CIRCUIT] closed: #{service} query success"
+      def circuit_success_message
+        @circuit_success_message ||= "[CIRCUIT] #{service}: success"
       end
 
-      def circuit_closed_failure_message
-        @closed_failure_message ||= "[CIRCUIT] closed: detected #{service} failure"
+      def circuit_failure_message
+        @circuit_failure_message ||= "[CIRCUIT] #{service}: failure"
       end
 
-      def circuit_opening_message
-        @opening_message ||= "[CIRCUIT] opening #{service} circuit"
+      def circuit_opened_message
+        @circuit_opened_message ||= "[CIRCUIT] #{service}: opened"
+      end
+
+      def circuit_closed_message
+        @circuit_closed_message ||= "[CIRCUIT] #{service}: closed"
       end
     end
   end

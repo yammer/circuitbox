@@ -43,6 +43,7 @@ class Circuitbox
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
+      @state_change_mutex = Mutex.new
       check_sleep_window
     end
 
@@ -54,22 +55,19 @@ class Circuitbox
     def run!
       currently_open = open_flag?
       if currently_open || should_open?
-        logger.debug(circuit_open_message)
         open! unless currently_open
         skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
-        close! if was_open?
-        logger.debug(circuit_closed_querying_message)
+        logger.debug(circuit_running_message)
 
         begin
           response = execution_timer.time(service, notifier, 'execution_time') do
             yield
           end
-          logger.debug(circuit_closed_query_success_message)
           success!
+          close! if half_open?
         rescue *exceptions => exception
-          logger.debug(circuit_closed_failure_message)
           failure!
           open! if half_open?
           raise Circuitbox::ServiceFailureError.new(service, exception)
@@ -134,27 +132,32 @@ class Circuitbox
     end
 
     def open!
+      @state_change_mutex.synchronize do
+        return if open_flag?
+
+        circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
+        half_open!
+      end
+
+      # Running event and logger outside of the synchronize block to allow other threads
+      # that may be waiting to become unblocked
       notify_event('open')
-      logger.debug(circuit_opening_message)
-      circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
-      half_open!
-      was_open!
+      logger.debug(circuit_opened_message)
     end
 
-    ### BEGIN - all this is just here to produce a close notification
     def close!
+      @state_change_mutex.synchronize do
+        # If the circuit is not open, the half_open key will be deleted from the store
+        # if half_open exists the deleted value is returned and allows us to continue
+        # if half_open doesn't exist nil is returned, causing us to return early
+        return unless !open_flag? && circuit_store.delete(storage_key('half_open'))
+      end
+
+      # Running event outside of the synchronize block to allow other threads
+      # that may be waiting to become unblocked
       notify_event('close')
-      circuit_store.delete(storage_key('was_open'))
+      logger.debug(circuit_closed_message)
     end
-
-    def was_open!
-      circuit_store.store(storage_key('was_open'), true)
-    end
-
-    def was_open?
-      circuit_store.key?(storage_key('was_open'))
-    end
-    ### END
 
     def half_open!
       circuit_store.store(storage_key('half_open'), true)
@@ -170,15 +173,17 @@ class Circuitbox
 
     def success!
       notify_and_increment_event('success')
-      circuit_store.delete(storage_key('half_open'))
+      logger.debug(circuit_success_message)
     end
 
     def failure!
       notify_and_increment_event('failure')
+      logger.debug(circuit_failure_message)
     end
 
     def skipped!
       notify_event('skipped')
+      logger.debug(circuit_skipped_message)
     end
 
     # Send event notification to notifier
