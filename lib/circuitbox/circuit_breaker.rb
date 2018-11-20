@@ -147,6 +147,9 @@ class Circuitbox
 
     def close!
       @state_change_mutex.synchronize do
+        # If the circuit is not open, the half_open key will be deleted from the store
+        # if half_open exists the deleted value is returned and allows us to continue
+        # if half_open doesn't exist nil is returned, causing us to return early
         return unless !open_flag? && circuit_store.delete(storage_key('half_open'))
       end
 
