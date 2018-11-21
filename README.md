@@ -166,10 +166,7 @@ end
 
 `payload[:gauge]` can be:
 
-- `failure_count`
-- `success_count`
-- `error_rate`
-- `execution_time` # execution time will only be notified when circuit is closed and block is successfully executed without timeout or errors.
+- `execution_time` # execution time will only be notified when circuit is closed and block is successfully executed.
 
 **warnings:**
 in case of misconfiguration, circuitbox will fire a circuitbox_warning

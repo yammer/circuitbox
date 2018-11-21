@@ -510,33 +510,6 @@ class CircuitBreakerTest < Minitest::Test
       assert_equal false, notifier.notified?, 'no notification sent'
     end
 
-    def test_notifies_on_success_rate_calculation
-      notifier = gimme_notifier(metric: 'error_rate', metric_value: 0.0)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                               notifier: notifier,
-                                               exceptions: [Timeout::Error])
-      10.times { circuit.run { 'success' } }
-      assert notifier.notified?, 'no notification sent'
-    end
-
-    def test_notifies_on_error_rate_calculation
-      notifier = gimme_notifier(metric: 'failure_count', metric_value: 1)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                               notifier: notifier,
-                                               exceptions: [Timeout::Error])
-      10.times { circuit.run { raise Timeout::Error } }
-      assert notifier.notified?, 'no notification sent'
-    end
-
-    def test_success_count_on_error_rate_calculation
-      notifier = gimme_notifier(metric: 'success_count', metric_value: 6)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                               notifier: notifier,
-                                               exceptions: [Timeout::Error])
-      10.times { circuit.run { 'success' } }
-      assert notifier.notified?, 'no notification sent'
-    end
-
     def test_not_notify_circuit_execution_time_on_null_timer
       notifier = gimme_notifier(metric: 'execution_time', metric_value: Gimme::Matchers::Anything.new)
       timer = Circuitbox::Timer::Null.new

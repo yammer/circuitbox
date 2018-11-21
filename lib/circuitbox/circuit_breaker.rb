@@ -118,8 +118,6 @@ class Circuitbox
       successes = success_count
       rate = error_rate(failures, successes)
 
-      log_metrics(rate, failures, successes)
-
       passed_volume_threshold?(failures, successes) && passed_rate_threshold?(rate)
     end
 
@@ -195,12 +193,6 @@ class Circuitbox
     def notify_and_increment_event(event)
       notify_event(event)
       circuit_store.increment(stat_storage_key(event), 1, expires: (option_value(:time_window) * 2))
-    end
-
-    def log_metrics(error_rate, failures, successes)
-      notifier.metric_gauge(service, 'error_rate', error_rate)
-      notifier.metric_gauge(service, 'failure_count', failures)
-      notifier.metric_gauge(service, 'success_count', successes)
     end
 
     def check_sleep_window
