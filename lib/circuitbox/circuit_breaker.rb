@@ -53,9 +53,7 @@ class Circuitbox
     end
 
     def run!
-      currently_open = open_flag?
-      if currently_open || should_open?
-        open! unless currently_open
+      if open_flag?
         skipped!
         raise Circuitbox::OpenCircuitError.new(service)
       else
@@ -65,11 +63,10 @@ class Circuitbox
           response = execution_timer.time(service, notifier, 'execution_time') do
             yield
           end
+
           success!
-          close! if half_open?
         rescue *exceptions => exception
           failure!
-          open! if half_open?
           raise Circuitbox::ServiceFailureError.new(service, exception)
         end
       end
@@ -85,8 +82,6 @@ class Circuitbox
 
     def open?
       if open_flag?
-        true
-      elsif should_open?
         true
       else
         false
@@ -129,18 +124,38 @@ class Circuitbox
       rate >= option_value(:error_threshold)
     end
 
-    def open!
+    def half_open_failure
       @state_change_mutex.synchronize do
-        return if open_flag?
+        return if open_flag? || !half_open?
 
-        circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
-        half_open!
+        trip
       end
 
       # Running event and logger outside of the synchronize block to allow other threads
       # that may be waiting to become unblocked
+      notify_opened
+    end
+
+    def open!
+      @state_change_mutex.synchronize do
+        return if open_flag?
+
+        trip
+      end
+
+      # Running event and logger outside of the synchronize block to allow other threads
+      # that may be waiting to become unblocked
+      notify_opened
+    end
+
+    def notify_opened
       notify_event('open')
       logger.debug(circuit_opened_message)
+    end
+
+    def trip
+      circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
+      circuit_store.store(storage_key('half_open'), true)
     end
 
     def close!
@@ -157,10 +172,6 @@ class Circuitbox
       logger.debug(circuit_closed_message)
     end
 
-    def half_open!
-      circuit_store.store(storage_key('half_open'), true)
-    end
-
     def open_flag?
       circuit_store.key?(storage_key('asleep'))
     end
@@ -172,11 +183,19 @@ class Circuitbox
     def success!
       notify_and_increment_event('success')
       logger.debug(circuit_success_message)
+
+      close! if half_open?
     end
 
     def failure!
       notify_and_increment_event('failure')
       logger.debug(circuit_failure_message)
+
+      if half_open?
+        half_open_failure
+      elsif should_open?
+        open!
+      end
     end
 
     def skipped!

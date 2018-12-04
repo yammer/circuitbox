@@ -12,7 +12,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_goes_into_half_open_state_on_sleep
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.send(:open!)
+    circuit.send(:trip)
     assert circuit.send(:half_open?)
   end
 
@@ -242,7 +242,7 @@ class CircuitBreakerTest < Minitest::Test
 
       open_circuit(current_time)
 
-      @circuit.expects(:open!)
+      @circuit.expects(:half_open_failure)
 
       Timecop.freeze(current_time + 3) do
         @circuit.run do
@@ -304,7 +304,6 @@ class CircuitBreakerTest < Minitest::Test
       # since we're testing a threading issue without running multiple threads
       # we need the circuit to run the first time
       circuit.stubs(:open_flag?).returns(false, true)
-      circuit.expects(:should_open?).returns(false)
 
       circuit.run { circuit_ran = true }
 
@@ -353,7 +352,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_skipped
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.stubs(should_open?: true)
+    circuit.stubs(open_flag?: true)
     circuit.stubs(:notify_event)
     circuit.expects(:notify_event).with('skipped')
     emulate_circuit_run(circuit, :failure, Timeout::Error)
@@ -395,23 +394,6 @@ class CircuitBreakerTest < Minitest::Test
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
     circuit.stubs(open_flag?: true)
     assert circuit.open?
-  end
-
-  def test_open_checks_if_volume_threshold_has_passed
-    circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.stubs(open_flag?: false)
-
-    circuit.expects(:passed_volume_threshold?).with(0, 0).once
-    circuit.open?
-  end
-
-  def test_open_checks_error_rate_threshold
-    circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.stubs(open_flag?: false,
-                  passed_volume_threshold?: true)
-
-   circuit.expects(:passed_rate_threshold?).with(0.0).once
-   circuit.open?
   end
 
   def test_open_is_false_if_awake_and_under_rate_threshold
@@ -473,18 +455,27 @@ class CircuitBreakerTest < Minitest::Test
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
       10.times { circuit.run { raise Timeout::Error } }
-      assert notifier.notified?, 'no notification sent'
+      assert notifier.notified_open?, 'no notification sent'
     end
 
     def test_notification_on_close
       notifier = gimme_notifier
+      current_time = Time.new(2015, 7, 29)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
-      5.times { circuit.run { raise Timeout::Error } }
+
+      Timecop.freeze(current_time) do
+        5.times { circuit.run { raise Timeout::Error } }
+      end
+
       notifier.clear_notified!
-      10.times { circuit.run { 'success' } }
-      assert notifier.notified?, 'no notification sent'
+
+      Timecop.freeze(current_time + 95) do
+        10.times { circuit.run { 'success' } }
+      end
+
+      assert notifier.notified_close?, 'no notification sent'
     end
 
     def test_warning_when_sleep_window_is_shorter_than_time_window
@@ -544,7 +535,7 @@ class CircuitBreakerTest < Minitest::Test
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
-      circuit.send(:open!)
+      circuit.send(:trip)
       circuit.run { raise Timeout::Error }
       refute notifier.metric_sent?, 'execution time metric sent'
     end
@@ -555,17 +546,21 @@ class CircuitBreakerTest < Minitest::Test
       metric_value = opts.fetch(:metric_value, 0.0)
       fake_notifier = gimme
       notified = false
+      notified_open = false
+      notified_close = false
       metric_sent = false
-      give(fake_notifier).notify(service, 'open') { notified = true }
-      give(fake_notifier).notify(service, 'close') { notified = true }
+      give(fake_notifier).notify(service, 'open') { notified_open = true }
+      give(fake_notifier).notify(service, 'close') { notified_close = true }
       give(fake_notifier).notify_warning(service, Gimme::Matchers::Anything.new) { notified = true }
       give(fake_notifier).metric_gauge(service, metric, metric_value) do
         notified = true
         metric_sent = true
       end
       give(fake_notifier).notified? { notified }
+      give(fake_notifier).notified_open? { notified_open }
+      give(fake_notifier).notified_close? { notified_close }
       give(fake_notifier).metric_sent? { metric_sent }
-      give(fake_notifier).clear_notified! { notified = false }
+      give(fake_notifier).clear_notified! { notified = false; notified_open = false; notified_close = false }
       fake_notifier
     end
   end
