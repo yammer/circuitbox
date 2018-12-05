@@ -103,7 +103,7 @@ class Circuitbox
     end
 
     def try_close_next_time
-      circuit_store.delete(storage_key('asleep'))
+      circuit_store.delete(open_storage_key)
     end
 
   private
@@ -154,8 +154,8 @@ class Circuitbox
     end
 
     def trip
-      circuit_store.store(storage_key('asleep'), true, expires: option_value(:sleep_window))
-      circuit_store.store(storage_key('half_open'), true)
+      circuit_store.store(open_storage_key, true, expires: option_value(:sleep_window))
+      circuit_store.store(half_open_storage_key, true)
     end
 
     def close!
@@ -163,7 +163,7 @@ class Circuitbox
         # If the circuit is not open, the half_open key will be deleted from the store
         # if half_open exists the deleted value is returned and allows us to continue
         # if half_open doesn't exist nil is returned, causing us to return early
-        return unless !open_flag? && circuit_store.delete(storage_key('half_open'))
+        return unless !open_flag? && circuit_store.delete(half_open_storage_key)
       end
 
       # Running event outside of the synchronize block to allow other threads
@@ -173,11 +173,11 @@ class Circuitbox
     end
 
     def open_flag?
-      circuit_store.key?(storage_key('asleep'))
+      circuit_store.key?(open_storage_key)
     end
 
     def half_open?
-      circuit_store.key?(storage_key('half_open'))
+      circuit_store.key?(half_open_storage_key)
     end
 
     def success!
@@ -236,8 +236,12 @@ class Circuitbox
       time - (time % time_window) # remove rest of integer division
     end
 
-    def storage_key(key)
-      "circuits:#{service}:#{key}"
+    def open_storage_key
+      @open_storage_key ||= "circuits:#{service}:open"
+    end
+
+    def half_open_storage_key
+      @half_open_storage_key ||= "circuits:#{service}:half_open"
     end
   end
 end

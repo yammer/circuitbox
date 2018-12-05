@@ -134,7 +134,7 @@ class CircuitBreakerTest < Minitest::Test
     def setup
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 exceptions: [Timeout::Error],
-                                                cache: ExpiringCache.new('circuits:yammer:asleep', true))
+                                                cache: ExpiringCache.new('circuits:yammer:open', true))
     end
 
     def test_key_expiration_closes_circuit
