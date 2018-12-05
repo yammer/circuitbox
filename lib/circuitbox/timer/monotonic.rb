@@ -1,7 +1,7 @@
 class Circuitbox
   class Timer
     class Monotonic
-      def initialize(time_unit = :milliseconds)
+      def initialize(time_unit = :millisecond)
         @time_unit = time_unit
       end
 
