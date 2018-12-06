@@ -66,6 +66,9 @@ class Circuitbox
 
           success!
         rescue *exceptions => exception
+          # Other stores could raise an exception that circuitbox is asked to watch.
+          # setting to nil keeps the same behavior as the previous defination of run.
+          response = nil
           failure!
           raise Circuitbox::ServiceFailureError.new(service, exception) if circuitbox_exceptions
         end
