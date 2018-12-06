@@ -29,7 +29,7 @@ class CircuitBreakerTest < Minitest::Test
     def test_open_circuit_on_100_percent_failure
       run_counter = 0
       10.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           raise Timeout::Error
         end
@@ -40,7 +40,7 @@ class CircuitBreakerTest < Minitest::Test
     def test_keep_circuit_closed_on_success
       run_counter = 0
       10.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           'sucess'
         end
@@ -51,18 +51,18 @@ class CircuitBreakerTest < Minitest::Test
     def test_open_circuit_on_low_success_rate_below_limit
       run_counter = 0
       5.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           raise Timeout::Error
         end
       end
 
       # one success
-      @circuit.run { 'success' }
+      @circuit.run(circuitbox_exceptions: false) { 'success' }
       assert_equal 5, @circuit.failure_count, 'the total count of failures is not 5'
 
       5.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           raise Timeout::Error
         end
@@ -73,7 +73,7 @@ class CircuitBreakerTest < Minitest::Test
     def test_keep_circuit_closed_on_low_failure_rate_below_failure_limit
       run_counter = 0
       7.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           'sucess'
         end
@@ -81,7 +81,7 @@ class CircuitBreakerTest < Minitest::Test
       assert_equal 0, @circuit.failure_count, 'some errors were counted'
 
       3.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           raise Timeout::Error
         end
@@ -93,7 +93,7 @@ class CircuitBreakerTest < Minitest::Test
     def test_open_circuit_on_high_failure_rate_exceeding_failure_limit
       run_counter = 0
       10.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           'sucess'
         end
@@ -101,7 +101,7 @@ class CircuitBreakerTest < Minitest::Test
       assert_equal 0, @circuit.failure_count, 'some errors were counted'
 
       10.times do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           run_counter += 1
           raise Timeout::Error
         end
@@ -138,8 +138,8 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_key_expiration_closes_circuit
-      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run! {} }
-      assert_equal 'success', @circuit.run! { 'success' }
+      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run {} }
+      assert_equal 'success', @circuit.run { 'success' }
     end
   end
 
@@ -154,15 +154,15 @@ class CircuitBreakerTest < Minitest::Test
 
     def test_raises_when_circuit_is_open
       @circuit.stubs(open_flag?: true)
-      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run! {} }
+      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run {} }
     end
 
     def test_raises_on_service_failure
-      assert_raises(Circuitbox::ServiceFailureError) { @circuit.run! { raise SentinalError } }
+      assert_raises(Circuitbox::ServiceFailureError) { @circuit.run { raise SentinalError } }
     end
 
     def test_sets_original_error_on_service_failure
-      @circuit.run! { raise SentinalError }
+      @circuit.run { raise SentinalError }
     rescue Circuitbox::ServiceFailureError => service_failure_error
       assert_instance_of SentinalError, service_failure_error.original
     end
@@ -190,7 +190,7 @@ class CircuitBreakerTest < Minitest::Test
       Timecop.freeze(current_time) do
         open_circuit!
         # should_open? calculation happens when run is called here
-        @circuit.run { run_count += 1 }
+        @circuit.run(circuitbox_exceptions: false) { run_count += 1 }
       end
 
       assert_equal 0, run_count, 'circuit has not opened prior'
@@ -207,7 +207,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def open_circuit!
-      @circuit.option_value(:volume_threshold).times { @circuit.run { raise Timeout::Error } }
+      @circuit.option_value(:volume_threshold).times { @circuit.run(circuitbox_exceptions: false) { raise Timeout::Error } }
     end
   end
 
@@ -231,7 +231,7 @@ class CircuitBreakerTest < Minitest::Test
       @circuit.expects(:notify_event).with('close').never
 
       Timecop.freeze(current_time + 3) do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           raise Timeout::Error
         end
       end
@@ -245,7 +245,7 @@ class CircuitBreakerTest < Minitest::Test
       @circuit.expects(:half_open_failure)
 
       Timecop.freeze(current_time + 3) do
-        @circuit.run do
+        @circuit.run(circuitbox_exceptions: false) do
           raise Timeout::Error
         end
       end
@@ -279,7 +279,7 @@ class CircuitBreakerTest < Minitest::Test
 
     def open_circuit(run_at)
       Timecop.freeze(run_at) do
-        3.times { @circuit.run { raise Timeout::Error } }
+        3.times { @circuit.run(circuitbox_exceptions: false) { raise Timeout::Error } }
 
         assert @circuit.open?
       end
@@ -297,7 +297,7 @@ class CircuitBreakerTest < Minitest::Test
                                              exceptions: [Timeout::Error])
 
     Timecop.freeze(current_time) do
-      4.times { circuit.run { raise Timeout::Error } }
+      4.times { circuit.run(circuitbox_exceptions: false) { raise Timeout::Error } }
 
       assert circuit.send(:half_open?)
 
@@ -454,7 +454,7 @@ class CircuitBreakerTest < Minitest::Test
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
-      10.times { circuit.run { raise Timeout::Error } }
+      10.times { circuit.run(circuitbox_exceptions: false) { raise Timeout::Error } }
       assert notifier.notified_open?, 'no notification sent'
     end
 
@@ -466,13 +466,13 @@ class CircuitBreakerTest < Minitest::Test
                                                exceptions: [Timeout::Error])
 
       Timecop.freeze(current_time) do
-        5.times { circuit.run { raise Timeout::Error } }
+        5.times { circuit.run(circuitbox_exceptions: false) { raise Timeout::Error } }
       end
 
       notifier.clear_notified!
 
       Timecop.freeze(current_time + 95) do
-        10.times { circuit.run { 'success' } }
+        10.times { circuit.run(circuitbox_exceptions: false) { 'success' } }
       end
 
       assert notifier.notified_close?, 'no notification sent'
@@ -526,7 +526,7 @@ class CircuitBreakerTest < Minitest::Test
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
-      circuit.run { raise Timeout::Error }
+      circuit.run(circuitbox_exceptions: false) { raise Timeout::Error }
       refute notifier.metric_sent?, 'execution time metric sent'
     end
 
@@ -536,7 +536,7 @@ class CircuitBreakerTest < Minitest::Test
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
       circuit.send(:trip)
-      circuit.run { raise Timeout::Error }
+      circuit.run(circuitbox_exceptions: false) { raise Timeout::Error }
       refute notifier.metric_sent?, 'execution time metric sent'
     end
 
@@ -566,7 +566,7 @@ class CircuitBreakerTest < Minitest::Test
   end
 
   def emulate_circuit_run(circuit, response_type, response_value)
-    circuit.run do
+    circuit.run(circuitbox_exceptions: false) do
       case response_type
       when :failure
         raise response_value

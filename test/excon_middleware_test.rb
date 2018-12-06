@@ -28,7 +28,7 @@ class Circuitbox
       stub_circuitbox
       env = { host: 'yammer.com' }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       default_value_generator = ->(_, _) { :sential }
       middleware = ExconMiddleware.new(app,
                                        circuitbox: circuitbox,
@@ -40,7 +40,7 @@ class Circuitbox
       stub_circuitbox
       env = { host: 'yammer.com' }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       middleware = ExconMiddleware.new(app, circuitbox: circuitbox, default_value: :sential)
       assert_equal :sential, middleware.error_call(env)
     end
@@ -97,7 +97,7 @@ class Circuitbox
       stub_circuitbox
       env = { host: 'yammer.com', circuit_breaker_default_value: :sential }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       middleware = ExconMiddleware.new(app, circuitbox: circuitbox)
       assert_equal middleware.error_call(env), :sential
     end
@@ -105,7 +105,7 @@ class Circuitbox
     def test_return_null_response_for_open_circuit
       stub_circuitbox
       env = { host: 'yammer.com' }
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
       mw = ExconMiddleware.new(app, circuitbox: circuitbox)
       response = mw.error_call(env)

@@ -32,7 +32,7 @@ class Circuitbox
     end
 
     def error_call(datum)
-      circuit(datum).run! do
+      circuit(datum).run do
         raise RequestFailed
       end
     rescue Circuitbox::Error => exception
@@ -40,13 +40,13 @@ class Circuitbox
     end
 
     def request_call(datum)
-      circuit(datum).run! do
+      circuit(datum).run do
         @stack.request_call(datum)
       end
     end
 
     def response_call(datum)
-      circuit(datum).run! do
+      circuit(datum).run do
         raise RequestFailed if open_circuit?(datum[:response])
       end
       @stack.response_call(datum)

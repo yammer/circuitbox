@@ -52,10 +52,10 @@ class Circuitbox
       value.is_a?(Proc) ? value.call : value
     end
 
-    def run!
+    def run(circuitbox_exceptions: true)
       if open_flag?
         skipped!
-        raise Circuitbox::OpenCircuitError.new(service)
+        raise Circuitbox::OpenCircuitError.new(service) if circuitbox_exceptions
       else
         logger.debug(circuit_running_message)
 
@@ -67,17 +67,11 @@ class Circuitbox
           success!
         rescue *exceptions => exception
           failure!
-          raise Circuitbox::ServiceFailureError.new(service, exception)
+          raise Circuitbox::ServiceFailureError.new(service, exception) if circuitbox_exceptions
         end
       end
 
       response
-    end
-
-    def run
-      run! { yield }
-    rescue Circuitbox::Error
-      nil
     end
 
     def open?
