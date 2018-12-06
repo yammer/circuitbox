@@ -88,15 +88,7 @@ class Circuitbox
     end
 
     def circuit_open_value(env, service_response, exception)
-      env[:circuit_breaker_default_value] || call_default_lambda(service_response, exception)
-    end
-
-    def call_default_lambda(service_response, exception)
-      if default_value.arity == 2
-        default_value.call(service_response, exception)
-      else
-        default_value.call(service_response)
-      end
+      env[:circuit_breaker_default_value] || default_value.call(service_response, exception)
     end
 
     def circuit(env)

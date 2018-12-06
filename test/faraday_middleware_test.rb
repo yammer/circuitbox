@@ -29,7 +29,7 @@ class Circuitbox
       env = { url: URI('http://yammer.com/') }
       give(circuitbox).circuit('yammer.com', anything) { circuit }
       give(circuit).run! { raise Circuitbox::Error }
-      default_value_generator = lambda { |response| :sential }
+      default_value_generator = ->(_, _) { :sential }
       middleware = FaradayMiddleware.new(app,
                                          circuitbox: circuitbox,
                                          default_value: default_value_generator)
