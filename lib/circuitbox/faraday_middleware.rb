@@ -27,7 +27,8 @@ class Circuitbox
         # nil -> connection could not be established, or failed very hard
         # 5xx -> non recoverable server error, oposed to 4xx which are client errors
         response.status.nil? || (500 <= response.status && response.status <= 599)
-      end
+      end,
+      default_value: ->(service_response, exception) { NullResponse.new(service_response, exception) }
     }
 
     def initialize(app, opts = {})
@@ -70,13 +71,9 @@ class Circuitbox
       end
     end
 
-    def default_value
-      @default_value ||= begin
-        default = opts.fetch(:default_value) do
-          lambda { |service_response, exception| NullResponse.new(service_response, exception) }
-        end
-        default.respond_to?(:call) ? default : lambda { |*| default }
-      end
+    def call_default_value(response, exception)
+      default_value = opts[:default_value]
+      default_value.respond_to?(:call) ? default_value.call(response, exception) : default_value
     end
 
     def open_circuit?(response)
@@ -88,7 +85,7 @@ class Circuitbox
     end
 
     def circuit_open_value(env, service_response, exception)
-      env[:circuit_breaker_default_value] || default_value.call(service_response, exception)
+      env[:circuit_breaker_default_value] || call_default_value(service_response, exception)
     end
 
     def circuit(env)
