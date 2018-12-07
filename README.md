@@ -76,7 +76,7 @@ class ExampleServiceClient
       # length of interval (in seconds) over which it calculates the error rate
       time_window:      60,
 
-      # number of requests within `time_window` seconds before it calculates error rates
+      # number of requests within `time_window` seconds before it calculates error rates (checked on failures)
       volume_threshold: 10,
 
       # the store you want to use to save the circuit state so it can be
@@ -84,7 +84,7 @@ class ExampleServiceClient
       # this overrides what is set in the global configuration
       cache: Moneta.new(:Memory),
 
-      # exceeding this rate will open the circuit
+      # exceeding this rate will open the circuit (checked on failures)
       error_threshold:  50,
 
       # Logger to use
