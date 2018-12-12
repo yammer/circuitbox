@@ -7,8 +7,8 @@ class Circuitbox
 
     DEFAULT_EXCEPTIONS = [
       Faraday::Error::TimeoutError,
-      RequestFailed,
-    ]
+      RequestFailed
+    ].freeze
 
     class NullResponse < Faraday::Response
       attr_reader :original_response, :original_exception
@@ -90,7 +90,7 @@ class Circuitbox
 
     def circuit(env)
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
-      circuitbox.circuit id, circuit_breaker_options
+      circuitbox.circuit(id, circuit_breaker_options)
     end
   end
 end
