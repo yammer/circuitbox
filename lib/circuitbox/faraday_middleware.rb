@@ -26,7 +26,7 @@ class Circuitbox
         # response.status:
         # nil -> connection could not be established, or failed very hard
         # 5xx -> non recoverable server error, oposed to 4xx which are client errors
-        response.status.nil? || (500 <= response.status && response.status <= 599)
+        response.status.nil? || (response.status >= 500 && response.status <= 599)
       end,
       default_value: ->(service_response, exception) { NullResponse.new(service_response, exception) }
     }
