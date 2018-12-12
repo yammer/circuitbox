@@ -278,13 +278,6 @@ end
 By default the Faraday middleware returns a `503` response when the circuit is
 open, but this as many other things can be configured via middleware options
 
-* `exceptions` pass a list of exceptions for the Circuitbreaker to catch,
-  defaults to Faraday::Error::TimeoutError and Request failures
-
-```ruby
-c.use Circuitbox::FaradayMiddleware, exceptions: [Faraday::Error::TimeoutError]
-```
-
 * `default_value` value to return for open circuits, defaults to 503 response
   wrapping the original response given by the service and stored as
   `original_response` property of the returned 503, this can be overwritten
@@ -306,7 +299,8 @@ c.use Circuitbox::FaradayMiddleware, identifier: "service_name_circuit"
 ```
 
 * `circuit_breaker_options` options to initialize the circuit with defaults to
-  `{ volume_threshold: 10, exceptions: Circuitbox::FaradayMiddleware::DEFAULT_EXCEPTIONS }`
+  `{ exceptions: Circuitbox::FaradayMiddleware::DEFAULT_EXCEPTIONS }`.
+  Accepts same options as Circuitbox:CircuitBreaker#new
 
 ```ruby
 c.use Circuitbox::FaradayMiddleware, circuit_breaker_options: {}

@@ -111,7 +111,7 @@ class Circuitbox
     end
 
     def test_overwrite_exceptions
-      middleware = FaradayMiddleware.new(app, exceptions: [SentialException])
+      middleware = FaradayMiddleware.new(app, circuit_breaker_options: { exceptions: [SentialException] })
       assert_includes middleware.exceptions, SentialException
     end
 

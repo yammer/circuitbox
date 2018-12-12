@@ -65,9 +65,7 @@ class Circuitbox
     def circuit_breaker_options
       @circuit_breaker_options ||= begin
         options = opts.fetch(:circuit_breaker_options, {})
-        options.merge!(
-          exceptions: opts.fetch(:exceptions, DEFAULT_EXCEPTIONS)
-        )
+        { exceptions: DEFAULT_EXCEPTIONS }.merge!(options)
       end
     end
 
