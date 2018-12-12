@@ -80,17 +80,13 @@ class Circuitbox
       opts[:open_circuit].call(response)
     end
 
-    def circuitbox
-      @circuitbox ||= opts.fetch(:circuitbox, Circuitbox)
-    end
-
     def circuit_open_value(env, service_response, exception)
       env[:circuit_breaker_default_value] || call_default_value(service_response, exception)
     end
 
     def circuit(env)
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
-      circuitbox.circuit(id, circuit_breaker_options)
+      Circuitbox.circuit(id, circuit_breaker_options)
     end
   end
 end
