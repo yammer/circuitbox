@@ -15,13 +15,26 @@ class Circuitbox
     end
 
     def test_default_identifier
+      middleware = FaradayMiddleware.new(app)
       env = { url: URI('http://yammer.com/') }
-      assert_equal 'yammer.com', FaradayMiddleware.new(app).identifier.call(env)
+
+      assert_equal 'yammer.com', middleware.opts[:identifier].call(env)
+    end
+
+    def test_default_identifier_no_host
+      middleware = FaradayMiddleware.new(app)
+      uri = gimme
+      give(uri).host { nil }
+      give(uri).to_s { 'yam'}
+      env = { url: uri }
+
+      assert_equal 'yam', middleware.opts[:identifier].call(env)
     end
 
     def test_overwrite_identifier
       middleware = FaradayMiddleware.new(app, identifier: 'sential')
-      assert_equal middleware.identifier, 'sential'
+
+      assert_equal middleware.opts[:identifier], 'sential'
     end
 
     def test_overwrite_default_value_generator_lambda

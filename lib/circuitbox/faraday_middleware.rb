@@ -22,6 +22,10 @@ class Circuitbox
         response.status.nil? || (response.status >= 500 && response.status <= 599)
       end,
       default_value: ->(service_response, exception) { NullResponse.new(service_response, exception) },
+      # It's possible for the URL object to not have a host at the time the middleware
+      # is run. To not break circuitbox by creating a circuit with a nil service name
+      # we can get the string representation of the URL object and use that as the service name.
+      identifier: ->(env) { env[:url].host || env[:url].to_s },
       # default circuit breaker options are merged in during initialization
       circuit_breaker_options: {}
     }.freeze
@@ -57,13 +61,6 @@ class Circuitbox
       circuit_open_value(request_env, service_response, ex)
     end
 
-    def identifier
-      # It's possible for the URL object to not have a host at the time the middleware
-      # is run. To not break circuitbox by creating a circuit with a nil service name
-      # we can get the string representation of the URL object and use that as the service name.
-      @identifier ||= opts.fetch(:identifier, ->(env) { env[:url].host || env[:url].to_s })
-    end
-
     private
 
     def call_default_value(response, exception)
@@ -80,7 +77,9 @@ class Circuitbox
     end
 
     def circuit(env)
+      identifier = opts[:identifier]
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
+
       Circuitbox.circuit(id, opts[:circuit_breaker_options])
     end
   end
