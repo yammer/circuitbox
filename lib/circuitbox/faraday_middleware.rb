@@ -5,11 +5,6 @@ class Circuitbox
   class FaradayMiddleware < Faraday::Middleware
     class RequestFailed < StandardError; end
 
-    DEFAULT_EXCEPTIONS = [
-      Faraday::Error::TimeoutError,
-      RequestFailed
-    ].freeze
-
     class NullResponse < Faraday::Response
       attr_reader :original_response, :original_exception
       def initialize(response = nil, exception = nil)
@@ -19,21 +14,34 @@ class Circuitbox
       end
     end
 
-    attr_reader :opts
-
-    DEFAULT_CIRCUITBOX_OPTIONS = {
+    DEFAULT_OPTIONS = {
       open_circuit: lambda do |response|
         # response.status:
         # nil -> connection could not be established, or failed very hard
         # 5xx -> non recoverable server error, oposed to 4xx which are client errors
         response.status.nil? || (response.status >= 500 && response.status <= 599)
       end,
-      default_value: ->(service_response, exception) { NullResponse.new(service_response, exception) }
-    }
+      default_value: ->(service_response, exception) { NullResponse.new(service_response, exception) },
+      # default circuit breaker options are merged in during initialization
+      circuit_breaker_options: {}
+    }.freeze
+
+    DEFAULT_EXCEPTIONS = [
+      Faraday::Error::TimeoutError,
+      RequestFailed
+    ].freeze
+
+    DEFAULT_CIRCUIT_BREAKER_OPTIONS = {
+      exceptions: DEFAULT_EXCEPTIONS
+    }.freeze
+
+    attr_reader :opts
 
     def initialize(app, opts = {})
       @app = app
-      @opts = DEFAULT_CIRCUITBOX_OPTIONS.merge(opts)
+      @opts = DEFAULT_OPTIONS.merge(opts)
+
+      @opts[:circuit_breaker_options] = DEFAULT_CIRCUIT_BREAKER_OPTIONS.merge(@opts[:circuit_breaker_options])
       super(app)
     end
 
@@ -49,10 +57,6 @@ class Circuitbox
       circuit_open_value(request_env, service_response, ex)
     end
 
-    def exceptions
-      circuit_breaker_options[:exceptions]
-    end
-
     def identifier
       # It's possible for the URL object to not have a host at the time the middleware
       # is run. To not break circuitbox by creating a circuit with a nil service name
@@ -61,13 +65,6 @@ class Circuitbox
     end
 
     private
-
-    def circuit_breaker_options
-      @circuit_breaker_options ||= begin
-        options = opts.fetch(:circuit_breaker_options, {})
-        { exceptions: DEFAULT_EXCEPTIONS }.merge!(options)
-      end
-    end
 
     def call_default_value(response, exception)
       default_value = opts[:default_value]
@@ -84,7 +81,7 @@ class Circuitbox
 
     def circuit(env)
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
-      Circuitbox.circuit(id, circuit_breaker_options)
+      Circuitbox.circuit(id, opts[:circuit_breaker_options])
     end
   end
 end

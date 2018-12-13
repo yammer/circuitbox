@@ -61,8 +61,10 @@ class Circuitbox
 
     def test_default_exceptions
       middleware = FaradayMiddleware.new(app)
-      assert_includes middleware.exceptions, Faraday::Error::TimeoutError
-      assert_includes middleware.exceptions, FaradayMiddleware::RequestFailed
+      circuit_breaker_options = middleware.opts[:circuit_breaker_options]
+
+      assert_includes circuit_breaker_options[:exceptions], Faraday::Error::TimeoutError
+      assert_includes circuit_breaker_options[:exceptions], FaradayMiddleware::RequestFailed
     end
 
     def test_overridde_success_response
@@ -112,7 +114,9 @@ class Circuitbox
 
     def test_overwrite_exceptions
       middleware = FaradayMiddleware.new(app, circuit_breaker_options: { exceptions: [SentialException] })
-      assert_includes middleware.exceptions, SentialException
+      circuit_breaker_options = middleware.opts[:circuit_breaker_options]
+
+      assert_includes circuit_breaker_options[:exceptions], SentialException
     end
 
     def test_pass_circuit_breaker_options
