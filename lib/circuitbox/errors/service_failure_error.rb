@@ -6,7 +6,8 @@ class Circuitbox
       @service = service
       @original = exception
       # we copy over the original exceptions backtrace if there is one
-      set_backtrace(exception.backtrace) unless exception.backtrace.empty?
+      backtrace = exception.backtrace
+      set_backtrace(backtrace) unless backtrace.empty?
     end
 
     def to_s

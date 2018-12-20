@@ -5,6 +5,5 @@ class Circuitbox
     def initialize(service)
       @service = service
     end
-
   end
 end
