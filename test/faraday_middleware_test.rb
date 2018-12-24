@@ -15,52 +15,69 @@ class Circuitbox
     end
 
     def test_default_identifier
+      middleware = FaradayMiddleware.new(app)
       env = { url: URI('http://yammer.com/') }
-      assert_equal 'yammer.com', FaradayMiddleware.new(app).identifier.call(env)
+
+      assert_equal 'yammer.com', middleware.opts[:identifier].call(env)
+    end
+
+    def test_default_identifier_no_host
+      middleware = FaradayMiddleware.new(app)
+      uri = gimme
+      give(uri).host { nil }
+      give(uri).to_s { 'yam'}
+      env = { url: uri }
+
+      assert_equal 'yam', middleware.opts[:identifier].call(env)
     end
 
     def test_overwrite_identifier
       middleware = FaradayMiddleware.new(app, identifier: 'sential')
-      assert_equal middleware.identifier, 'sential'
+
+      assert_equal middleware.opts[:identifier], 'sential'
     end
 
     def test_overwrite_default_value_generator_lambda
-      stub_circuitbox
+      circuit = gimme
       env = { url: URI('http://yammer.com/') }
-      give(circuitbox).circuit('yammer.com', anything) { circuit }
+
       give(circuit).run! { raise Circuitbox::Error }
-      default_value_generator = lambda { |response| :sential }
-      middleware = FaradayMiddleware.new(app,
-                                         circuitbox: circuitbox,
-                                         default_value: default_value_generator)
+      Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
+
+      default_value_generator = ->(_, _) { :sential }
+      middleware = FaradayMiddleware.new(app, default_value: default_value_generator)
       assert_equal :sential, middleware.call(env)
     end
 
     def test_default_value_generator_lambda_passed_error
-      stub_circuitbox
+      circuit = gimme
       env = { url: URI('http://yammer.com/') }
-      give(circuitbox).circuit('yammer.com', anything) { circuit }
+
       give(circuit).run! { raise Circuitbox::Error, 'error text' }
+      Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
+
       default_value_generator = ->(_, error) { error.message }
-      middleware = FaradayMiddleware.new(app,
-                                         circuitbox: circuitbox,
-                                         default_value: default_value_generator)
+      middleware = FaradayMiddleware.new(app, default_value: default_value_generator)
       assert_equal 'error text', middleware.call(env)
     end
 
     def test_overwrite_default_value_generator_static_value
-      stub_circuitbox
+      circuit = gimme
       env = { url: URI('http://yammer.com/') }
-      give(circuitbox).circuit('yammer.com', anything) { circuit }
+
       give(circuit).run! { raise Circuitbox::Error }
-      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox, default_value: :sential)
+      Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
+
+      middleware = FaradayMiddleware.new(app, default_value: :sential)
       assert_equal :sential, middleware.call(env)
     end
 
     def test_default_exceptions
       middleware = FaradayMiddleware.new(app)
-      assert_includes middleware.exceptions, Faraday::Error::TimeoutError
-      assert_includes middleware.exceptions, FaradayMiddleware::RequestFailed
+      circuit_breaker_options = middleware.opts[:circuit_breaker_options]
+
+      assert_includes circuit_breaker_options[:exceptions], Faraday::Error::TimeoutError
+      assert_includes circuit_breaker_options[:exceptions], FaradayMiddleware::RequestFailed
     end
 
     def test_overridde_success_response
@@ -109,59 +126,61 @@ class Circuitbox
     end
 
     def test_overwrite_exceptions
-      middleware = FaradayMiddleware.new(app, exceptions: [SentialException])
-      assert_includes middleware.exceptions, SentialException
+      middleware = FaradayMiddleware.new(app, circuit_breaker_options: { exceptions: [SentialException] })
+      circuit_breaker_options = middleware.opts[:circuit_breaker_options]
+
+      assert_includes circuit_breaker_options[:exceptions], SentialException
     end
 
     def test_pass_circuit_breaker_options
-      stub_circuitbox
+      circuit = gimme
       env = { url: URI('http://yammer.com/') }
       expected_circuit_breaker_options = {
         sential: :sential,
         exceptions: FaradayMiddleware::DEFAULT_EXCEPTIONS
       }
-      give(circuitbox).circuit('yammer.com', expected_circuit_breaker_options) { circuit }
-      options = { circuitbox: circuitbox, circuit_breaker_options: { sential: :sential } }
+      Circuitbox.expects(:circuit).with('yammer.com', expected_circuit_breaker_options).returns(circuit)
+
+      options = { circuit_breaker_options: { sential: :sential } }
       middleware = FaradayMiddleware.new(app, options)
       middleware.call(env)
-
-      verify(circuitbox, 1.times).circuit('yammer.com', expected_circuit_breaker_options)
     end
 
     def test_overwrite_circuitbreaker_default_value
-      stub_circuitbox
+      circuit = gimme
       env = { url: URI('http://yammer.com/'), circuit_breaker_default_value: :sential }
-      give(circuitbox).circuit('yammer.com', anything) { circuit }
+
       give(circuit).run! { raise Circuitbox::Error }
-      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
+      Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
+
+      middleware = FaradayMiddleware.new(app)
       assert_equal middleware.call(env), :sential
     end
 
     def test_return_value_closed_circuit
-      stub_circuitbox
+      circuit = gimme
       env = { url: URI('http://yammer.com/') }
+
+
       give(circuit).run! { :sential }
-      give(circuitbox).circuit('yammer.com', anything) { circuit }
-      middleware = FaradayMiddleware.new(app, circuitbox: circuitbox)
+      Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
+
+      middleware = FaradayMiddleware.new(app)
       assert_equal middleware.call(env), :sential
     end
 
     def test_return_null_response_for_open_circuit
-      stub_circuitbox
+      circuit = gimme
       env = { url: URI('http://yammer.com/') }
+
       give(circuit).run! { raise Circuitbox::Error }
-      give(circuitbox).circuit('yammer.com', anything) { circuit }
-      response = FaradayMiddleware.new(app, circuitbox: circuitbox).call(env)
+      Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
+
+      response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
       assert_equal response.status, 503
       assert response.finished?
       refute response.success?
-    end
-
-    attr_reader :circuitbox, :circuit
-    def stub_circuitbox
-      @circuitbox = gimme
-      @circuit = gimme
     end
   end
 end
