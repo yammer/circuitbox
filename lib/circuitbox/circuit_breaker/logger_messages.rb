@@ -4,7 +4,7 @@ class Circuitbox
   class CircuitBreaker
     module LoggerMessages
       def circuit_skipped_message
-        @circuit_open_message ||= "[CIRCUIT] #{service}: skipped"
+        @circuit_skipped_message ||= "[CIRCUIT] #{service}: skipped"
       end
 
       def circuit_running_message
