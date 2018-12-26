@@ -76,7 +76,7 @@ class ExampleServiceClient
       # length of interval (in seconds) over which it calculates the error rate
       time_window:      60,
 
-      # number of requests within `time_window` seconds before it calculates error rates
+      # number of requests within `time_window` seconds before it calculates error rates (checked on failures)
       volume_threshold: 10,
 
       # the store you want to use to save the circuit state so it can be
@@ -84,7 +84,7 @@ class ExampleServiceClient
       # this overrides what is set in the global configuration
       cache: Moneta.new(:Memory),
 
-      # exceeding this rate will open the circuit
+      # exceeding this rate will open the circuit (checked on failures)
       error_threshold:  50,
 
       # Logger to use
@@ -166,10 +166,7 @@ end
 
 `payload[:gauge]` can be:
 
-- `failure_count`
-- `success_count`
-- `error_rate`
-- `execution_time` # execution time will only be notified when circuit is closed and block is successfully executed without timeout or errors.
+- `execution_time` # execution time will only be notified when circuit is closed and block is successfully executed.
 
 **warnings:**
 in case of misconfiguration, circuitbox will fire a circuitbox_warning
