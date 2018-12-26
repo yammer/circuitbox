@@ -51,7 +51,7 @@ class Circuitbox
 
     def call(request_env)
       service_response = nil
-      circuit(request_env).run! do
+      circuit(request_env).run do
         @app.call(request_env).on_complete do |env|
           service_response = Faraday::Response.new(env)
           raise RequestFailed if open_circuit?(service_response)

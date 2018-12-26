@@ -41,7 +41,7 @@ class Circuitbox
       circuit = gimme
       env = { url: URI('http://yammer.com/') }
 
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       default_value_generator = ->(_, _) { :sential }
@@ -53,7 +53,7 @@ class Circuitbox
       circuit = gimme
       env = { url: URI('http://yammer.com/') }
 
-      give(circuit).run! { raise Circuitbox::Error, 'error text' }
+      give(circuit).run { raise Circuitbox::Error, 'error text' }
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       default_value_generator = ->(_, error) { error.message }
@@ -65,7 +65,7 @@ class Circuitbox
       circuit = gimme
       env = { url: URI('http://yammer.com/') }
 
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       middleware = FaradayMiddleware.new(app, default_value: :sential)
@@ -150,7 +150,7 @@ class Circuitbox
       circuit = gimme
       env = { url: URI('http://yammer.com/'), circuit_breaker_default_value: :sential }
 
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       middleware = FaradayMiddleware.new(app)
@@ -161,8 +161,7 @@ class Circuitbox
       circuit = gimme
       env = { url: URI('http://yammer.com/') }
 
-
-      give(circuit).run! { :sential }
+      give(circuit).run { :sential }
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       middleware = FaradayMiddleware.new(app)
@@ -173,7 +172,7 @@ class Circuitbox
       circuit = gimme
       env = { url: URI('http://yammer.com/') }
 
-      give(circuit).run! { raise Circuitbox::Error }
+      give(circuit).run { raise Circuitbox::Error }
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       response = FaradayMiddleware.new(app).call(env)
