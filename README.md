@@ -54,7 +54,7 @@ will need to be recreated to pick up the new defaults.
 ```ruby
   Circuitbox.configure do |config|
     config.default_circuit_store = Circuitbox::MemoryStore.new,
-    config.default_notifier = Notifier::Null.new,
+    config.default_notifier = Circuitbox::Notifier::Null.new,
     config.default_timer = Circuitbox::Timer::Simple.new,
     config.default_logger = Rails.logger
   end
