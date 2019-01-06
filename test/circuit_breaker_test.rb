@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'moneta'
 require 'circuitbox/timer/null'
 
 class CircuitBreakerTest < Minitest::Test

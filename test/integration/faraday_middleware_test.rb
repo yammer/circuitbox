@@ -1,4 +1,5 @@
 require "integration_helper"
+require 'moneta'
 require "typhoeus/adapters/faraday"
 
 class Circuitbox

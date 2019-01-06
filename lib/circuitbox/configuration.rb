@@ -1,4 +1,4 @@
-require 'moneta'
+require_relative 'memory_store'
 require_relative 'timer/simple'
 require_relative 'notifier/active_support'
 require_relative 'notifier/null'
@@ -17,7 +17,7 @@ class Circuitbox
     end
 
     def default_circuit_store
-      @default_circuit_store ||= Moneta.new(:Memory, expires: true, threadsafe: true)
+      @default_circuit_store ||= MemoryStore.new
     end
 
     def default_notifier
