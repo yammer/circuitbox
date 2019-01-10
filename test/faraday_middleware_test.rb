@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'test_helper'
+require 'moneta'
 require 'circuitbox/faraday_middleware'
 
 class SentialException < StandardError; end
