@@ -25,18 +25,18 @@ class ExampleServiceClient
   end
 
   def http_get
-    circuit.run do
+    circuit.run(circuitbox_exceptions: false) do
       Zephyr.new("http://example.com").get(200, 1000, "/api/messages")
     end
   end
 end
 ```
 
-Using the `run!` method will throw an exception when the circuit is open or the underlying service fails.
+Using the `run` method will throw an exception when the circuit is open or the underlying service fails.
 
 ```ruby
   def http_get
-    circuit.run! do
+    circuit.run do
       Zephyr.new("http://example.com").get(200, 1000, "/api/messages")
     end
   end
