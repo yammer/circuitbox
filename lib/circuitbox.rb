@@ -21,7 +21,7 @@ class Circuitbox
 
       return circuit unless block_given?
 
-      circuit.run { yield }
+      circuit.run(circuitbox_exceptions: false) { yield }
     end
   end
 end

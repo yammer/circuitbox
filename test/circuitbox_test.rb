@@ -65,4 +65,10 @@ class CircuitboxTest < Minitest::Test
     assert_equal 1337, circuit_two.option_value(:sleep_window)
     assert_equal [Timeout::Error], circuit_two.exceptions
   end
+
+  def test_run_sets_circuit_exceptions_to_false
+    Circuitbox::CircuitBreaker.any_instance.expects(:run).with(circuitbox_exceptions: false)
+
+    Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]) { }
+  end
 end
