@@ -43,13 +43,8 @@ class CircuitboxTest < Minitest::Test
     assert_equal timer, Circuitbox.default_timer
   end
 
-  def test_delegates_to_circuit
-    Circuitbox.expects(:circuit).with(:yammer, {})
-    Circuitbox[:yammer]
-  end
-
   def test_creates_a_circuit_breaker
-    assert Circuitbox[:yammer, exceptions: [Timeout::Error]].is_a? Circuitbox::CircuitBreaker
+    assert Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]).is_a? Circuitbox::CircuitBreaker
   end
 
   def test_returns_the_same_circuit_every_time

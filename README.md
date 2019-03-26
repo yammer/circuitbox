@@ -10,7 +10,7 @@ Resources about the circuit breaker pattern:
 ## Usage
 
 ```ruby
-Circuitbox[:your_service, exceptions: [Net::ReadTimeout]] do
+Circuitbox.circuit(:your_service, exceptions: [Net::ReadTimeout]) do
   Net::HTTP.get URI('http://example.com/api/messages')
 end
 ```
