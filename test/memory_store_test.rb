@@ -5,10 +5,6 @@ require 'circuitbox/memory_store'
 
 class MemoryStoreTest < Minitest::Test
   def setup
-    @compactor = mock
-    @compactor.stubs(:run)
-    Circuitbox::MemoryStore::Compactor.stubs(:new)
-                                      .returns(@compactor)
     @memory_store = Circuitbox::MemoryStore.new
   end
 
@@ -60,7 +56,7 @@ class MemoryStoreTest < Minitest::Test
 
   def test_increment_updates_expires_on_existing_key
     container = mock
-    container.stubs(:expired? => false, :value => 1, :value= => 2)
+    container.stubs(:expired_at? => false, :value => 1, :value= => 2)
     container.expects(:expires_after).with(5)
 
     Circuitbox::MemoryStore::Container.stubs(:new)
@@ -70,8 +66,12 @@ class MemoryStoreTest < Minitest::Test
     @memory_store.increment('test', 1, expires: 5) # updates existing key
   end
 
-  def test_increment_attempts_a_compaction
-    @compactor.expects(:run)
+  def test_increment_compacts_store
+    current_second = @memory_store.send(:current_second)
+    @memory_store.stubs(:current_second).returns(current_second + 61)
+
+    @memory_store.expects(:compact)
+
     @memory_store.increment('test')
   end
 
@@ -91,13 +91,17 @@ class MemoryStoreTest < Minitest::Test
                                       .returns(container)
     @memory_store.store('test', 1234)
 
-    container.expects(:expired?).returns(true)
+    container.expects(:expired_at?).returns(true)
 
     assert_nil @memory_store.load('test')
   end
 
-  def test_load_attempts_a_compaction
-    @compactor.expects(:run)
+  def test_load_compacts_store
+    current_second = @memory_store.send(:current_second)
+    @memory_store.stubs(:current_second).returns(current_second + 61)
+
+    @memory_store.expects(:compact)
+
     @memory_store.load('test')
   end
 
@@ -116,8 +120,17 @@ class MemoryStoreTest < Minitest::Test
     Circuitbox::MemoryStore::Container.stubs(:new)
                                       .returns(container)
     @memory_store.store('test', 1)
-    container.expects(:expired?).returns(true)
+    container.expects(:expired_at?).returns(true)
     assert_equal false, @memory_store.key?('test')
+  end
+
+  def test_key_compacts_store
+    current_second = @memory_store.send(:current_second)
+    @memory_store.stubs(:current_second).returns(current_second + 61)
+
+    @memory_store.expects(:compact)
+
+    @memory_store.key?('test')
   end
 
   def test_delete_removes_key
