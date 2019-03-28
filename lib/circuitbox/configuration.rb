@@ -1,4 +1,6 @@
 require_relative 'memory_store'
+require_relative 'timer/monotonic'
+require_relative 'timer/null'
 require_relative 'timer/simple'
 require_relative 'notifier/active_support'
 require_relative 'notifier/null'
