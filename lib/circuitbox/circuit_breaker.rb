@@ -78,12 +78,10 @@ class Circuitbox
     end
 
     def open?
-      if open_flag?
-        true
-      else
-        false
-      end
+      circuit_store.key?(open_storage_key)
     end
+    alias :open_flag? :open?
+    private :open_flag?
 
     def error_rate(failures = failure_count, success = success_count)
       all_count = failures + success
@@ -167,10 +165,6 @@ class Circuitbox
       # that may be waiting to become unblocked
       notify_event('close')
       logger.debug(circuit_closed_message)
-    end
-
-    def open_flag?
-      circuit_store.key?(open_storage_key)
     end
 
     def half_open?
