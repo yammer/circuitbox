@@ -53,7 +53,7 @@ class Circuitbox
     end
 
     def run(circuitbox_exceptions: true)
-      if open_flag?
+      if open?
         skipped!
         raise Circuitbox::OpenCircuitError.new(service) if circuitbox_exceptions
       else
@@ -80,8 +80,6 @@ class Circuitbox
     def open?
       circuit_store.key?(open_storage_key)
     end
-    alias :open_flag? :open?
-    private :open_flag?
 
     def error_rate(failures = failure_count, success = success_count)
       all_count = failures + success
@@ -121,7 +119,7 @@ class Circuitbox
 
     def half_open_failure
       @state_change_mutex.synchronize do
-        return if open_flag? || !half_open?
+        return if open? || !half_open?
 
         trip
       end
@@ -133,7 +131,7 @@ class Circuitbox
 
     def open!
       @state_change_mutex.synchronize do
-        return if open_flag?
+        return if open?
 
         trip
       end
@@ -158,7 +156,7 @@ class Circuitbox
         # If the circuit is not open, the half_open key will be deleted from the store
         # if half_open exists the deleted value is returned and allows us to continue
         # if half_open doesn't exist nil is returned, causing us to return early
-        return unless !open_flag? && circuit_store.delete(half_open_storage_key)
+        return unless !open? && circuit_store.delete(half_open_storage_key)
       end
 
       # Running event outside of the synchronize block to allow other threads

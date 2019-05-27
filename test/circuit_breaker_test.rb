@@ -154,7 +154,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_raises_when_circuit_is_open
-      @circuit.stubs(open_flag?: true)
+      @circuit.stubs(open?: true)
       assert_raises(Circuitbox::OpenCircuitError) { @circuit.run {} }
     end
 
@@ -304,7 +304,7 @@ class CircuitBreakerTest < Minitest::Test
 
       # since we're testing a threading issue without running multiple threads
       # we need the circuit to run the first time
-      circuit.stubs(:open_flag?).returns(false, true)
+      circuit.stubs(:open?).returns(false, true)
 
       circuit.run { circuit_ran = true }
 
@@ -353,7 +353,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_skipped
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.stubs(open_flag?: true)
+    circuit.stubs(open?: true)
     circuit.stubs(:notify_event)
     circuit.expects(:notify_event).with('skipped')
     emulate_circuit_run(circuit, :failure, Timeout::Error)
@@ -383,9 +383,9 @@ class CircuitBreakerTest < Minitest::Test
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
     circuit.stubs(should_open?: true)
 
-    assert !circuit.send(:open_flag?)
+    assert !circuit.send(:open?)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
-    assert circuit.send(:open_flag?)
+    assert circuit.send(:open?)
 
     circuit.expects(:open!).never
     emulate_circuit_run(circuit, :failure, Timeout::Error)
@@ -393,13 +393,13 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_open_is_true_if_open_flag
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.stubs(open_flag?: true)
+    circuit.stubs(open?: true)
     assert circuit.open?
   end
 
   def test_open_is_false_if_awake_and_under_rate_threshold
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.stubs(open_flag?: false,
+    circuit.stubs(open?: false,
                   passed_volume_threshold?: false,
                   passed_rate_threshold: false)
 
