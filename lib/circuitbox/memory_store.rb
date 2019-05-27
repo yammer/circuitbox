@@ -1,6 +1,6 @@
-# frozen-string-literal: true
+# frozen_string_literal: true
 
-require_relative 'memory_store/compactor'
+require_relative 'memory_store/monotonic_time'
 require_relative 'memory_store/container'
 
 class Circuitbox
@@ -10,7 +10,8 @@ class Circuitbox
     def initialize(compaction_frequency: 60)
       @store = {}
       @mutex = Mutex.new
-      @compactor = Compactor.new(store: @store, frequency: compaction_frequency)
+      @compaction_frequency = compaction_frequency
+      @compact_after = current_second + compaction_frequency
     end
 
     def store(key, value, opts = {})
@@ -53,13 +54,15 @@ class Circuitbox
   private
 
     def fetch_container(key)
-      @compactor.run
+      current_time = current_second
+
+      compact(current_time) if @compact_after < current_time
 
       container = @store[key]
 
       return unless container
 
-      if container.expired?
+      if container.expired_at?(current_time)
         @store.delete(key)
         nil
       else
@@ -71,6 +74,11 @@ class Circuitbox
       container = fetch_container(key)
       return unless container
       container.value
+    end
+
+    def compact(current_time)
+      @store.delete_if { |_, value| value.expired_at?(current_time) }
+      @compact_after = current_time + @compaction_frequency
     end
   end
 end

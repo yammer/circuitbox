@@ -12,11 +12,7 @@ class Circuitbox
   class << self
     include Configuration
 
-    def [](service_name, options = {})
-      circuit(service_name, options)
-    end
-
-    def circuit(service_name, options = {})
+    def circuit(service_name, options)
       circuit = (cached_circuits[service_name] ||= CircuitBreaker.new(service_name, options))
 
       return circuit unless block_given?
