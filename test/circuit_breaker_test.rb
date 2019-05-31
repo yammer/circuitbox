@@ -347,7 +347,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_failure
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.expects(:notify_and_increment_event).with('failure')
+    circuit.expects(:increment_and_notify_event).with('failure')
     emulate_circuit_run(circuit, :failure, Timeout::Error)
   end
 
@@ -361,7 +361,7 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_records_response_success
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    circuit.expects(:notify_and_increment_event).with('success')
+    circuit.expects(:increment_and_notify_event).with('success')
     emulate_circuit_run(circuit, :success, 'success')
   end
 
@@ -408,13 +408,13 @@ class CircuitBreakerTest < Minitest::Test
 
   def test_logs_and_retrieves_success_events
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    5.times { circuit.send(:notify_and_increment_event, 'success') }
+    5.times { circuit.send(:increment_and_notify_event, 'success') }
     assert_equal 5, circuit.success_count
   end
 
   def test_logs_and_retrieves_failure_events
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
-    5.times { circuit.send(:notify_and_increment_event, 'failure') }
+    5.times { circuit.send(:increment_and_notify_event, 'failure') }
     assert_equal 5, circuit.failure_count
   end
 
@@ -423,19 +423,19 @@ class CircuitBreakerTest < Minitest::Test
     current_time = Time.new(2015, 7, 29)
 
     Timecop.freeze(current_time) do
-      4.times { circuit.send(:notify_and_increment_event, 'success') }
+      4.times { circuit.send(:increment_and_notify_event, 'success') }
       assert_equal 4, circuit.success_count
     end
 
     # one minute after current_time
     Timecop.freeze(current_time + 60) do
-      7.times { circuit.send(:notify_and_increment_event, 'success') }
+      7.times { circuit.send(:increment_and_notify_event, 'success') }
       assert_equal 7, circuit.success_count
     end
 
     # one minute 30 seconds after current_time
     Timecop.freeze(current_time + 90) do
-      circuit.send(:notify_and_increment_event, 'success')
+      circuit.send(:increment_and_notify_event, 'success')
       assert_equal 8, circuit.success_count
     end
 

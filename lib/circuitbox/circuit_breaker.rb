@@ -170,14 +170,14 @@ class Circuitbox
     end
 
     def success!
-      notify_and_increment_event('success')
+      increment_and_notify_event('success')
       logger.debug(circuit_success_message)
 
       close! if half_open?
     end
 
     def failure!
-      notify_and_increment_event('failure')
+      increment_and_notify_event('failure')
       logger.debug(circuit_failure_message)
 
       if half_open?
@@ -197,10 +197,10 @@ class Circuitbox
       notifier.notify(service, event)
     end
 
-    # Send notification and increment stat store
-    def notify_and_increment_event(event)
-      notify_event(event)
+    # Increment stat store and send notification
+    def increment_and_notify_event(event)
       circuit_store.increment(stat_storage_key(event), 1, expires: (option_value(:time_window) * 2))
+      notify_event(event)
     end
 
     def check_sleep_window
