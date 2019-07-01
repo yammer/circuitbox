@@ -1,10 +1,10 @@
 class Circuitbox
   class Timer
     class Simple
-      def time(service, notifier, metric_name)
-        before = Time.now.to_f
+      def time(service, notifier, metric_name, time_source)
+        before = time_source.elapsed_seconds
         result = yield
-        total_time = Time.now.to_f - before
+        total_time = time_source.elapsed_seconds - before
         notifier.metric_gauge(service, metric_name, total_time)
         result
       end

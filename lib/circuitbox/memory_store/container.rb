@@ -1,9 +1,9 @@
-require_relative 'monotonic_time'
+require 'circuitbox/time_source/monotonic'
 
 class Circuitbox
   class MemoryStore
     class Container
-      include MonotonicTime
+      include Circuitbox::TimeSource::Monotonic
 
       attr_accessor :value
 
@@ -13,7 +13,7 @@ class Circuitbox
       end
 
       def expired?
-        @expires_after > 0 && @expires_after < current_second
+        @expires_after > 0 && @expires_after < elapsed_seconds
       end
 
       def expired_at?(clock_second)
@@ -21,7 +21,7 @@ class Circuitbox
       end
 
       def expires_after(seconds = 0)
-        @expires_after = seconds.zero? ? seconds : current_second + seconds
+        @expires_after = seconds.zero? ? seconds : elapsed_seconds + seconds
       end
     end
   end

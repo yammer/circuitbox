@@ -67,8 +67,8 @@ class MemoryStoreTest < Minitest::Test
   end
 
   def test_increment_compacts_store
-    current_second = @memory_store.send(:current_second)
-    @memory_store.stubs(:current_second).returns(current_second + 61)
+    elapsed_seconds = @memory_store.send(:elapsed_seconds)
+    @memory_store.stubs(:elapsed_seconds).returns(elapsed_seconds + 61)
 
     @memory_store.expects(:compact)
 
@@ -97,8 +97,8 @@ class MemoryStoreTest < Minitest::Test
   end
 
   def test_load_compacts_store
-    current_second = @memory_store.send(:current_second)
-    @memory_store.stubs(:current_second).returns(current_second + 61)
+    elapsed_seconds = @memory_store.send(:elapsed_seconds)
+    @memory_store.stubs(:elapsed_seconds).returns(elapsed_seconds + 61)
 
     @memory_store.expects(:compact)
 
@@ -125,8 +125,8 @@ class MemoryStoreTest < Minitest::Test
   end
 
   def test_key_compacts_store
-    current_second = @memory_store.send(:current_second)
-    @memory_store.stubs(:current_second).returns(current_second + 61)
+    elapsed_seconds = @memory_store.send(:elapsed_seconds)
+    @memory_store.stubs(:elapsed_seconds).returns(elapsed_seconds + 61)
 
     @memory_store.expects(:compact)
 

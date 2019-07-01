@@ -7,7 +7,7 @@ class Circuitbox
     include LoggerMessages
 
     attr_reader :service, :circuit_options, :exceptions,
-                :logger, :circuit_store, :notifier, :time_class, :execution_timer
+                :logger, :circuit_store, :notifier, :time_source, :execution_timer
 
     DEFAULTS = {
       sleep_window:     90,
@@ -24,6 +24,7 @@ class Circuitbox
     # `error_threshold`   - percentage of failed requests needed to trip circuit
     # `exceptions`        - exceptions that count as failures
     # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
+    # `time_source`       - Source for time (in seconds) since a starting point
     # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
     #
     def initialize(service, options = {})
@@ -42,7 +43,7 @@ class Circuitbox
       raise ArgumentError, 'exceptions need to be an array' unless @exceptions.is_a?(Array)
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
-      @time_class = options.fetch(:time_class) { Time }
+      @time_source = options.fetch(:time_source) { Circuitbox.default_time_source }
       @state_change_mutex = Mutex.new
       check_sleep_window
     end
@@ -60,7 +61,7 @@ class Circuitbox
         logger.debug(circuit_running_message)
 
         begin
-          response = execution_timer.time(service, notifier, 'execution_time') do
+          response = execution_timer.time(service, notifier, 'execution_time', time_source) do
             yield
           end
 
@@ -220,7 +221,7 @@ class Circuitbox
 
     # return time representation in seconds
     def align_time_to_window
-      time = time_class.now.to_i
+      time = time_source.elapsed_seconds.to_i
       time_window = option_value(:time_window)
       time - (time % time_window) # remove rest of integer division
     end

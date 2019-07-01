@@ -12,6 +12,7 @@ class CircuitboxTest < Minitest::Test
     Circuitbox.default_logger = nil
     Circuitbox.default_circuit_store = nil
     Circuitbox.default_timer = nil
+    Circuitbox.default_time_source = nil
   end
 
   def test_configure_block_clears_cached_circuits
@@ -41,6 +42,12 @@ class CircuitboxTest < Minitest::Test
     timer = gimme
     Circuitbox.default_timer = timer
     assert_equal timer, Circuitbox.default_timer
+  end
+
+  def test_default_time_source_is_configurable
+    time_source = gimme
+    Circuitbox.default_time_source = time_source
+    assert_equal time_source, Circuitbox.default_time_source
   end
 
   def test_creates_a_circuit_breaker

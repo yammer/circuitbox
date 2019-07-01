@@ -43,7 +43,7 @@ Using the `run` method will throw an exception when the circuit is open or the u
 ```
 
 ## Global Configuration
-Circuitbox has defaults for circuit_store, notifier, timer, and logger.
+Circuitbox has defaults for circuit_store, notifier, timer, time_source, and logger.
 This can be configured through ```Circuitbox.configure```.
 The circuit cache used by ```Circuitbox.circuit``` will be cleared after running ```Circuitbox.configure```.
 This means when accessing the circuit through ```Circuitbox.circuit``` any custom configuration options should always be given.
@@ -56,6 +56,7 @@ will need to be recreated to pick up the new defaults.
     config.default_circuit_store = Circuitbox::MemoryStore.new,
     config.default_notifier = Circuitbox::Notifier::Null.new,
     config.default_timer = Circuitbox::Timer::Simple.new,
+    config.default_time_source = Circuitbox::TimeSource::WallClock,
     config.default_logger = Rails.logger
   end
 ```
@@ -93,9 +94,15 @@ class ExampleServiceClient
 
       # Customized Timer object
       # Use NullTimer if you don't want to time circuit execution
-      # Use MonotonicTimer to avoid bad time metrics on system time resync
       # This overrides what is set in the global configuration
-      execution_timer: SimpleTimer,
+      execution_timer: Circuitbox::Timer::Simple.new,
+
+      # Time source
+      # If your circuit store is not being shared by multiple machines, you can
+      # use TimeSource::Monotonic to avoid bad time metrics on system time resync.
+      # But if you are monitoring execution on multiple machines with a centralized
+      # circuit store, use TimeSource::WallClock.
+      time_source: Circuitbox::TimeSource::WallClock,
 
       # Customized notifier
       # overrides the default

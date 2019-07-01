@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
-require_relative 'memory_store/monotonic_time'
+require 'circuitbox/time_source/monotonic'
 require_relative 'memory_store/container'
 
 class Circuitbox
   class MemoryStore
-    include MonotonicTime
+    include Circuitbox::TimeSource::Monotonic
 
     def initialize(compaction_frequency: 60)
       @store = {}
       @mutex = Mutex.new
       @compaction_frequency = compaction_frequency
-      @compact_after = current_second + compaction_frequency
+      @compact_after = elapsed_seconds + compaction_frequency
     end
 
     def store(key, value, opts = {})
@@ -54,7 +54,7 @@ class Circuitbox
   private
 
     def fetch_container(key)
-      current_time = current_second
+      current_time = elapsed_seconds
 
       compact(current_time) if @compact_after < current_time
 

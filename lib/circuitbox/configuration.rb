@@ -1,7 +1,8 @@
 require_relative 'memory_store'
-require_relative 'timer/monotonic'
 require_relative 'timer/null'
 require_relative 'timer/simple'
+require_relative 'time_source/monotonic'
+require_relative 'time_source/wall_clock'
 require_relative 'notifier/active_support'
 require_relative 'notifier/null'
 
@@ -10,6 +11,7 @@ class Circuitbox
     attr_writer :default_circuit_store,
                 :default_notifier,
                 :default_timer,
+                :default_time_source,
                 :default_logger
 
     def configure
@@ -32,6 +34,10 @@ class Circuitbox
 
     def default_timer
       @default_timer ||= Timer::Simple.new
+    end
+
+    def default_time_source
+      @default_time_source ||= TimeSource::WallClock
     end
 
     def default_logger

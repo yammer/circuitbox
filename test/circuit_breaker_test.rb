@@ -522,6 +522,17 @@ class CircuitBreakerTest < Minitest::Test
       assert notifier.metric_sent?, 'no execution time metric sent'
     end
 
+    def test_execution_time_metric_with_monotonic_time_source
+      notifier = gimme_notifier(metric: 'execution_time', metric_value: 5)
+      circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                               notifier: notifier,
+                                               exceptions: [Timeout::Error],
+                                               time_source: Circuitbox::TimeSource::Monotonic)
+      Process.stubs(:clock_gettime).returns(142857.1).then.returns(142862.1)
+      circuit.run { 'success' }
+      assert notifier.metric_sent?, 'correct execution time metric not sent'
+    end
+
     def test_no_execution_time_metric_on_error_execution
       notifier = gimme_notifier(metric: 'execution_time', metric_value: Gimme::Matchers::Anything.new)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
