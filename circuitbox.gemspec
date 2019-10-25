@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir['README.md', 'LICENSE', 'lib/**/*']
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler', '~> 1.16'
+  spec.add_development_dependency 'bundler', '> 1.16'
   spec.add_development_dependency 'excon', '~> 0.62'
   spec.add_development_dependency 'faraday', '~> 0.15'
   spec.add_development_dependency 'gimme', '~> 0.5'
