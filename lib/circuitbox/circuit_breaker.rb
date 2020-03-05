@@ -77,6 +77,18 @@ class Circuitbox
       response
     end
 
+    # Starts a circuit run block and returns circuit_open state, and a completion 
+    # that can be used to complete the run execution if the circuit is not already opened.
+    # @return circuit_open?, completion(success: true|false)
+    def run_and_get_completion
+      if open?
+        skipped!
+        return [true, nil]
+      end
+
+      [false, ->(success:) { success ? success! : failure! }]
+    end
+
     def open?
       circuit_store.key?(open_storage_key)
     end
