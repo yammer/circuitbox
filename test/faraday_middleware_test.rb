@@ -77,7 +77,7 @@ class Circuitbox
       middleware = FaradayMiddleware.new(app)
       circuit_breaker_options = middleware.opts[:circuit_breaker_options]
 
-      assert_includes circuit_breaker_options[:exceptions], Faraday::Error::TimeoutError
+      assert_includes circuit_breaker_options[:exceptions], Faraday::TimeoutError
       assert_includes circuit_breaker_options[:exceptions], FaradayMiddleware::RequestFailed
     end
 

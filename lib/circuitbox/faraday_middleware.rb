@@ -31,7 +31,7 @@ class Circuitbox
     }.freeze
 
     DEFAULT_EXCEPTIONS = [
-      Faraday::Error::TimeoutError,
+      Faraday::TimeoutError,
       RequestFailed
     ].freeze
 
