@@ -3,6 +3,7 @@
 require 'test_helper'
 require 'moneta'
 require 'circuitbox/faraday_middleware'
+require 'rubygems'
 
 class SentialException < StandardError; end
 
@@ -77,7 +78,13 @@ class Circuitbox
       middleware = FaradayMiddleware.new(app)
       circuit_breaker_options = middleware.opts[:circuit_breaker_options]
 
-      assert_includes circuit_breaker_options[:exceptions], Faraday::Error::TimeoutError
+      faraday_version = Gem::Version.new(Faraday::VERSION).segments
+      faraday_major = faraday_version[0]
+      faraday_minor = faraday_version[1]
+
+      faraday_exception = faraday_major > 0 || faraday_minor > 8 ? Faraday::TimeoutError : Faraday::Error::TimeoutError
+
+      assert_includes circuit_breaker_options[:exceptions], faraday_exception
       assert_includes circuit_breaker_options[:exceptions], FaradayMiddleware::RequestFailed
     end
 
