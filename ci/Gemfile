@@ -4,4 +4,8 @@ if ENV['ACTIVE_SUPPORT']
   gem 'activesupport'
 end
 
+faraday_version = ENV['FARADAY_VERSION'] || '1.0.0'
+
+gem 'faraday', "~> #{faraday_version}"
+
 gemspec(path: '../')
