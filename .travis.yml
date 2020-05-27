@@ -11,13 +11,8 @@ env:
   - NO_ACTIVE_SUPPORT=true FARADAY_VERSION=0.8.0
 rvm:
   - 2.3.8
-  - 2.4.6
-  - 2.5.5
-  - 2.6.3
-  - ruby-head
-matrix:
-  fast_finish: true
-  allow_failures:
-    - rvm: ruby-head
+  - 2.4.10
+  - 2.5.8
+  - 2.6.6
 before_install:
    - gem install bundler
