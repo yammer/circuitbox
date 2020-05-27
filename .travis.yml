@@ -20,4 +20,4 @@ matrix:
   allow_failures:
     - rvm: ruby-head
 before_install:
-   - gem install bundler -v '~> 1.17'
+   - gem install bundler
