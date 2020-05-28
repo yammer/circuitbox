@@ -17,14 +17,14 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_development_dependency 'bundler', '> 1.16'
-  spec.add_development_dependency 'excon', '~> 0.62'
+  spec.add_development_dependency 'excon', '~> 0.71'
   spec.add_development_dependency 'faraday', ['>= 0.15', '< 2.0']
   spec.add_development_dependency 'gimme', '~> 0.5'
   spec.add_development_dependency 'minitest', '~> 5.11'
   spec.add_development_dependency 'minitest-excludes', '~> 2.0'
   spec.add_development_dependency 'mocha', '~> 1.7'
   spec.add_development_dependency 'rack', '~> 2.0'
-  spec.add_development_dependency 'rake', '~> 12.0'
+  spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'timecop', '~> 0.9'
   spec.add_development_dependency 'typhoeus', '~> 1.3'
   spec.add_development_dependency 'moneta', '~> 1.0'
