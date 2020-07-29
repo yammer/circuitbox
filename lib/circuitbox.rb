@@ -1,4 +1,3 @@
-require 'uri'
 require 'logger'
 
 require_relative 'circuitbox/version'
