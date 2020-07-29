@@ -59,7 +59,7 @@ class ObjectUsageBenchmark
       end
     end
 
-  private
+    private
 
     def current_object_allocations
       GC.start

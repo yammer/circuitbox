@@ -1,0 +1,37 @@
+require: rubocop-performance
+
+AllCops:
+  Exclude:
+    - 'test/**/*.rb'
+  NewCops: enable
+  TargetRubyVersion: 2.4
+
+Layout/LineLength:
+  Enabled: false
+
+Metrics:
+  Enabled: false
+
+Performance/ChainArrayAllocation:
+  Enabled: true
+
+Performance/OpenStruct:
+  Enabled: true
+
+Style/Documentation:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Style/RaiseArgs:
+  EnforcedStyle: compact
+
+Style/ReturnNil:
+  Enabled: true
+
+Style/StringLiterals:
+  Enabled: false
+
+Style/SymbolArray:
+  EnforcedStyle: brackets

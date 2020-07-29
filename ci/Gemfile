@@ -1,8 +1,6 @@
 source 'https://rubygems.org'
 
-if ENV['ACTIVE_SUPPORT']
-  gem 'activesupport'
-end
+gem 'activesupport' if ENV['ACTIVE_SUPPORT']
 
 faraday_version = ENV['FARADAY_VERSION'] || '1.0.0'
 

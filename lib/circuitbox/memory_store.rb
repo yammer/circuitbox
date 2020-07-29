@@ -51,7 +51,7 @@ class Circuitbox
       @mutex.synchronize { @store.delete(key) }
     end
 
-  private
+    private
 
     def fetch_container(key)
       current_time = current_second
@@ -73,6 +73,7 @@ class Circuitbox
     def fetch_value(key)
       container = fetch_container(key)
       return unless container
+
       container.value
     end
 

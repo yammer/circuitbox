@@ -10,10 +10,10 @@ class Circuitbox
                 :logger, :circuit_store, :notifier, :time_class, :execution_timer
 
     DEFAULTS = {
-      sleep_window:     90,
+      sleep_window: 90,
       volume_threshold: 5,
-      error_threshold:  50,
-      time_window:      60
+      error_threshold: 50,
+      time_window: 60
     }.freeze
 
     #
@@ -39,7 +39,7 @@ class Circuitbox
       end
 
       @exceptions = options.fetch(:exceptions)
-      raise ArgumentError, 'exceptions need to be an array' unless @exceptions.is_a?(Array)
+      raise ArgumentError.new('exceptions need to be an array') unless @exceptions.is_a?(Array)
 
       @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
@@ -65,12 +65,12 @@ class Circuitbox
           end
 
           success!
-        rescue *exceptions => exception
+        rescue *exceptions => e
           # Other stores could raise an exception that circuitbox is asked to watch.
           # setting to nil keeps the same behavior as the previous defination of run.
           response = nil
           failure!
-          raise Circuitbox::ServiceFailureError.new(service, exception) if circuitbox_exceptions
+          raise Circuitbox::ServiceFailureError.new(service, e) if circuitbox_exceptions
         end
       end
 
@@ -83,7 +83,8 @@ class Circuitbox
 
     def error_rate(failures = failure_count, success = success_count)
       all_count = failures + success
-      return 0.0 unless all_count > 0
+      return 0.0 unless all_count.positive?
+
       (failures / all_count.to_f) * 100
     end
 
@@ -99,7 +100,7 @@ class Circuitbox
       circuit_store.delete(open_storage_key)
     end
 
-  private
+    private
 
     def should_open?
       failures = failure_count
@@ -206,12 +207,12 @@ class Circuitbox
     def check_sleep_window
       sleep_window = option_value(:sleep_window)
       time_window  = option_value(:time_window)
-      if sleep_window < time_window
-        warning_message = "sleep_window: #{sleep_window} is shorter than time_window: #{time_window}, "\
-                          "the error_rate would not be reset after a sleep."
-        notifier.notify_warning(service, warning_message)
-        warn("Circuit: #{service}, Warning: #{warning_message}")
-      end
+      return unless sleep_window < time_window
+
+      warning_message = "sleep_window: #{sleep_window} is shorter than time_window: #{time_window}, "\
+                        "the error_rate would not be reset after a sleep."
+      notifier.notify_warning(service, warning_message)
+      warn("Circuit: #{service}, Warning: #{warning_message}")
     end
 
     def stat_storage_key(event)
