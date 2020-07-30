@@ -8,7 +8,7 @@ class Circuitbox
     DEFAULT_EXCEPTIONS = [
       Excon::Errors::Timeout,
       RequestFailed
-    ]
+    ].freeze
 
     class NullResponse < Excon::Response
       def initialize(response, exception)
@@ -26,7 +26,7 @@ class Circuitbox
 
     def initialize(stack, opts = {})
       @stack = stack
-      default_options = { open_circuit: lambda { |response| response[:status] >= 400 } }
+      default_options = { open_circuit: ->(response) { response[:status] >= 400 } }
       @opts = default_options.merge(opts)
       super(stack)
     end
@@ -35,8 +35,8 @@ class Circuitbox
       circuit(datum).run do
         raise RequestFailed
       end
-    rescue Circuitbox::Error => exception
-      circuit_open_value(datum, datum[:response], exception)
+    rescue Circuitbox::Error => e
+      circuit_open_value(datum, datum[:response], e)
     end
 
     def request_call(datum)
@@ -50,8 +50,8 @@ class Circuitbox
         raise RequestFailed if open_circuit?(datum[:response])
       end
       @stack.response_call(datum)
-    rescue Circuitbox::Error => exception
-      circuit_open_value(datum, datum[:response], exception)
+    rescue Circuitbox::Error => e
+      circuit_open_value(datum, datum[:response], e)
     end
 
     def identifier
@@ -93,9 +93,9 @@ class Circuitbox
     def default_value
       @default_value ||= begin
         default = opts.fetch(:default_value) do
-          lambda { |response, exception| NullResponse.new(response, exception) }
+          ->(response, exception) { NullResponse.new(response, exception) }
         end
-        default.respond_to?(:call) ? default : lambda { |*| default }
+        default.respond_to?(:call) ? default : ->(*) { default }
       end
     end
   end

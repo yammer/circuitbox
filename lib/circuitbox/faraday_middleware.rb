@@ -7,6 +7,7 @@ class Circuitbox
 
     class NullResponse < Faraday::Response
       attr_reader :original_response, :original_exception
+
       def initialize(response = nil, exception = nil)
         @original_response  = response
         @original_exception = exception
@@ -60,8 +61,8 @@ class Circuitbox
           raise RequestFailed if open_circuit?(service_response)
         end
       end
-    rescue Circuitbox::Error => ex
-      circuit_open_value(request_env, service_response, ex)
+    rescue Circuitbox::Error => e
+      circuit_open_value(request_env, service_response, e)
     end
 
     private

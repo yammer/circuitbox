@@ -42,7 +42,7 @@ class Circuitbox
                           end
     end
 
-  private
+    private
 
     def cached_circuits
       @cached_circuits ||= {}

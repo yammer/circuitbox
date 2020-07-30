@@ -10,7 +10,6 @@ env:
   - ACTIVE_SUPPORT=true FARADAY_VERSION=0.8.0
   - NO_ACTIVE_SUPPORT=true FARADAY_VERSION=0.8.0
 rvm:
-  - 2.3.8
   - 2.4.10
   - 2.5.8
   - 2.6.6

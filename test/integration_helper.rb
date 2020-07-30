@@ -24,7 +24,7 @@ class FakeServer
   end
 
   def shutdown
-    @servers.map { |server| server.exit }
+    @servers.map(&:exit)
     @servers = []
   end
 
