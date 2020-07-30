@@ -13,6 +13,12 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/yammer/circuitbox'
   spec.license       = 'Apache-2.0'
 
+  spec.metadata = {
+    'bug_tracker_uri' => 'https://github.com/yammer/circuitbox/issues',
+    'changelog_uri' => 'https://github.com/yammer/circuitbox/blob/master/CHANGELOG.md',
+    'source_code_uri' => 'https://github.com/yammer/circuitbox'
+  }
+
   spec.required_ruby_version = '>= 2.4.0'
 
   spec.files = Dir['README.md', 'LICENSE', 'lib/**/*']
