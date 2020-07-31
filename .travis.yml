@@ -1,18 +1,21 @@
 dist: bionic
 language: ruby
-gemfile: ci/Gemfile
-env:
-  - ACTIVE_SUPPORT=true
-  - NO_ACTIVE_SUPPORT=true
-  - ACTIVE_SUPPORT=true FARADAY_VERSION=0.17
-  - NO_ACTIVE_SUPPORT=true FARADAY_VERSION=0.17
-  # Faraday < 0.9.0 doesn't support the new error class format
-  - ACTIVE_SUPPORT=true FARADAY_VERSION=0.8.0
-  - NO_ACTIVE_SUPPORT=true FARADAY_VERSION=0.8.0
-rvm:
-  - 2.4.10
-  - 2.5.8
-  - 2.6.6
-  - 2.7.1
 before_install:
    - gem install bundler
+jobs:
+  include:
+    - name: "2.4 tests"
+      rvm: 2.4.10
+      script: ./test.sh
+    - name: "2.5 tests"
+      rvm: 2.5.8
+      script: ./test.sh
+    - name: "2.6 tests"
+      rvm: 2.6.6
+      script: ./test.sh
+    - name: "2.7 tests"
+      rvm: 2.7.1
+      script: ./test.sh
+    - name: "Lint"
+      rvm: 2.7.1
+      script: bundle exec rubocop
