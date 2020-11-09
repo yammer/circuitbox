@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'memory_store'
 require_relative 'timer/monotonic'
 require_relative 'timer/null'

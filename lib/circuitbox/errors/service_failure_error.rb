@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Circuitbox
   class ServiceFailureError < Circuitbox::Error
     attr_reader :service, :original

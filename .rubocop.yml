@@ -35,3 +35,6 @@ Style/StringLiterals:
 
 Style/SymbolArray:
   EnforcedStyle: brackets
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
