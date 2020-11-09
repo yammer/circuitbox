@@ -3,6 +3,8 @@ require: rubocop-performance
 AllCops:
   Exclude:
     - 'test/**/*.rb'
+    - 'benchmark/circuit_store_benchmark.rb'
+    - 'ci/Gemfile'
   NewCops: enable
   TargetRubyVersion: 2.4
 
