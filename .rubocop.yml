@@ -3,6 +3,8 @@ require: rubocop-performance
 AllCops:
   Exclude:
     - 'test/**/*.rb'
+    - 'benchmark/circuit_store_benchmark.rb'
+    - 'ci/Gemfile'
   NewCops: enable
   TargetRubyVersion: 2.4
 
@@ -35,3 +37,6 @@ Style/StringLiterals:
 
 Style/SymbolArray:
   EnforcedStyle: brackets
+
+Style/FrozenStringLiteralComment:
+  Enabled: true
