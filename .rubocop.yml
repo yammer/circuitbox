@@ -2,6 +2,7 @@ require: rubocop-performance
 
 AllCops:
   Exclude:
+    - '**/vendor/**/*'
     - 'test/**/*.rb'
     - 'benchmark/circuit_store_benchmark.rb'
     - 'ci/Gemfile'
@@ -21,9 +22,6 @@ Performance/OpenStruct:
   Enabled: true
 
 Style/Documentation:
-  Enabled: false
-
-Style/FrozenStringLiteralComment:
   Enabled: false
 
 Style/RaiseArgs:

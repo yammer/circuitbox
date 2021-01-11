@@ -1,0 +1,14 @@
+name: Lint
+on: [push, pull_request]
+jobs:
+  lint:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Ruby 2.7
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.7
+        bundler-cache: true
+    - name: Run Lint
+      run: bundle exec rubocop --parallel
