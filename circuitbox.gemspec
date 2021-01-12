@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
 
   spec.metadata = {
     'bug_tracker_uri' => 'https://github.com/yammer/circuitbox/issues',
-    'changelog_uri' => 'https://github.com/yammer/circuitbox/blob/master/CHANGELOG.md',
+    'changelog_uri' => 'https://github.com/yammer/circuitbox/blob/main/CHANGELOG.md',
     'source_code_uri' => 'https://github.com/yammer/circuitbox'
   }
 
@@ -34,8 +34,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'moneta', '~> 1.0'
   spec.add_development_dependency 'rack', '~> 2.0'
   spec.add_development_dependency 'rake', '~> 13.0'
-  spec.add_development_dependency 'rubocop', '0.88.0'
-  spec.add_development_dependency 'rubocop-performance', '1.7.1'
+  spec.add_development_dependency 'rubocop', '1.8.1'
+  spec.add_development_dependency 'rubocop-performance', '1.9.2'
   spec.add_development_dependency 'timecop', '~> 0.9'
   spec.add_development_dependency 'typhoeus', '~> 1.3'
 end
