@@ -5,6 +5,7 @@ class Circuitbox
     attr_reader :service, :original
 
     def initialize(service, exception)
+      super()
       @service = service
       @original = exception
       # we copy over the original exceptions backtrace if there is one

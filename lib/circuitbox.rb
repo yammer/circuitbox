@@ -13,12 +13,12 @@ class Circuitbox
   class << self
     include Configuration
 
-    def circuit(service_name, options)
+    def circuit(service_name, options, &block)
       circuit = (cached_circuits[service_name] ||= CircuitBreaker.new(service_name, options))
 
-      return circuit unless block_given?
+      return circuit unless block
 
-      circuit.run(circuitbox_exceptions: false) { yield }
+      circuit.run(circuitbox_exceptions: false, &block)
     end
   end
 end

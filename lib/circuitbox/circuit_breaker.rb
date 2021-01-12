@@ -52,7 +52,7 @@ class Circuitbox
       value.is_a?(Proc) ? value.call : value
     end
 
-    def run(circuitbox_exceptions: true)
+    def run(circuitbox_exceptions: true, &block)
       if open?
         skipped!
         raise Circuitbox::OpenCircuitError.new(service) if circuitbox_exceptions
@@ -60,9 +60,7 @@ class Circuitbox
         logger.debug(circuit_running_message)
 
         begin
-          response = execution_timer.time(service, notifier, 'execution_time') do
-            yield
-          end
+          response = execution_timer.time(service, notifier, 'execution_time', &block)
 
           success!
         rescue *exceptions => e

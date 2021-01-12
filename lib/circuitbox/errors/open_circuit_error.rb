@@ -5,6 +5,7 @@ class Circuitbox
     attr_reader :service
 
     def initialize(service)
+      super()
       @service = service
     end
   end

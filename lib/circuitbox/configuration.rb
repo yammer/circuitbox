@@ -40,7 +40,7 @@ class Circuitbox
       @default_logger ||= if defined?(Rails)
                             Rails.logger
                           else
-                            Logger.new(STDOUT)
+                            Logger.new($stdout)
                           end
     end
 

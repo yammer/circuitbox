@@ -12,7 +12,7 @@ iterations_to_run_each_circuit = 5000
 frequency_to_report_object_allocations = 150
 circuits_to_test = []
 
-logger = Logger.new(STDOUT)
+logger = Logger.new($stdout)
 logger.level = Logger::WARN # so we don't output any debug info
 
 circuits_to_test << Circuitbox::CircuitBreaker.new('circuitbox_memory_store',
