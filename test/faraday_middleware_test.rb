@@ -27,7 +27,7 @@ class Circuitbox
       middleware = FaradayMiddleware.new(app)
       uri = gimme
       give(uri).host { nil }
-      give(uri).to_s { 'yam'}
+      give(uri).to_s { 'yam' }
       env = { url: uri }
 
       assert_equal 'yam', middleware.opts[:identifier].call(env)
@@ -36,7 +36,7 @@ class Circuitbox
     def test_overwrite_identifier
       middleware = FaradayMiddleware.new(app, identifier: 'sential')
 
-      assert_equal middleware.opts[:identifier], 'sential'
+      assert_equal 'sential', middleware.opts[:identifier]
     end
 
     def test_overwrite_default_value_generator_lambda
@@ -55,7 +55,7 @@ class Circuitbox
       circuit = gimme
       env = { url: URI('http://yammer.com/') }
 
-      give(circuit).run { raise Circuitbox::Error, 'error text' }
+      give(circuit).run { raise Circuitbox::Error.new('error text') }
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       default_value_generator = ->(_, error) { error.message }
@@ -82,7 +82,7 @@ class Circuitbox
       faraday_major = faraday_version[0]
       faraday_minor = faraday_version[1]
 
-      faraday_exception = faraday_major > 0 || faraday_minor > 8 ? Faraday::TimeoutError : Faraday::Error::TimeoutError
+      faraday_exception = faraday_major.positive? || faraday_minor > 8 ? Faraday::TimeoutError : Faraday::Error::TimeoutError
 
       assert_includes circuit_breaker_options[:exceptions], faraday_exception
       assert_includes circuit_breaker_options[:exceptions], FaradayMiddleware::RequestFailed
@@ -95,7 +95,7 @@ class Circuitbox
       error_response = ->(_) { false }
       response = FaradayMiddleware.new(app, open_circuit: error_response).call(env)
       assert_kind_of Faraday::Response, response
-      assert_equal response.status, 500
+      assert_equal 500, response.status
       assert response.finished?
       refute response.success?
     end
@@ -106,7 +106,7 @@ class Circuitbox
       give(app).call(anything) { Faraday::Response.new(status: 500) }
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
-      assert_equal response.status, 503
+      assert_equal 503, response.status
       assert response.finished?
       refute response.success?
     end
@@ -117,7 +117,7 @@ class Circuitbox
       give(app).call(anything) { Faraday::Response.new(status: 400) }
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
-      assert_equal response.status, 400
+      assert_equal 400, response.status
       assert response.finished?
       refute response.success?
     end
@@ -128,7 +128,7 @@ class Circuitbox
       give(app).call(anything) { Faraday::Response.new(status: nil) }
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
-      assert_equal response.status, 503
+      assert_equal 503, response.status
       assert response.finished?
       refute response.success?
     end
@@ -162,7 +162,7 @@ class Circuitbox
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       middleware = FaradayMiddleware.new(app)
-      assert_equal middleware.call(env), :sential
+      assert_equal :sential, middleware.call(env)
     end
 
     def test_return_value_closed_circuit
@@ -173,7 +173,7 @@ class Circuitbox
       Circuitbox.expects(:circuit).with('yammer.com', anything).returns(circuit)
 
       middleware = FaradayMiddleware.new(app)
-      assert_equal middleware.call(env), :sential
+      assert_equal :sential, middleware.call(env)
     end
 
     def test_return_null_response_for_open_circuit
@@ -185,7 +185,7 @@ class Circuitbox
 
       response = FaradayMiddleware.new(app).call(env)
       assert_kind_of Faraday::Response, response
-      assert_equal response.status, 503
+      assert_equal 503, response.status
       assert response.finished?
       refute response.success?
     end

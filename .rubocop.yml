@@ -1,4 +1,7 @@
-require: rubocop-performance
+require:
+  - rubocop-minitest
+  - rubocop-performance
+  - rubocop-rake
 
 AllCops:
   Exclude:

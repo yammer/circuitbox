@@ -16,7 +16,7 @@ class CircuitboxTest < Minitest::Test
 
   def test_configure_block_clears_cached_circuits
     Circuitbox.expects(:clear_cached_circuits!)
-    Circuitbox.configure {}
+    Circuitbox.configure { 'no config' }
   end
 
   def test_default_circuit_store_is_configurable
@@ -64,6 +64,6 @@ class CircuitboxTest < Minitest::Test
   def test_run_sets_circuit_exceptions_to_false
     Circuitbox::CircuitBreaker.any_instance.expects(:run).with(circuitbox_exceptions: false)
 
-    Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]) { }
+    Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]) { 'success' }
   end
 end
