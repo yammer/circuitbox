@@ -139,11 +139,10 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def test_key_expiration_closes_circuit
-      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run {} }
-      assert_equal 'success', @circuit.run { 'success' }
+      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run { 'failure' } }
+      assert_equal 'success', (@circuit.run { 'success' })
     end
   end
-
 
   class Exceptions < Minitest::Test
     class SentinalError < StandardError; end
@@ -155,7 +154,7 @@ class CircuitBreakerTest < Minitest::Test
 
     def test_raises_when_circuit_is_open
       @circuit.stubs(open?: true)
-      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run {} }
+      assert_raises(Circuitbox::OpenCircuitError) { @circuit.run { 'fail' } }
     end
 
     def test_raises_on_service_failure
@@ -164,8 +163,8 @@ class CircuitBreakerTest < Minitest::Test
 
     def test_sets_original_error_on_service_failure
       @circuit.run { raise SentinalError }
-    rescue Circuitbox::ServiceFailureError => service_failure_error
-      assert_instance_of SentinalError, service_failure_error.original
+    rescue Circuitbox::ServiceFailureError => e
+      assert_instance_of SentinalError, e.original
     end
 
     def test_raises_argument_error_when_exceptions_is_not_an_array
@@ -258,10 +257,10 @@ class CircuitBreakerTest < Minitest::Test
       open_circuit(current_time)
 
       Timecop.freeze(current_time + 3) do
-        @circuit.run { }
+        @circuit.run { 'success' }
 
-        assert_equal false, @circuit.send(:half_open?)
-        assert_equal false, @circuit.open?
+        refute @circuit.send(:half_open?)
+        refute @circuit.open?
       end
     end
 
@@ -274,7 +273,7 @@ class CircuitBreakerTest < Minitest::Test
       @circuit.expects(:notify_event).with('close')
 
       Timecop.freeze(current_time + 3) do
-        @circuit.run { }
+        @circuit.run { 'success' }
       end
     end
 
@@ -383,7 +382,7 @@ class CircuitBreakerTest < Minitest::Test
     circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [Timeout::Error])
     circuit.stubs(should_open?: true)
 
-    assert !circuit.send(:open?)
+    refute circuit.send(:open?)
     emulate_circuit_run(circuit, :failure, Timeout::Error)
     assert circuit.send(:open?)
 
@@ -403,7 +402,7 @@ class CircuitBreakerTest < Minitest::Test
                   passed_volume_threshold?: false,
                   passed_rate_threshold: false)
 
-    assert !circuit.open?
+    refute circuit.open?
   end
 
   def test_logs_and_retrieves_success_events
@@ -499,7 +498,7 @@ class CircuitBreakerTest < Minitest::Test
                                      sleep_window: 11,
                                      time_window: 10,
                                      exceptions: [Timeout::Error])
-      assert_equal false, notifier.notified?, 'no notification sent'
+      refute notifier.notified?, 'no notification sent'
     end
 
     def test_not_notify_circuit_runtime_on_null_timer

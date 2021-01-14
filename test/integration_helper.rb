@@ -30,7 +30,7 @@ class FakeServer
 
   def create(port, result)
     @servers << Thread.new do
-      Rack::Handler::WEBrick.run(Proc.new { |env| result },
+      Rack::Handler::WEBrick.run(proc { |_env| result },
                                  Port: port,
                                  AccessLog: [],
                                  Logger: WEBrick::Log.new(DEV_NULL))
@@ -40,9 +40,8 @@ class FakeServer
 end
 
 module IntegrationHelpers
-  def open_circuit(c = connection)
+  def open_circuit(conn = connection)
     volume_threshold = Circuitbox::CircuitBreaker::DEFAULTS[:volume_threshold]
-    (volume_threshold + 1).times { c.get(failure_url) }
+    (volume_threshold + 1).times { conn.get(failure_url) }
   end
 end
-

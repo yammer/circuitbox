@@ -6,9 +6,9 @@ class ServiceFailureErrorTest < Minitest::Test
   attr_reader :error
 
   def setup
-    raise SomeOtherError, "some other error"
-  rescue => ex
-    @error = ex
+    raise SomeOtherError.new("some other error")
+  rescue SomeOtherError => e
+    @error = e
   end
 
   def test_includes_the_message_of_the_wrapped_exception

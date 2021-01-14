@@ -7,7 +7,7 @@ class SentialException < StandardError; end
 
 class Circuitbox
   class ExconMiddlewareTest < Minitest::Test
-    attr_reader :app
+    attr_reader :app, :circuitbox, :circuit
 
     def setup
       @app = gimme
@@ -21,7 +21,7 @@ class Circuitbox
 
     def test_overwrite_identifier
       middleware = ExconMiddleware.new(app, identifier: 'sential')
-      assert_equal middleware.identifier, 'sential'
+      assert_equal 'sential', middleware.identifier
     end
 
     def test_overwrite_default_value_generator_lambda
@@ -58,7 +58,7 @@ class Circuitbox
       mw = ExconMiddleware.new(app, open_circuit: error_response)
       response = mw.response_call(env)
       assert_kind_of Excon::Response, response
-      assert_equal response.status, 400
+      assert_equal 400, response.status
     end
 
     def test_default_success_response
@@ -70,7 +70,7 @@ class Circuitbox
       response = mw.response_call(env)
 
       assert_kind_of Excon::Response, response
-      assert_equal response.status, 503
+      assert_equal 503, response.status
     end
 
     def test_overwrite_exceptions
@@ -90,7 +90,7 @@ class Circuitbox
       middleware = ExconMiddleware.new(app, options)
       middleware.request_call(env)
 
-      verify(circuitbox, 1.times).circuit('yammer.com', expected_circuit_breaker_options)
+      verify(circuitbox).circuit('yammer.com', expected_circuit_breaker_options)
     end
 
     def test_overwrite_circuitbreaker_default_value
@@ -99,7 +99,7 @@ class Circuitbox
       give(circuitbox).circuit('yammer.com', anything) { circuit }
       give(circuit).run { raise Circuitbox::Error }
       middleware = ExconMiddleware.new(app, circuitbox: circuitbox)
-      assert_equal middleware.error_call(env), :sential
+      assert_equal :sential, middleware.error_call(env)
     end
 
     def test_return_null_response_for_open_circuit
@@ -110,10 +110,9 @@ class Circuitbox
       mw = ExconMiddleware.new(app, circuitbox: circuitbox)
       response = mw.error_call(env)
       assert_kind_of Excon::Response, response
-      assert_equal response.status, 503
+      assert_equal 503, response.status
     end
 
-    attr_reader :circuitbox, :circuit
     def stub_circuitbox
       @circuitbox = gimme
       @circuit = gimme

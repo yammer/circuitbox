@@ -111,7 +111,7 @@ class MemoryStoreTest < Minitest::Test
   end
 
   def test_key_returns_false_when_key_is_not_set
-    assert_equal false, @memory_store.key?('test')
+    refute @memory_store.key?('test')
   end
 
   def test_key_returns_false_when_key_is_expired
@@ -121,7 +121,7 @@ class MemoryStoreTest < Minitest::Test
                                       .returns(container)
     @memory_store.store('test', 1)
     container.expects(:expired_at?).returns(true)
-    assert_equal false, @memory_store.key?('test')
+    refute @memory_store.key?('test')
   end
 
   def test_key_compacts_store
@@ -137,6 +137,6 @@ class MemoryStoreTest < Minitest::Test
     @memory_store.store('test', 1)
 
     @memory_store.delete('test')
-    assert_equal false, @memory_store.key?('test')
+    refute @memory_store.key?('test')
   end
 end
