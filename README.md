@@ -92,10 +92,10 @@ class ExampleServiceClient
       logger: Logger.new(STDOUT),
 
       # Customized Timer object
-      # Use NullTimer if you don't want to time circuit execution
+      # Use NullTimer if you don't want to time circuit runtime
       # Use MonotonicTimer to avoid bad time metrics on system time resync
       # This overrides what is set in the global configuration
-      execution_timer: SimpleTimer,
+      timer: SimpleTimer,
 
       # Customized notifier
       # overrides the default
@@ -168,7 +168,7 @@ end
 
 `payload[:gauge]` can be:
 
-- `execution_time` # execution time will only be notified when circuit is closed and block is successfully executed.
+- `runtime` # runtime will only be notified when circuit is closed and block is successfully executed.
 
 **warnings:**
 in case of misconfiguration, circuitbox will fire a circuitbox_warning
