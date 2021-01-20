@@ -11,6 +11,11 @@ class Circuitbox
 
     @@only_once = false
     def setup
+      Circuitbox.configure do |config|
+        config.default_circuit_store = Moneta.new(:Memory, expires: true)
+        config.default_logger = Logger.new(File::NULL)
+      end
+
       @connection = Faraday.new do |c|
         c.use FaradayMiddleware
         c.adapter :typhoeus # support in_parallel
@@ -23,10 +28,6 @@ class Circuitbox
         FakeServer.create(4712, ['500', {'Content-Type' => 'text/plain'}, ["Failure!"]])
         @@only_once = true
       end
-    end
-
-    def teardown
-      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
     end
 
     def test_circuit_does_not_open_for_below_threshhold_failed_requests
