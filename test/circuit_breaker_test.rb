@@ -8,7 +8,10 @@ class CircuitBreakerTest < Minitest::Test
   class ConnectionError < StandardError; end
 
   def setup
-    Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
+    Circuitbox.configure do |config|
+      config.default_circuit_store = Moneta.new(:Memory, expires: true)
+      config.default_logger = Logger.new(File::NULL)
+    end
   end
 
   def test_goes_into_half_open_state_on_sleep
@@ -19,7 +22,11 @@ class CircuitBreakerTest < Minitest::Test
 
   class Ratio < Minitest::Test
     def setup
-      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
+      Circuitbox.configure do |config|
+        config.default_circuit_store = Moneta.new(:Memory, expires: true)
+        config.default_logger = Logger.new(File::NULL)
+      end
+
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 sleep_window: 300,
                                                 volume_threshold: 5,
@@ -148,7 +155,11 @@ class CircuitBreakerTest < Minitest::Test
     class SentinalError < StandardError; end
 
     def setup
-      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
+      Circuitbox.configure do |config|
+        config.default_circuit_store = Moneta.new(:Memory, expires: true)
+        config.default_logger = Logger.new(File::NULL)
+      end
+
       @circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [SentinalError])
     end
 
@@ -174,7 +185,11 @@ class CircuitBreakerTest < Minitest::Test
 
   class CloseAfterSleep < Minitest::Test
     def setup
-      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
+      Circuitbox.configure do |config|
+        config.default_circuit_store = Moneta.new(:Memory, expires: true)
+        config.default_logger = Logger.new(File::NULL)
+      end
+
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 sleep_window: 2,
                                                 time_window: 2,
@@ -213,7 +228,11 @@ class CircuitBreakerTest < Minitest::Test
 
   class HalfOpenState < Minitest::Test
     def setup
-      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
+      Circuitbox.configure do |config|
+        config.default_circuit_store = Moneta.new(:Memory, expires: true)
+        config.default_logger = Logger.new(File::NULL)
+      end
+
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 sleep_window: 2,
                                                 time_window: 2,

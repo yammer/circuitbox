@@ -33,7 +33,7 @@ class FakeServer
       Rack::Handler::WEBrick.run(proc { |_env| result },
                                  Port: port,
                                  AccessLog: [],
-                                 Logger: WEBrick::Log.new(DEV_NULL))
+                                 Logger: WEBrick::Log.new(File::NULL))
     end
     sleep 0.5 # wait for the server to spin up
   end
