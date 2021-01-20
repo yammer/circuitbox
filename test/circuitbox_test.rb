@@ -37,12 +37,6 @@ class CircuitboxTest < Minitest::Test
     assert_equal logger, Circuitbox.default_logger
   end
 
-  def test_default_timer_is_configurable
-    timer = gimme
-    Circuitbox.default_timer = timer
-    assert_equal timer, Circuitbox.default_timer
-  end
-
   def test_creates_a_circuit_breaker
     assert Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]).is_a? Circuitbox::CircuitBreaker
   end

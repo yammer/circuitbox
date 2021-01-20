@@ -2,7 +2,6 @@
 
 require 'test_helper'
 require 'moneta'
-require 'circuitbox/timer/null'
 
 class CircuitBreakerTest < Minitest::Test
   class ConnectionError < StandardError; end
@@ -499,17 +498,6 @@ class CircuitBreakerTest < Minitest::Test
                                      time_window: 10,
                                      exceptions: [Timeout::Error])
       refute notifier.notified?, 'no notification sent'
-    end
-
-    def test_not_notify_circuit_runtime_on_null_timer
-      notifier = gimme_notifier(metric: 'runtime', metric_value: Gimme::Matchers::Anything.new)
-      timer = Circuitbox::Timer::Null.new
-      circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                               notifier: notifier,
-                                               timer: timer,
-                                               exceptions: [Timeout::Error])
-      circuit.run { 'success' }
-      refute notifier.metric_sent?, 'runtime metric sent'
     end
 
     def test_send_runtime_metric

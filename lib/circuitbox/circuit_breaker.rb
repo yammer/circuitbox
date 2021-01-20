@@ -7,7 +7,7 @@ class Circuitbox
     include LoggerMessages
 
     attr_reader :service, :circuit_options, :exceptions,
-                :logger, :circuit_store, :notifier, :time_class, :timer
+                :logger, :circuit_store, :notifier, :time_class
 
     DEFAULTS = {
       sleep_window: 90,
@@ -30,7 +30,6 @@ class Circuitbox
       @service = service.to_s
       @circuit_options = DEFAULTS.merge(options)
       @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
-      @timer = options.fetch(:timer) { Circuitbox.default_timer }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
       if @circuit_options[:timeout_seconds]
@@ -60,7 +59,7 @@ class Circuitbox
         logger.debug(circuit_running_message)
 
         begin
-          response = timer.time(service, notifier, 'runtime', &block)
+          response = Timer.measure(service, notifier, 'runtime', &block)
 
           success!
         rescue *exceptions => e
