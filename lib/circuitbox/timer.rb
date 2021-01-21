@@ -29,10 +29,10 @@ class Circuitbox
     class << self
       def measure(service, notifier, metric_name)
         before = now
-        result = yield
+        yield
+      ensure
         total_time = now - before
         notifier.metric_gauge(service, metric_name, total_time)
-        result
       end
 
       private

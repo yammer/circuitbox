@@ -528,15 +528,6 @@ class CircuitBreakerTest < Minitest::Test
       assert notifier.metric_sent?, 'no runtime metric sent'
     end
 
-    def test_no_runtime_metric_on_error
-      notifier = gimme_notifier(metric: 'runtime', metric_value: Gimme::Matchers::Anything.new)
-      circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                               notifier: notifier,
-                                               exceptions: [Timeout::Error])
-      circuit.run(circuitbox_exceptions: false) { raise Timeout::Error }
-      refute notifier.metric_sent?, 'runtime metric sent'
-    end
-
     def test_no_runtime_metric_when_circuit_open
       notifier = gimme_notifier(metric: 'runtime', metric_value: Gimme::Matchers::Anything.new)
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
