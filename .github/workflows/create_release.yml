@@ -17,7 +17,7 @@ jobs:
     - name: Setup ENV
       id: custom-env
       run: |
-        export CIRCUITBOX_VERSION=$(echo ${RELEASE_TAG} | cut -c2-)
+        export CIRCUITBOX_VERSION=$(echo ${RELEASE_TAG#refs/tags/} | cut -c2-)
         echo "::set-output name=gem_filename::circuitbox-${CIRCUITBOX_VERSION}.gem"
 
         if echo $CIRCUITBOX_VERSION | grep -q "pre"
