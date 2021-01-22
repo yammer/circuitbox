@@ -464,7 +464,10 @@ class CircuitBreakerTest < Minitest::Test
 
   class Notifications < Minitest::Test
     def setup
-      Circuitbox.configure { |config| config.default_circuit_store = Moneta.new(:Memory, expires: true) }
+      Circuitbox.configure do |config|
+        config.default_circuit_store = Moneta.new(:Memory, expires: true)
+        config.default_logger = Logger.new(File::NULL)
+      end
     end
 
     def test_notification_on_open
