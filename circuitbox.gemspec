@@ -28,9 +28,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'excon', '~> 0.71'
   spec.add_development_dependency 'faraday', ['>= 0.8', '< 2.0']
   spec.add_development_dependency 'gimme', '~> 0.5'
-  spec.add_development_dependency 'minitest', '~> 5.11'
+  spec.add_development_dependency 'minitest', '~> 5.14'
   spec.add_development_dependency 'minitest-excludes', '~> 2.0'
-  spec.add_development_dependency 'mocha', '~> 1.7'
+  spec.add_development_dependency 'mocha', '~> 1.12'
   spec.add_development_dependency 'moneta', '~> 1.0'
   spec.add_development_dependency 'rack', '~> 2.0'
   spec.add_development_dependency 'rake', '~> 13.0'
@@ -39,5 +39,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop-performance', '1.9.2'
   spec.add_development_dependency 'rubocop-rake', '0.5.1'
   spec.add_development_dependency 'timecop', '~> 0.9'
-  spec.add_development_dependency 'typhoeus', '~> 1.3'
+  spec.add_development_dependency 'typhoeus', '~> 1.4'
 end
