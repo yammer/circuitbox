@@ -139,6 +139,10 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def setup
+      Circuitbox.configure do |config|
+        config.default_logger = Logger.new(File::NULL)
+      end
+
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 exceptions: [Timeout::Error],
                                                 cache: ExpiringCache.new('circuits:yammer:open', true))
