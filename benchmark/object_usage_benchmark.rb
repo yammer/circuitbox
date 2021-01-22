@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'circuitbox'
-require 'circuitbox/memory_store'
+require 'moneta'
 
 ##
 # This looks at the retained object counts over time of different in-memory stores
@@ -41,7 +41,7 @@ class ObjectUsageBenchmark
         while total_iterations < iterations
           total_iterations += 1
 
-          circuit.run do
+          circuit.run(circuitbox_exceptions: false) do
             raise StandardError if total_iterations % 4
           end
 
