@@ -10,11 +10,11 @@ require_relative 'circuitbox/errors/service_failure_error'
 require_relative 'circuitbox/configuration'
 
 class Circuitbox
-  class << self
-    include Configuration
+  extend Configuration
 
+  class << self
     def circuit(service_name, options, &block)
-      circuit = (cached_circuits[service_name] ||= CircuitBreaker.new(service_name, options))
+      circuit = find_or_create_circuit_breaker(service_name, options)
 
       return circuit unless block
 
