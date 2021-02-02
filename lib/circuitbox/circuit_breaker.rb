@@ -29,7 +29,7 @@ class Circuitbox
     def initialize(service, options = {})
       @service = service.to_s
       @circuit_options = DEFAULTS.merge(options)
-      @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
+      @circuit_store = options.fetch(:cache) { Circuitbox.default_circuit_store }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
       if @circuit_options[:timeout_seconds]
@@ -40,7 +40,7 @@ class Circuitbox
       @exceptions = options.fetch(:exceptions)
       raise ArgumentError.new('exceptions need to be an array') unless @exceptions.is_a?(Array)
 
-      @logger     = options.fetch(:logger) { Circuitbox.default_logger }
+      @logger = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
       @state_change_mutex = Mutex.new
       check_sleep_window
@@ -59,7 +59,11 @@ class Circuitbox
         logger.debug(circuit_running_message)
 
         begin
-          response = Timer.measure(service, notifier, 'runtime', &block)
+          response = if measure?
+                       Timer.measure(service, notifier, 'runtime', &block)
+                     else
+                       yield
+                     end
 
           success!
         rescue *exceptions => e
@@ -98,6 +102,10 @@ class Circuitbox
     end
 
     private
+
+    def measure?
+      !notifier.instance_of?(Notifier::Null)
+    end
 
     def should_open?
       failures = failure_count
