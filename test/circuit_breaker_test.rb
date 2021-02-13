@@ -526,8 +526,8 @@ class CircuitBreakerTest < Minitest::Test
       refute notifier.notified?, 'no notification sent'
     end
 
-    def test_send_runtime_metric
-      notifier = gimme_notifier(metric: 'runtime', metric_value: Gimme::Matchers::Anything.new)
+    def test_send_circuit_run_metric
+      notifier = gimme_notifier
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
@@ -535,20 +535,18 @@ class CircuitBreakerTest < Minitest::Test
       assert notifier.metric_sent?, 'no runtime metric sent'
     end
 
-    def test_no_runtime_metric_when_circuit_open
-      notifier = gimme_notifier(metric: 'runtime', metric_value: Gimme::Matchers::Anything.new)
+    def test_no_circuit_run_metric_when_circuit_open
+      notifier = gimme_notifier
       circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                notifier: notifier,
                                                exceptions: [Timeout::Error])
       circuit.send(:trip)
       circuit.run(circuitbox_exceptions: false) { raise Timeout::Error }
-      refute notifier.metric_sent?, 'runtime metric sent'
+      refute notifier.metric_sent?, 'circuit_run metric sent'
     end
 
     def gimme_notifier(opts = {})
       service = opts.fetch(:service, 'yammer').to_s
-      metric = opts.fetch(:metric, 'error_rate')
-      metric_value = opts.fetch(:metric_value, 0.0)
       fake_notifier = gimme
       notified = false
       notified_open = false
@@ -557,9 +555,10 @@ class CircuitBreakerTest < Minitest::Test
       give(fake_notifier).notify(service, 'open') { notified_open = true }
       give(fake_notifier).notify(service, 'close') { notified_close = true }
       give(fake_notifier).notify_warning(service, Gimme::Matchers::Anything.new) { notified = true }
-      give(fake_notifier).metric_gauge(service, metric, metric_value) do
+      give(fake_notifier).notify_run(service) do |blk|
         notified = true
         metric_sent = true
+        blk.call
       end
       give(fake_notifier).notified? { notified }
       give(fake_notifier).notified_open? { notified_open }

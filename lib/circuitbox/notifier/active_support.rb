@@ -11,8 +11,8 @@ class Circuitbox
         ::ActiveSupport::Notifications.instrument('circuit_warning', circuit: circuit_name, message: message)
       end
 
-      def metric_gauge(circuit_name, gauge, value)
-        ::ActiveSupport::Notifications.instrument('circuit_gauge', circuit: circuit_name, gauge: gauge, value: value)
+      def notify_run(circuit_name, &block)
+        ::ActiveSupport::Notifications.instrument('circuit_run', circuit: circuit_name, &block)
       end
     end
   end

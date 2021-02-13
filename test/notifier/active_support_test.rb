@@ -17,8 +17,16 @@ class NotifierActiveSupportTest < Minitest::Test
     Circuitbox::Notifier::ActiveSupport.new.notify_warning('yammer', 'hello')
   end
 
-  def test_sends_metric_as_notification
-    ActiveSupport::Notifications.expects(:instrument).with("circuit_gauge", { circuit: 'yammer', gauge: 'ratio', value: 12})
-    Circuitbox::Notifier::ActiveSupport.new.metric_gauge('yammer', 'ratio', 12)
+  def test_sends_notification_on_notify_run
+    ActiveSupport::Notifications.expects(:instrument).with("circuit_run", { circuit: 'yammer'})
+    Circuitbox::Notifier::ActiveSupport.new.notify_run('yammer') { 'nothing' }
+  end
+
+  def test_notify_run_runs_the_block
+    called = false
+
+    Circuitbox::Notifier::ActiveSupport.new.notify_run('yammer') { called = true }
+
+    assert called
   end
 end
