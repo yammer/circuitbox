@@ -7,7 +7,9 @@ class Circuitbox
 
       def notify_warning(_, _); end
 
-      def metric_gauge(_, _, _); end
+      def notify_run(_)
+        yield
+      end
     end
   end
 end

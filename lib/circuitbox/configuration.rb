@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'memory_store'
-require_relative 'timer'
 require_relative 'notifier/active_support'
 require_relative 'notifier/null'
 
@@ -9,7 +8,6 @@ class Circuitbox
   module Configuration
     attr_writer :default_circuit_store,
                 :default_notifier,
-                :default_timer,
                 :default_logger
 
     def self.extended(base)

@@ -16,7 +16,15 @@ class NotifierNullTest < Minitest::Test
     @notifier.notify_warning('first', 'second')
   end
 
-  def test_metric_gauge_accepts_three_arguments
-    @notifier.metric_gauge('first', 'second', 'third')
+  def test_notify_run_accepts_one_argument_and_block
+    @notifier.notify_run('first') { }
+  end
+
+  def test_notify_run_runs_the_block
+    called = false
+
+    @notifier.notify_run('something') { called = true }
+
+    assert called
   end
 end

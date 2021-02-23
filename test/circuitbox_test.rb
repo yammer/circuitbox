@@ -11,7 +11,6 @@ class CircuitboxTest < Minitest::Test
     Circuitbox.default_notifier = nil
     Circuitbox.default_logger = nil
     Circuitbox.default_circuit_store = nil
-    Circuitbox.default_timer = nil
   end
 
   def test_configure_block_clears_cached_circuits

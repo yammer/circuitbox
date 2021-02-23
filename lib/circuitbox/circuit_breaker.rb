@@ -59,7 +59,7 @@ class Circuitbox
         logger.debug(circuit_running_message)
 
         begin
-          response = Timer.measure(service, notifier, 'runtime', &block)
+          response = notifier.notify_run(service, &block)
 
           success!
         rescue *exceptions => e
