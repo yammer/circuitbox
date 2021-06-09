@@ -3,11 +3,11 @@
 class Circuitbox
   class Notifier
     class Null
-      def notify(_, _); end
+      def notify(_circuit_name, _event); end
 
-      def notify_warning(_, _); end
+      def notify_warning(_circuit_name, _message); end
 
-      def notify_run(_)
+      def notify_run(_circuit_name)
         yield
       end
     end
