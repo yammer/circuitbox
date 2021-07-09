@@ -27,9 +27,9 @@ class CircuitBreakerTest < Minitest::Test
       end
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                                sleep_window: 300,
+                                                sleep_window_sec: 300,
                                                 volume_threshold: 5,
-                                                error_threshold: 33,
+                                                error_percent_threshold: 33,
                                                 exceptions: [Timeout::Error])
     end
 
@@ -194,10 +194,10 @@ class CircuitBreakerTest < Minitest::Test
       end
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                                sleep_window: 2,
-                                                time_window: 2,
+                                                sleep_window_sec: 2,
+                                                time_window_sec: 2,
                                                 volume_threshold: 5,
-                                                error_threshold: 50,
+                                                error_percent_threshold: 50,
                                                 exceptions: [Timeout::Error])
     end
 
@@ -215,9 +215,9 @@ class CircuitBreakerTest < Minitest::Test
 
       # We need to be past the sleep window for the circuit to close
       # which is why we are adding 1 second to the sleep window
-      approximate_sleep_window = @circuit.option_value(:sleep_window) + 1
+      approximate_sleep_window_sec = @circuit.option_value(:sleep_window_sec) + 1
 
-      Timecop.freeze(current_time + approximate_sleep_window) do
+      Timecop.freeze(current_time + approximate_sleep_window_sec) do
         @circuit.run { run_count += 1 }
       end
 
@@ -237,10 +237,10 @@ class CircuitBreakerTest < Minitest::Test
       end
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                                sleep_window: 2,
-                                                time_window: 2,
+                                                sleep_window_sec: 2,
+                                                time_window_sec: 2,
                                                 volume_threshold: 2,
-                                                error_threshold: 50,
+                                                error_percent_threshold: 50,
                                                 exceptions: [Timeout::Error])
     end
 
@@ -312,10 +312,10 @@ class CircuitBreakerTest < Minitest::Test
     current_time = Time.new(2015, 7, 29)
     circuit_ran = false
     circuit = Circuitbox::CircuitBreaker.new(:yammer,
-                                             sleep_window: 2,
-                                             time_window: 2,
+                                             sleep_window_sec: 2,
+                                             time_window_sec: 2,
                                              volume_threshold: 2,
-                                             error_threshold: 50,
+                                             error_percent_threshold: 50,
                                              exceptions: [Timeout::Error])
 
     Timecop.freeze(current_time) do
@@ -508,20 +508,20 @@ class CircuitBreakerTest < Minitest::Test
       _, error = capture_io do
         Circuitbox::CircuitBreaker.new(:yammer,
                                        notifier: notifier,
-                                       sleep_window: 1,
-                                       time_window: 10,
+                                       sleep_window_sec: 1,
+                                       time_window_sec: 10,
                                        exceptions: [Timeout::Error])
       end
       assert notifier.notified?, 'no notification sent'
-      assert_match(/Circuit: yammer.+sleep_window: 1.+time_window: 10.+/, error)
+      assert_match(/Circuit: yammer.+sleep_window_sec: 1.+time_window_sec: 10.+/, error)
     end
 
     def test_does_not_warn_on_sleep_window_being_correctly_sized
       notifier = gimme_notifier
       Circuitbox::CircuitBreaker.new(:yammer,
                                      notifier: notifier,
-                                     sleep_window: 11,
-                                     time_window: 10,
+                                     sleep_window_sec: 11,
+                                     time_window_sec: 10,
                                      exceptions: [Timeout::Error])
       refute notifier.notified?, 'no notification sent'
     end

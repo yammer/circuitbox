@@ -70,12 +70,12 @@ class ExampleServiceClient
       exceptions:       [YourCustomException],
 
       # seconds the circuit stays open once it has passed the error threshold
-      sleep_window:     300,
+      sleep_window_sec:     300,
 
       # length of interval (in seconds) over which it calculates the error rate
-      time_window:      60,
+      time_window_sec:      60,
 
-      # number of requests within `time_window` seconds before it calculates error rates (checked on failures)
+      # number of requests within `time_window_sec` seconds before it calculates error rates (checked on failures)
       volume_threshold: 10,
 
       # the store you want to use to save the circuit state so it can be
@@ -84,7 +84,7 @@ class ExampleServiceClient
       cache: Circuitbox::MemoryStore.new,
 
       # exceeding this rate will open the circuit (checked on failures)
-      error_threshold:  50,
+      error_percent_threshold:  50,
 
       # Logger to use
       # This overrides what is set in the global configuration
@@ -103,7 +103,7 @@ You can also pass a Proc as an option value which will evaluate each time the ci
 
 ```ruby
 Circuitbox.circuit(:yammer, {
-  sleep_window: Proc.new { Configuration.get(:sleep_window) },
+  sleep_window_sec: Proc.new { Configuration.get(:sleep_window_sec) },
   exceptions: [Net::ReadTimeout]
 })
 ```

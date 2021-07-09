@@ -46,11 +46,11 @@ class CircuitboxTest < Minitest::Test
   end
 
   def test_sets_the_circuit_options_the_first_time_only
-    circuit_one = Circuitbox.circuit(:yammer, exceptions: [Timeout::Error], sleep_window: 1337)
-    circuit_two = Circuitbox.circuit(:yammer, exceptions: [StandardError], sleep_window: 2000)
+    circuit_one = Circuitbox.circuit(:yammer, exceptions: [Timeout::Error], sleep_window_sec: 1337)
+    circuit_two = Circuitbox.circuit(:yammer, exceptions: [StandardError], sleep_window_sec: 2000)
 
-    assert_equal 1337, circuit_one.option_value(:sleep_window)
-    assert_equal 1337, circuit_two.option_value(:sleep_window)
+    assert_equal 1337, circuit_one.option_value(:sleep_window_sec)
+    assert_equal 1337, circuit_two.option_value(:sleep_window_sec)
     assert_equal [Timeout::Error], circuit_two.exceptions
   end
 

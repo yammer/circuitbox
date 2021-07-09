@@ -10,20 +10,20 @@ class Circuitbox
                 :logger, :circuit_store, :notifier, :time_class
 
     DEFAULTS = {
-      sleep_window: 90,
+      sleep_window_sec: 90,
       volume_threshold: 5,
-      error_threshold: 50,
-      time_window: 60
+      error_percent_threshold: 50,
+      time_window_sec: 60
     }.freeze
 
     #
     # Configuration options
     #
-    # `sleep_window`      - seconds to sleep the circuit
+    # `sleep_window_sec`      - seconds to sleep the circuit
     # `volume_threshold`  - number of requests before error rate calculation occurs
-    # `error_threshold`   - percentage of failed requests needed to trip circuit
+    # `error_percent_threshold`   - percentage of failed requests needed to trip circuit
     # `exceptions`        - exceptions that count as failures
-    # `time_window`       - interval of time used to calculate error_rate (in seconds) - default is 60s
+    # `time_window_sec`       - interval of time used to calculate error_rate (in seconds) - default is 60s
     # `logger`            - Logger to use - defaults to Rails.logger if defined, otherwise STDOUT
     #
     def initialize(service, options = {})
@@ -112,7 +112,7 @@ class Circuitbox
     end
 
     def passed_rate_threshold?(rate)
-      rate >= option_value(:error_threshold)
+      rate >= option_value(:error_percent_threshold)
     end
 
     def half_open_failure
@@ -145,7 +145,7 @@ class Circuitbox
     end
 
     def trip
-      circuit_store.store(open_storage_key, true, expires: option_value(:sleep_window))
+      circuit_store.store(open_storage_key, true, expires: option_value(:sleep_window_sec))
       circuit_store.store(half_open_storage_key, true)
     end
 
@@ -197,16 +197,16 @@ class Circuitbox
 
     # Increment stat store and send notification
     def increment_and_notify_event(event)
-      circuit_store.increment(stat_storage_key(event), 1, expires: (option_value(:time_window) * 2))
+      circuit_store.increment(stat_storage_key(event), 1, expires: (option_value(:time_window_sec) * 2))
       notify_event(event)
     end
 
     def check_sleep_window
-      sleep_window = option_value(:sleep_window)
-      time_window  = option_value(:time_window)
-      return unless sleep_window < time_window
+      sleep_window_sec = option_value(:sleep_window_sec)
+      time_window_sec  = option_value(:time_window_sec)
+      return unless sleep_window_sec < time_window_sec
 
-      warning_message = "sleep_window: #{sleep_window} is shorter than time_window: #{time_window}, "\
+      warning_message = "sleep_window_sec: #{sleep_window_sec} is shorter than time_window_sec: #{time_window_sec}, "\
                         "the error_rate would not be reset after a sleep."
       notifier.notify_warning(service, warning_message)
       warn("Circuit: #{service}, Warning: #{warning_message}")
@@ -219,8 +219,8 @@ class Circuitbox
     # return time representation in seconds
     def align_time_to_window
       time = time_class.now.to_i
-      time_window = option_value(:time_window)
-      time - (time % time_window) # remove rest of integer division
+      time_window_sec = option_value(:time_window_sec)
+      time - (time % time_window_sec) # remove rest of integer division
     end
 
     def open_storage_key

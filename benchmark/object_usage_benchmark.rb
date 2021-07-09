@@ -16,15 +16,15 @@ logger = Logger.new($stdout)
 logger.level = Logger::WARN # so we don't output any debug info
 
 circuits_to_test << Circuitbox::CircuitBreaker.new('circuitbox_memory_store',
-                                                   sleep_window: 2,
-                                                   time_window: 1,
+                                                   sleep_window_sec: 2,
+                                                   time_window_sec: 1,
                                                    logger: logger,
                                                    exceptions: [StandardError],
                                                    cache: Circuitbox::MemoryStore.new)
 
 circuits_to_test << Circuitbox::CircuitBreaker.new('moneta_memory_store',
-                                                   sleep_window: 2,
-                                                   time_window: 1,
+                                                   sleep_window_sec: 2,
+                                                   time_window_sec: 1,
                                                    logger: logger,
                                                    exceptions: [StandardError],
                                                    cache: Moneta.new(:Memory, expires: true, threadsafe: true))
@@ -45,9 +45,9 @@ class ObjectUsageBenchmark
             raise StandardError if total_iterations % 4
           end
 
-          # by sleeping we end up causing the circuit to go through
-          # multiple time_window's when the iteration count is high
-          # and the time window is low.
+          # by sleeping, we end up causing the circuit to go through
+          # multiple time windows when the iteration count is high
+          # and time_window_sec is low.
           sleep 0.1
 
           next unless (total_iterations % report_every).zero?

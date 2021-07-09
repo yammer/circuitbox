@@ -11,7 +11,7 @@
 - Faraday middleware supports faraday 1.0 [\#143](https://github.com/yammer/circuitbox/pull/143)
 - Remove ```run!``` method and change ```run``` method (see upgrade guide) [\#119](https://github.com/yammer/circuitbox/pull/119) [\#126](https://github.com/yammer/circuitbox/pull/126)
 - Correctly check a circuits volume threshold [\#116](https://github.com/yammer/circuitbox/pull/116)
-- Stop overwriting sleep_window when it is less than time window [\#108](https://github.com/yammer/circuitbox/pull/108)
+- Stop overwriting sleep_window_sec when it is less than time_window_sec [\#108](https://github.com/yammer/circuitbox/pull/108)
 - Lower default sleep window from 300 seconds (5 minutes) to 90 seconds (1 minute 30 seconds) [\#107](https://github.com/yammer/circuitbox/pull/107)
 - Remove Circuitbox's use of ruby timeout [\#106](https://github.com/yammer/circuitbox/pull/106)
 - Register faraday middleware [\#104](https://github.com/yammer/circuitbox/pull/104)
