@@ -20,5 +20,13 @@ class Circuitbox
 
       circuit.run(circuitbox_exceptions: false, &block)
     end
+
+    def open?(service_name)
+      @cached_circuits_mutex.synchronize do
+        return false unless @cached_circuits[service_name]
+
+        @cached_circuits[service_name].open?
+      end
+    end
   end
 end

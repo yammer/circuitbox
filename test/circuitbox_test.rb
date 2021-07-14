@@ -59,4 +59,19 @@ class CircuitboxTest < Minitest::Test
 
     Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]) { 'success' }
   end
+
+  def test_existing_circuit_is_not_open
+    Circuitbox.circuit(:yammer, exceptions: [Timeout::Error])
+    assert_equal false, Circuitbox.open?(:yammer)
+  end
+
+  def test_existing_circuit_is_open
+    Circuitbox::CircuitBreaker.any_instance.expects(:open?).returns(true)
+    Circuitbox.circuit(:yammer, exceptions: [Timeout::Error])
+    assert_equal true, Circuitbox.open?(:yammer)
+  end
+
+  def test_nonexistent_circuit_is_not_open
+    assert_equal false, Circuitbox.open?(:nonexistent)
+  end
 end
