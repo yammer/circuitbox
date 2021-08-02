@@ -14,7 +14,7 @@ class Circuitbox
     end
 
     def to_s
-      "#{self.class.name} wrapped: #{original}"
+      "#{self.class.name} (original: #{original})"
     end
   end
 end
