@@ -5,10 +5,10 @@ class Circuitbox
     attr_reader :service, :original
 
     def initialize(service, exception)
-      super()
+      super("Service #{service.inspect} was unavailable: #{exception}")
       @service = service
       @original = exception
-      # we copy over the original exceptions backtrace if there is one
+      # We copy over the original exceptions backtrace if there is one
       backtrace = exception.backtrace
       set_backtrace(backtrace) unless backtrace.empty?
     end
