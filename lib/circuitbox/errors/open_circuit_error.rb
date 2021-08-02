@@ -5,7 +5,7 @@ class Circuitbox
     attr_reader :service
 
     def initialize(service)
-      super()
+      super("Service #{service.inspect} has an open circuit")
       @service = service
     end
   end
