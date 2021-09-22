@@ -13,7 +13,7 @@ class ServiceFailureErrorTest < Minitest::Test
 
   def test_includes_the_message_of_the_wrapped_exception
     ex = Circuitbox::ServiceFailureError.new('test', error)
-    assert_equal "Circuitbox::ServiceFailureError (original: #{error})", ex.to_s
+    assert_equal 'Circuitbox::ServiceFailureError: Service "test" was unavailable (original: some other error)', ex.to_s
   end
 
   def test_keeps_the_original_backtrace
