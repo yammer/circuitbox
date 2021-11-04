@@ -27,7 +27,7 @@ class Circuitbox
       @mutex.synchronize do
         existing_container = fetch_container(key)
 
-        # reusing the existing container is a small optmization
+        # reusing the existing container is a small optimization
         # to reduce the amount of objects created
         if existing_container
           existing_container.expires_after(seconds_to_expire)
