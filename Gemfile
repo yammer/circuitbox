@@ -7,7 +7,7 @@ gemspec
 
 gem "pry"
 
-gem 'rubocop', '~> 1.12.1', require: false
-gem 'rubocop-minitest', '~> 0.12.1', require: false
-gem 'rubocop-performance', '~> 1.11.3', require: false
-gem 'rubocop-rake', '~> 0.5.1', require: false
+gem 'rubocop', '~> 1.25.0', require: false
+gem 'rubocop-minitest', '~> 0.17.0', require: false
+gem 'rubocop-performance', '~> 1.13.0', require: false
+gem 'rubocop-rake', '~> 0.6.0', require: false
