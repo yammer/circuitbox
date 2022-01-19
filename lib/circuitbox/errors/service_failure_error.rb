@@ -8,13 +8,13 @@ class Circuitbox
       super()
       @service = service
       @original = exception
-      # we copy over the original exceptions backtrace if there is one
+      # We copy over the original exceptions backtrace if there is one
       backtrace = exception.backtrace
       set_backtrace(backtrace) unless backtrace.empty?
     end
 
     def to_s
-      "#{self.class.name} wrapped: #{original}"
+      "#{self.class}: Service #{service.inspect} was unavailable (original: #{original})"
     end
   end
 end

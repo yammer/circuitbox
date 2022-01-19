@@ -8,5 +8,9 @@ class Circuitbox
       super()
       @service = service
     end
+
+    def to_s
+      "#{self.class}: Service #{service.inspect} has an open circuit"
+    end
   end
 end
