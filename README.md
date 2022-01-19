@@ -125,53 +125,49 @@ some pre-requisits need to be satisfied first:
 
 ## Notifications
 
-circuitbox use ActiveSupport Notifications.
+Circuitbox has two built in notifiers, null and active support.
+The active support notifier is used if `ActiveSupport::Notifications` is defined when circuitbox is loaded.
+If `ActiveSupport::Notifications` is not defined the null notifier is used.
+The null notifier does not send notifications anywhere.
 
+The default notifier can be changed to use a specific built in notifier or a custom notifier when [configuring circuitbox](#global-configuration).
+
+### ActiveSupport
 Usage example:
 
-**Log on circuit open/close:**
+**Circuit open/close:**
 
 ```ruby
-class CircuitOpenException    < StandardError ; end
-
-ActiveSupport::Notifications.subscribe('circuit_open') do |name, start, finish, id, payload|
+ActiveSupport::Notifications.subscribe('open.circuitbox') do |_name, _start, _finish, _id, payload|
   circuit_name = payload[:circuit]
   Rails.logger.warn("Open circuit for: #{circuit_name}")
 end
-ActiveSupport::Notifications.subscribe('circuit_close') do |name, start, finish, id, payload|
+ActiveSupport::Notifications.subscribe('close.circuitbox') do |_name, _start, _finish, _id, payload|
   circuit_name = payload[:circuit]
   Rails.logger.info("Close circuit for: #{circuit_name}")
 end
 ```
 
-**generate metrics:**
+**Circuit run:**
 
 ```ruby
-$statsd = Statsd.new 'localhost', 9125
-
-ActiveSupport::Notifications.subscribe('circuit_gauge') do |name, start, finish, id, payload|
-  circuit_name = payload[:circuit]
-  gauge        = payload[:gauge]
-  value        = payload[:value]
-  metrics_key  = "circuitbox.circuit.#{circuit_name}.#{gauge}"
-
-  $statsd.gauge(metrics_key, value)
+ActiveSupport::Notifications.subscribe('run.circuitbox') do |*args|
+  event = ActiveSupport::Notifications::Event.new(*args)
+  circuit_name = event.payload[:circuit_name]
+  
+  Rails.logger.info("Circuit: #{circuit_name} Runtime: #{event.duration}")
 end
 ```
 
-`payload[:gauge]` can be:
-
-- `runtime` # runtime will only be notified when circuit is closed and block is successfully executed.
-
-**warnings:**
-in case of misconfiguration, circuitbox will fire a circuitbox_warning
+**Circuit Warnings:**
+In case of misconfiguration, circuitbox will fire a `warning.circuitbox`
 notification.
 
 ```ruby
-ActiveSupport::Notifications.subscribe('circuit_warning') do |name, start, finish, id, payload|
+ActiveSupport::Notifications.subscribe('warning.circuitbox') do |_name, _start, _finish, _id, payload|
   circuit_name = payload[:circuit]
   warning      = payload[:message]
-  Rails.logger.warning("#{circuit_name} - #{warning}")
+  Rails.logger.warning("Circuit warning for: #{circuit_name} Message: #{warning}")
 end
 
 ```
