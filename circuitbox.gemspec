@@ -16,15 +16,16 @@ Gem::Specification.new do |spec|
   spec.metadata = {
     'bug_tracker_uri' => 'https://github.com/yammer/circuitbox/issues',
     'changelog_uri' => 'https://github.com/yammer/circuitbox/blob/main/CHANGELOG.md',
-    'source_code_uri' => 'https://github.com/yammer/circuitbox'
+    'source_code_uri' => 'https://github.com/yammer/circuitbox',
+    'rubygems_mfa_required' => 'true'
   }
 
-  spec.required_ruby_version = '>= 2.4.0'
+  spec.required_ruby_version = '>= 2.6.0'
 
   spec.files = Dir['README.md', 'LICENSE', 'lib/**/*']
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler', '> 1.16'
+  spec.add_development_dependency 'bundler', '> 2.0'
   spec.add_development_dependency 'excon', '~> 0.71'
   spec.add_development_dependency 'faraday', ['>= 0.8', '< 2.0']
   spec.add_development_dependency 'gimme', '~> 0.5'

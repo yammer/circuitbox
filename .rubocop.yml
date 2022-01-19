@@ -10,7 +10,7 @@ AllCops:
     - 'benchmark/circuit_store_benchmark.rb'
     - 'ci/Gemfile'
   NewCops: enable
-  TargetRubyVersion: 2.4
+  TargetRubyVersion: 2.6
 
 Layout/LineLength:
   Enabled: false
