@@ -25,7 +25,7 @@ class ExampleServiceClient
   end
 
   def http_get
-    circuit.run(circuitbox_exceptions: false) do
+    circuit.run(exception: false) do
       Zephyr.new("http://example.com").get(200, 1000, "/api/messages")
     end
   end

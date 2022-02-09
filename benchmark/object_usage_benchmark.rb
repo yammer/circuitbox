@@ -41,7 +41,7 @@ class ObjectUsageBenchmark
         while total_iterations < iterations
           total_iterations += 1
 
-          circuit.run(circuitbox_exceptions: false) do
+          circuit.run(exception: false) do
             raise StandardError if total_iterations % 4
           end
 

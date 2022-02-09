@@ -18,7 +18,7 @@ class Circuitbox
 
       return circuit unless block
 
-      circuit.run(circuitbox_exceptions: false, &block)
+      circuit.run(exception: false, &block)
     end
   end
 end
