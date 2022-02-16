@@ -55,7 +55,7 @@ class CircuitboxTest < Minitest::Test
   end
 
   def test_run_sets_circuit_exceptions_to_false
-    Circuitbox::CircuitBreaker.any_instance.expects(:run).with(circuitbox_exceptions: false)
+    Circuitbox::CircuitBreaker.any_instance.expects(:run).with(exception: false)
 
     Circuitbox.circuit(:yammer, exceptions: [Timeout::Error]) { 'success' }
   end

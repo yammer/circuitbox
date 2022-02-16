@@ -59,21 +59,21 @@ class Circuitbox
     # If the circuit is closed or half_open the block will run.
     # If the circuit is open the block will not be run.
     #
-    # @param circuitbox_exceptions [Boolean] If exceptions should be raised when the circuit is open
+    # @param exception [Boolean] If exceptions should be raised when the circuit is open
     #   or when a watched exception is raised from the block
     # @yield Block to run if circuit is not open
     #
-    # @raise [Circuitbox::OpenCircuitError] If the circuit is open and circuitbox_exceptions is true
-    # @raise [Circuitbox::ServiceFailureError] If a tracked exception is raised from the block and circuitbox_exceptions is true
+    # @raise [Circuitbox::OpenCircuitError] If the circuit is open and exception is true
+    # @raise [Circuitbox::ServiceFailureError] If a tracked exception is raised from the block and exception is true
     #
     # @return [Object] The result from the block
-    # @return [Nil] If the circuit is open and circuitbox_exceptions is false
+    # @return [Nil] If the circuit is open and exception is false
     #   In cases where an exception that circuitbox is watching is raised from either a notifier
     #   or from a custom circuit cache nil can be returned even though the block ran successfully
-    def run(circuitbox_exceptions: true, &block)
+    def run(exception: true, &block)
       if open?
         skipped!
-        raise Circuitbox::OpenCircuitError.new(service) if circuitbox_exceptions
+        raise Circuitbox::OpenCircuitError.new(service) if exception
       else
         logger.debug(circuit_running_message)
 
@@ -86,7 +86,7 @@ class Circuitbox
           # setting to nil keeps the same behavior as the previous definition of run.
           response = nil
           failure!
-          raise Circuitbox::ServiceFailureError.new(service, e) if circuitbox_exceptions
+          raise Circuitbox::ServiceFailureError.new(service, e) if exception
         end
       end
 
