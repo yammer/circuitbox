@@ -1,13 +1,9 @@
 # frozen_string_literal: true
 
-require_relative 'circuit_breaker/logger_messages'
-
 class Circuitbox
   class CircuitBreaker
-    include LoggerMessages
-
     attr_reader :service, :circuit_options, :exceptions,
-                :logger, :circuit_store, :notifier, :time_class
+                :circuit_store, :notifier, :time_class
 
     DEFAULTS = {
       sleep_window: 90,
@@ -26,7 +22,6 @@ class Circuitbox
     # @option options [Integer, Proc] :error_threshold (50) Percentage of failed requests needed to trip the circuit
     # @option options [Array] :exceptions The exceptions that should be monitored and counted as failures
     # @option options [Circuitbox::MemoryStore, Moneta] :cache (Circuitbox.default_circuit_store) Class to store circuit open/close statistics
-    # @option options [Logger] :logger (Circuitbox.default_logger) Logging class for circuit messages
     # @option options [Object] :notifier (Circuitbox.default_notifier) Class notifications are sent to
     #
     # @raise [ArgumentError] If the exceptions option is not an Array
@@ -44,7 +39,6 @@ class Circuitbox
       @exceptions = options.fetch(:exceptions)
       raise ArgumentError.new('exceptions need to be an array') unless @exceptions.is_a?(Array)
 
-      @logger     = options.fetch(:logger) { Circuitbox.default_logger }
       @time_class = options.fetch(:time_class) { Time }
       @state_change_mutex = Mutex.new
       check_sleep_window
@@ -75,8 +69,6 @@ class Circuitbox
         skipped!
         raise Circuitbox::OpenCircuitError.new(service) if exception
       else
-        logger.debug(circuit_running_message)
-
         begin
           response = notifier.notify_run(service, &block)
 
@@ -158,7 +150,7 @@ class Circuitbox
         trip
       end
 
-      # Running event and logger outside of the synchronize block to allow other threads
+      # Running event outside of the synchronize block to allow other threads
       # that may be waiting to become unblocked
       notify_opened
     end
@@ -170,14 +162,13 @@ class Circuitbox
         trip
       end
 
-      # Running event and logger outside of the synchronize block to allow other threads
+      # Running event outside of the synchronize block to allow other threads
       # that may be waiting to become unblocked
       notify_opened
     end
 
     def notify_opened
       notify_event('open')
-      logger.debug(circuit_opened_message)
     end
 
     def trip
@@ -196,7 +187,6 @@ class Circuitbox
       # Running event outside of the synchronize block to allow other threads
       # that may be waiting to become unblocked
       notify_event('close')
-      logger.debug(circuit_closed_message)
     end
 
     def half_open?
@@ -205,14 +195,12 @@ class Circuitbox
 
     def success!
       increment_and_notify_event('success')
-      logger.debug(circuit_success_message)
 
       close! if half_open?
     end
 
     def failure!
       increment_and_notify_event('failure')
-      logger.debug(circuit_failure_message)
 
       if half_open?
         half_open_failure
@@ -223,7 +211,6 @@ class Circuitbox
 
     def skipped!
       notify_event('skipped')
-      logger.debug(circuit_skipped_message)
     end
 
     # Send event notification to notifier

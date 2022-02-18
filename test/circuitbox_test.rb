@@ -9,7 +9,6 @@ class CircuitboxTest < Minitest::Test
 
   def teardown
     Circuitbox.default_notifier = nil
-    Circuitbox.default_logger = nil
     Circuitbox.default_circuit_store = nil
   end
 
@@ -28,12 +27,6 @@ class CircuitboxTest < Minitest::Test
     notifier = gimme
     Circuitbox.default_notifier = notifier
     assert_equal notifier, Circuitbox.default_notifier
-  end
-
-  def test_default_logger_is_configurable
-    logger = gimme
-    Circuitbox.default_logger = logger
-    assert_equal logger, Circuitbox.default_logger
   end
 
   def test_creates_a_circuit_breaker

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'logger'
-
 require_relative 'circuitbox/version'
 require_relative 'circuitbox/circuit_breaker'
 require_relative 'circuitbox/errors/error'
