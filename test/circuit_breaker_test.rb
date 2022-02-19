@@ -9,7 +9,6 @@ class CircuitBreakerTest < Minitest::Test
   def setup
     Circuitbox.configure do |config|
       config.default_circuit_store = Moneta.new(:Memory, expires: true)
-      config.default_logger = Logger.new(File::NULL)
     end
   end
 
@@ -23,7 +22,6 @@ class CircuitBreakerTest < Minitest::Test
     def setup
       Circuitbox.configure do |config|
         config.default_circuit_store = Moneta.new(:Memory, expires: true)
-        config.default_logger = Logger.new(File::NULL)
       end
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
@@ -139,9 +137,7 @@ class CircuitBreakerTest < Minitest::Test
     end
 
     def setup
-      Circuitbox.configure do |config|
-        config.default_logger = Logger.new(File::NULL)
-      end
+      Circuitbox.configure { }
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
                                                 exceptions: [Timeout::Error],
@@ -160,7 +156,6 @@ class CircuitBreakerTest < Minitest::Test
     def setup
       Circuitbox.configure do |config|
         config.default_circuit_store = Moneta.new(:Memory, expires: true)
-        config.default_logger = Logger.new(File::NULL)
       end
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer, exceptions: [SentinalError])
@@ -190,7 +185,6 @@ class CircuitBreakerTest < Minitest::Test
     def setup
       Circuitbox.configure do |config|
         config.default_circuit_store = Moneta.new(:Memory, expires: true)
-        config.default_logger = Logger.new(File::NULL)
       end
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
@@ -233,7 +227,6 @@ class CircuitBreakerTest < Minitest::Test
     def setup
       Circuitbox.configure do |config|
         config.default_circuit_store = Moneta.new(:Memory, expires: true)
-        config.default_logger = Logger.new(File::NULL)
       end
 
       @circuit = Circuitbox::CircuitBreaker.new(:yammer,
@@ -470,7 +463,6 @@ class CircuitBreakerTest < Minitest::Test
     def setup
       Circuitbox.configure do |config|
         config.default_circuit_store = Moneta.new(:Memory, expires: true)
-        config.default_logger = Logger.new(File::NULL)
       end
     end
 

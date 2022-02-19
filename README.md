@@ -43,7 +43,7 @@ Using the `run` method will throw an exception when the circuit is open or the u
 ```
 
 ## Global Configuration
-Circuitbox has defaults for circuit_store, notifier, and logger.
+Circuitbox has defaults for circuit_store and notifier.
 This can be configured through ```Circuitbox.configure```.
 The circuit cache used by ```Circuitbox.circuit``` will be cleared after running ```Circuitbox.configure```.
 This means when accessing the circuit through ```Circuitbox.circuit``` any custom configuration options should always be given.
@@ -55,7 +55,6 @@ will need to be recreated to pick up the new defaults.
   Circuitbox.configure do |config|
     config.default_circuit_store = Circuitbox::MemoryStore.new
     config.default_notifier = Circuitbox::Notifier::Null.new
-    config.default_logger = Rails.logger
   end
 ```
 
@@ -85,10 +84,6 @@ class ExampleServiceClient
 
       # exceeding this rate will open the circuit (checked on failures)
       error_threshold:  50,
-
-      # Logger to use
-      # This overrides what is set in the global configuration
-      logger: Logger.new(STDOUT),
 
       # Customized notifier
       # overrides the default

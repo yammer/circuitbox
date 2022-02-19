@@ -7,8 +7,7 @@ require_relative 'notifier/null'
 class Circuitbox
   module Configuration
     attr_writer :default_circuit_store,
-                :default_notifier,
-                :default_logger
+                :default_notifier
 
     def self.extended(base)
       base.instance_eval do
@@ -36,14 +35,6 @@ class Circuitbox
                             else
                               Notifier::Null.new
                             end
-    end
-
-    def default_logger
-      @default_logger ||= if defined?(Rails)
-                            Rails.logger
-                          else
-                            Logger.new($stdout)
-                          end
     end
 
     private

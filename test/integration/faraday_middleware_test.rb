@@ -13,7 +13,6 @@ class Circuitbox
     def setup
       Circuitbox.configure do |config|
         config.default_circuit_store = Moneta.new(:Memory, expires: true)
-        config.default_logger = Logger.new(File::NULL)
       end
 
       @connection = Faraday.new do |c|
