@@ -41,6 +41,8 @@ class Circuitbox
 
       @time_class = options.fetch(:time_class) { Time }
       @state_change_mutex = Mutex.new
+      @open_storage_key = "circuits:#{@service}:open"
+      @half_open_storage_key = "circuits:#{@service}:half_open"
       check_sleep_window
     end
 
@@ -89,7 +91,7 @@ class Circuitbox
     #
     # @return [Boolean] True if circuit is open, False if closed
     def open?
-      circuit_store.key?(open_storage_key)
+      circuit_store.key?(@open_storage_key)
     end
 
     # Calculates the current error rate of the circuit
@@ -122,7 +124,7 @@ class Circuitbox
     # This does not reset any of the circuit success/failure state so future failures
     # in the same time window may cause the circuit to open sooner
     def try_close_next_time
-      circuit_store.delete(open_storage_key)
+      circuit_store.delete(@open_storage_key)
     end
 
     private
@@ -172,8 +174,8 @@ class Circuitbox
     end
 
     def trip
-      circuit_store.store(open_storage_key, true, expires: option_value(:sleep_window))
-      circuit_store.store(half_open_storage_key, true)
+      circuit_store.store(@open_storage_key, true, expires: option_value(:sleep_window))
+      circuit_store.store(@half_open_storage_key, true)
     end
 
     def close!
@@ -181,7 +183,7 @@ class Circuitbox
         # If the circuit is not open, the half_open key will be deleted from the store
         # if half_open exists the deleted value is returned and allows us to continue
         # if half_open doesn't exist nil is returned, causing us to return early
-        return unless !open? && circuit_store.delete(half_open_storage_key)
+        return unless !open? && circuit_store.delete(@half_open_storage_key)
       end
 
       # Running event outside of the synchronize block to allow other threads
@@ -190,7 +192,7 @@ class Circuitbox
     end
 
     def half_open?
-      circuit_store.key?(half_open_storage_key)
+      circuit_store.key?(@half_open_storage_key)
     end
 
     def success!
@@ -244,14 +246,6 @@ class Circuitbox
       time = time_class.now.to_i
       time_window = option_value(:time_window)
       time - (time % time_window) # remove rest of integer division
-    end
-
-    def open_storage_key
-      @open_storage_key ||= "circuits:#{service}:open"
-    end
-
-    def half_open_storage_key
-      @half_open_storage_key ||= "circuits:#{service}:half_open"
     end
   end
 end
