@@ -41,11 +41,13 @@ class Circuitbox
 
       @time_class = options.fetch(:time_class) { Time }
       @state_change_mutex = Mutex.new
+      @open_storage_key = "circuits:#{@service}:open"
+      @half_open_storage_key = "circuits:#{@service}:half_open"
       check_sleep_window
     end
 
     def option_value(name)
-      value = circuit_options[name]
+      value = @circuit_options[name]
       value.is_a?(Proc) ? value.call : value
     end
 
@@ -67,18 +69,18 @@ class Circuitbox
     def run(exception: true, &block)
       if open?
         skipped!
-        raise Circuitbox::OpenCircuitError.new(service) if exception
+        raise Circuitbox::OpenCircuitError.new(@service) if exception
       else
         begin
-          response = notifier.notify_run(service, &block)
+          response = @notifier.notify_run(@service, &block)
 
           success!
-        rescue *exceptions => e
+        rescue *@exceptions => e
           # Other stores could raise an exception that circuitbox is asked to watch.
           # setting to nil keeps the same behavior as the previous definition of run.
           response = nil
           failure!
-          raise Circuitbox::ServiceFailureError.new(service, e) if exception
+          raise Circuitbox::ServiceFailureError.new(@service, e) if exception
         end
       end
 
@@ -89,7 +91,7 @@ class Circuitbox
     #
     # @return [Boolean] True if circuit is open, False if closed
     def open?
-      circuit_store.key?(open_storage_key)
+      @circuit_store.key?(@open_storage_key)
     end
 
     # Calculates the current error rate of the circuit
@@ -106,14 +108,14 @@ class Circuitbox
     #
     # @return [Integer] Number of failures
     def failure_count
-      circuit_store.load(stat_storage_key('failure'), raw: true).to_i
+      @circuit_store.load(stat_storage_key('failure'), raw: true).to_i
     end
 
     # Number of successes the circuit has encountered in the current time window
     #
     # @return [Integer] Number of successes
     def success_count
-      circuit_store.load(stat_storage_key('success'), raw: true).to_i
+      @circuit_store.load(stat_storage_key('success'), raw: true).to_i
     end
 
     # If the circuit is open the key indicating that the circuit is open
@@ -122,7 +124,7 @@ class Circuitbox
     # This does not reset any of the circuit success/failure state so future failures
     # in the same time window may cause the circuit to open sooner
     def try_close_next_time
-      circuit_store.delete(open_storage_key)
+      @circuit_store.delete(@open_storage_key)
     end
 
     private
@@ -172,8 +174,8 @@ class Circuitbox
     end
 
     def trip
-      circuit_store.store(open_storage_key, true, expires: option_value(:sleep_window))
-      circuit_store.store(half_open_storage_key, true)
+      @circuit_store.store(@open_storage_key, true, expires: option_value(:sleep_window))
+      @circuit_store.store(@half_open_storage_key, true)
     end
 
     def close!
@@ -181,7 +183,7 @@ class Circuitbox
         # If the circuit is not open, the half_open key will be deleted from the store
         # if half_open exists the deleted value is returned and allows us to continue
         # if half_open doesn't exist nil is returned, causing us to return early
-        return unless !open? && circuit_store.delete(half_open_storage_key)
+        return unless !open? && @circuit_store.delete(@half_open_storage_key)
       end
 
       # Running event outside of the synchronize block to allow other threads
@@ -190,7 +192,7 @@ class Circuitbox
     end
 
     def half_open?
-      circuit_store.key?(half_open_storage_key)
+      @circuit_store.key?(@half_open_storage_key)
     end
 
     def success!
@@ -215,12 +217,12 @@ class Circuitbox
 
     # Send event notification to notifier
     def notify_event(event)
-      notifier.notify(service, event)
+      @notifier.notify(@service, event)
     end
 
     # Increment stat store and send notification
     def increment_and_notify_event(event)
-      circuit_store.increment(stat_storage_key(event), 1, expires: (option_value(:time_window) * 2))
+      @circuit_store.increment(stat_storage_key(event), 1, expires: (option_value(:time_window) * 2))
       notify_event(event)
     end
 
@@ -231,27 +233,19 @@ class Circuitbox
 
       warning_message = "sleep_window: #{sleep_window} is shorter than time_window: #{time_window}, "\
                         "the error_rate would not be reset after a sleep."
-      notifier.notify_warning(service, warning_message)
-      warn("Circuit: #{service}, Warning: #{warning_message}")
+      @notifier.notify_warning(@service, warning_message)
+      warn("Circuit: #{@service}, Warning: #{warning_message}")
     end
 
     def stat_storage_key(event)
-      "circuits:#{service}:stats:#{align_time_to_window}:#{event}"
+      "circuits:#{@service}:stats:#{align_time_to_window}:#{event}"
     end
 
     # return time representation in seconds
     def align_time_to_window
-      time = time_class.now.to_i
+      time = @time_class.now.to_i
       time_window = option_value(:time_window)
       time - (time % time_window) # remove rest of integer division
-    end
-
-    def open_storage_key
-      @open_storage_key ||= "circuits:#{service}:open"
-    end
-
-    def half_open_storage_key
-      @half_open_storage_key ||= "circuits:#{service}:half_open"
     end
   end
 end
