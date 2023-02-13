@@ -18,13 +18,13 @@ jobs:
       id: custom-env
       run: |
         export CIRCUITBOX_VERSION=$(echo ${RELEASE_TAG#refs/tags/} | cut -c2-)
-        echo "::set-output name=gem_filename::circuitbox-${CIRCUITBOX_VERSION}.gem"
+        echo "gem_filename=circuitbox-${CIRCUITBOX_VERSION}.gem" >> $GITHUB_OUTPUT
 
         if echo $CIRCUITBOX_VERSION | grep -q "pre"
         then
-          echo "::set-output name=gem_prerelease::true"
+          echo "gem_prerelease=true" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=gem_prerelease::false"
+          echo "gem_prerelease=false" >> $GITHUB_OUTPUT
         fi
       env:
         RELEASE_TAG: ${{ github.ref }}
