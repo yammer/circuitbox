@@ -132,17 +132,16 @@ class Circuitbox
     def should_open?
       failures = failure_count
       successes = success_count
-      rate = error_rate(failures, successes)
 
-      passed_volume_threshold?(failures, successes) && passed_rate_threshold?(rate)
+      passed_volume_threshold?(failures, successes) && passed_rate_threshold?(failures, successes)
     end
 
     def passed_volume_threshold?(failures, successes)
       failures + successes >= option_value(:volume_threshold)
     end
 
-    def passed_rate_threshold?(rate)
-      rate >= option_value(:error_threshold)
+    def passed_rate_threshold?(failures, successes)
+      error_rate(failures, successes) >= option_value(:error_threshold)
     end
 
     def half_open_failure
