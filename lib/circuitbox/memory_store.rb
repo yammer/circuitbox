@@ -43,6 +43,13 @@ class Circuitbox
       @mutex.synchronize { fetch_container(key)&.value }
     end
 
+    def values_at(*keys, **_opts)
+      @mutex.synchronize do
+        current_time = current_second
+        keys.map! { |key| fetch_container(key, current_time)&.value }
+      end
+    end
+
     def key?(key)
       @mutex.synchronize { !fetch_container(key).nil? }
     end
@@ -53,9 +60,7 @@ class Circuitbox
 
     private
 
-    def fetch_container(key)
-      current_time = current_second
-
+    def fetch_container(key, current_time = current_second)
       compact(current_time) if @compact_after < current_time
 
       container = @store[key]

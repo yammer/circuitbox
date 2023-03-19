@@ -105,6 +105,44 @@ class MemoryStoreTest < Minitest::Test
     @memory_store.load('test')
   end
 
+  def test_values_at_returns_values_for_keys
+    @memory_store.store('test', 1234)
+    @memory_store.store('test2', 5678)
+
+    assert_equal [1234, 5678], @memory_store.values_at('test', 'test2')
+  end
+
+  def test_values_at_returns_nil_for_missing_keys
+    @memory_store.store('test', 1234)
+    @memory_store.store('test2', 5678)
+
+    assert_equal [1234, nil, 5678], @memory_store.values_at('test', 'test3', 'test2')
+  end
+
+  def test_values_at_returns_nil_for_expired_keys
+    container = mock
+    container.stubs(:value= => 5678, :value => 5678)
+    @memory_store.store('test', 1234)
+    Circuitbox::MemoryStore::Container.stubs(:new)
+                                      .returns(container)
+    @memory_store.store('test2', 5678)
+
+    container.expects(:expired_at?).returns(true)
+
+    assert_equal [1234, nil], @memory_store.values_at('test', 'test2')
+  end
+
+  def test_values_at_compacts_store
+    current_second = @memory_store.send(:current_second)
+    @memory_store.stubs(:current_second).returns(current_second + 61)
+
+    # this is expected to be called twice because the original method isn't called
+    # and the original compact method updates the compact_after ivar
+    @memory_store.expects(:compact).twice
+
+    @memory_store.values_at('test', 'test2')
+  end
+
   def test_key_returns_true_when_key_is_set
     @memory_store.store('test', 1)
     assert @memory_store.key?('test')
