@@ -40,7 +40,7 @@ class Circuitbox
     end
 
     def load(key, _opts = {})
-      @mutex.synchronize { fetch_value(key) }
+      @mutex.synchronize { fetch_container(key)&.value }
     end
 
     def key?(key)
@@ -68,13 +68,6 @@ class Circuitbox
       else
         container
       end
-    end
-
-    def fetch_value(key)
-      container = fetch_container(key)
-      return unless container
-
-      container.value
     end
 
     def compact(current_time)
