@@ -130,8 +130,16 @@ class Circuitbox
     private
 
     def should_open?
-      failures = failure_count
-      successes = success_count
+      aligned_time = align_time_to_window
+
+      failures, successes = @circuit_store.values_at(stat_storage_key('failure', aligned_time),
+                                                     stat_storage_key('success', aligned_time),
+                                                     raw: true)
+      # Calling to_i is only needed for moneta stores which can return a string representation of an integer.
+      # While readability could increase by adding .map(&:to_i) to the end of the values_at call it's also slightly
+      # less performant when we only have two values to convert.
+      failures = failures.to_i
+      successes = successes.to_i
 
       passed_volume_threshold?(failures, successes) && passed_rate_threshold?(failures, successes)
     end
