@@ -222,7 +222,8 @@ class Circuitbox
     # Increment stat store and send notification
     def increment_and_notify_event(event)
       time_window = option_value(:time_window)
-      @circuit_store.increment(stat_storage_key(event, time_window), 1, expires: time_window)
+      aligned_time = align_time_to_window(time_window)
+      @circuit_store.increment(stat_storage_key(event, aligned_time), 1, expires: time_window)
       notify_event(event)
     end
 
@@ -237,12 +238,12 @@ class Circuitbox
       warn("Circuit: #{@service}, Warning: #{warning_message}")
     end
 
-    def stat_storage_key(event, window = option_value(:time_window))
-      "circuits:#{@service}:stats:#{align_time_to_window(window)}:#{event}"
+    def stat_storage_key(event, aligned_time = align_time_to_window)
+      "circuits:#{@service}:stats:#{aligned_time}:#{event}"
     end
 
     # return time representation in seconds
-    def align_time_to_window(window)
+    def align_time_to_window(window = option_value(:time_window))
       time = @time_class.now.to_i
       time - (time % window) # remove rest of integer division
     end
