@@ -41,7 +41,7 @@ class Circuitbox
       value.is_a?(Proc) ? value.call : value
     end
 
-    def run!(run_options = {})
+    def run!(run_options = {}, &block)
       @partition = run_options.delete(:partition) # sorry for this hack.
 
       if open?
@@ -56,9 +56,9 @@ class Circuitbox
         begin
           response = if exceptions.include? Timeout::Error
             timeout_seconds = run_options.fetch(:timeout_seconds) { option_value(:timeout_seconds) }
-            timeout (timeout_seconds) { yield }
+            timeout (timeout_seconds) { block.call }
           else
-            yield
+            block.call
           end
 
           logger.debug "[CIRCUIT] closed: #{service} querie success"
@@ -74,9 +74,9 @@ class Circuitbox
       return response
     end
 
-    def run(run_options = {})
+    def run(run_options = {}, &block)
       begin
-        run!(run_options, &Proc.new)
+        run!(run_options, &block)
       rescue Circuitbox::Error
         nil
       end
