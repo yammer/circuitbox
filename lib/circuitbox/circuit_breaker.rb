@@ -130,19 +130,26 @@ class Circuitbox
     private
 
     def should_open?
-      failures = failure_count
-      successes = success_count
-      rate = error_rate(failures, successes)
+      aligned_time = align_time_to_window
 
-      passed_volume_threshold?(failures, successes) && passed_rate_threshold?(rate)
+      failures, successes = @circuit_store.values_at(stat_storage_key('failure', aligned_time),
+                                                     stat_storage_key('success', aligned_time),
+                                                     raw: true)
+      # Calling to_i is only needed for moneta stores which can return a string representation of an integer.
+      # While readability could increase by adding .map(&:to_i) to the end of the values_at call it's also slightly
+      # less performant when we only have two values to convert.
+      failures = failures.to_i
+      successes = successes.to_i
+
+      passed_volume_threshold?(failures, successes) && passed_rate_threshold?(failures, successes)
     end
 
     def passed_volume_threshold?(failures, successes)
       failures + successes >= option_value(:volume_threshold)
     end
 
-    def passed_rate_threshold?(rate)
-      rate >= option_value(:error_threshold)
+    def passed_rate_threshold?(failures, successes)
+      error_rate(failures, successes) >= option_value(:error_threshold)
     end
 
     def half_open_failure
@@ -223,7 +230,8 @@ class Circuitbox
     # Increment stat store and send notification
     def increment_and_notify_event(event)
       time_window = option_value(:time_window)
-      @circuit_store.increment(stat_storage_key(event, time_window), 1, expires: time_window)
+      aligned_time = align_time_to_window(time_window)
+      @circuit_store.increment(stat_storage_key(event, aligned_time), 1, expires: time_window)
       notify_event(event)
     end
 
@@ -238,12 +246,12 @@ class Circuitbox
       warn("Circuit: #{@service}, Warning: #{warning_message}")
     end
 
-    def stat_storage_key(event, window = option_value(:time_window))
-      "circuits:#{@service}:stats:#{align_time_to_window(window)}:#{event}"
+    def stat_storage_key(event, aligned_time = align_time_to_window)
+      "circuits:#{@service}:stats:#{aligned_time}:#{event}"
     end
 
     # return time representation in seconds
-    def align_time_to_window(window)
+    def align_time_to_window(window = option_value(:time_window))
       time = @time_class.now.to_i
       time - (time % window) # remove rest of integer division
     end
