@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require_relative 'time_helper/monotonic'
+require_relative 'time_helper/real'
+
 class Circuitbox
   class CircuitBreaker
     attr_reader :service, :circuit_options, :exceptions,
@@ -44,7 +47,8 @@ class Circuitbox
       @exceptions = options.fetch(:exceptions)
       raise ArgumentError.new('exceptions must be an array') unless @exceptions.is_a?(Array)
 
-      @time_class = options.fetch(:time_class) { Time }
+      @time_class = options.fetch(:time_class) { default_time_klass }
+
       @state_change_mutex = Mutex.new
       @open_storage_key = "circuits:#{@service}:open"
       @half_open_storage_key = "circuits:#{@service}:half_open"
@@ -240,6 +244,16 @@ class Circuitbox
       notify_event(event)
     end
 
+    def stat_storage_key(event, aligned_time = align_time_to_window)
+      "circuits:#{@service}:stats:#{aligned_time}:#{event}"
+    end
+
+    # return time representation in seconds
+    def align_time_to_window(window = option_value(:time_window))
+      time = @time_class.current_second
+      time - (time % window) # remove rest of integer division
+    end
+
     def check_sleep_window
       sleep_window = option_value(:sleep_window)
       time_window  = option_value(:time_window)
@@ -251,14 +265,12 @@ class Circuitbox
       warn("Circuit: #{@service}, Warning: #{warning_message}")
     end
 
-    def stat_storage_key(event, aligned_time = align_time_to_window)
-      "circuits:#{@service}:stats:#{aligned_time}:#{event}"
-    end
-
-    # return time representation in seconds
-    def align_time_to_window(window = option_value(:time_window))
-      time = @time_class.now.to_i
-      time - (time % window) # remove rest of integer division
+    def default_time_klass
+      if @circuit_store.is_a?(Circuitbox::MemoryStore)
+        Circuitbox::TimeHelper::Monotonic
+      else
+        Circuitbox::TimeHelper::Real
+      end
     end
   end
 end

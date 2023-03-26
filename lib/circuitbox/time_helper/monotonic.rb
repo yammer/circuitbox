@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class Circuitbox
-  class MemoryStore
-    module MonotonicTime
+  module TimeHelper
+    module Monotonic
       module_function
 
       def current_second
