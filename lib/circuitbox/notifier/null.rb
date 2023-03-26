@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Circuitbox
-  class Notifier
+  module Notifier
     class Null
       def notify(_circuit_name, _event); end
 
