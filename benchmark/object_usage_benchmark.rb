@@ -16,13 +16,13 @@ circuits_to_test << Circuitbox::CircuitBreaker.new('circuitbox_memory_store',
                                                    sleep_window: 2,
                                                    time_window: 1,
                                                    exceptions: [StandardError],
-                                                   cache: Circuitbox::MemoryStore.new)
+                                                   circuit_store: Circuitbox::MemoryStore.new)
 
 circuits_to_test << Circuitbox::CircuitBreaker.new('moneta_memory_store',
                                                    sleep_window: 2,
                                                    time_window: 1,
                                                    exceptions: [StandardError],
-                                                   cache: Moneta.new(:Memory, expires: true, threadsafe: true))
+                                                   circuit_store: Moneta.new(:Memory, expires: true, threadsafe: true))
 
 class ObjectUsageBenchmark
   class << self

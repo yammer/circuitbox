@@ -80,7 +80,7 @@ class ExampleServiceClient
       # the store you want to use to save the circuit state so it can be
       # tracked, this needs to be Moneta compatible, and support increment
       # this overrides what is set in the global configuration
-      cache: Circuitbox::MemoryStore.new,
+      circuit_store: Circuitbox::MemoryStore.new,
 
       # exceeding this rate will open the circuit (checked on failures)
       error_threshold:  50,
@@ -103,7 +103,7 @@ Circuitbox.circuit(:yammer, {
 })
 ```
 
-## Circuit Store (:cache)
+## Circuit Store
 
 Holds all the relevant data to trip the circuit if a given number of requests
 fail in a specified period of time. Circuitbox also supports
