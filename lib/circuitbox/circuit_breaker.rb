@@ -21,14 +21,14 @@ class Circuitbox
     # @option options [Integer, Proc] :volume_threshold (5) Number of requests before error rate is first calculated
     # @option options [Integer, Proc] :error_threshold (50) Percentage of failed requests needed to trip the circuit
     # @option options [Array] :exceptions The exceptions that should be monitored and counted as failures
-    # @option options [Circuitbox::MemoryStore, Moneta] :cache (Circuitbox.default_circuit_store) Class to store circuit open/close statistics
+    # @option options [Circuitbox::MemoryStore, Moneta] :circuit_store (Circuitbox.default_circuit_store) Class to store circuit open/close statistics
     # @option options [Object] :notifier (Circuitbox.default_notifier) Class notifications are sent to
     #
     # @raise [ArgumentError] If the exceptions option is not an Array
     def initialize(service, options = {})
       @service = service.to_s
       @circuit_options = DEFAULTS.merge(options)
-      @circuit_store   = options.fetch(:cache) { Circuitbox.default_circuit_store }
+      @circuit_store   = options.fetch(:circuit_store) { Circuitbox.default_circuit_store }
       @notifier = options.fetch(:notifier) { Circuitbox.default_notifier }
 
       if @circuit_options[:timeout_seconds]
@@ -36,8 +36,13 @@ class Circuitbox
              'Check the upgrade guide at https://github.com/yammer/circuitbox')
       end
 
+      if @circuit_options[:cache]
+        warn('cache was changed to circuit_store in circuitbox 2.0. '\
+             'Check the upgrade guide at https://github.com/yammer/circuitbox')
+      end
+
       @exceptions = options.fetch(:exceptions)
-      raise ArgumentError.new('exceptions need to be an array') unless @exceptions.is_a?(Array)
+      raise ArgumentError.new('exceptions must be an array') unless @exceptions.is_a?(Array)
 
       @time_class = options.fetch(:time_class) { Time }
       @state_change_mutex = Mutex.new
@@ -65,7 +70,7 @@ class Circuitbox
     # @return [Object] The result from the block
     # @return [Nil] If the circuit is open and exception is false
     #   In cases where an exception that circuitbox is watching is raised from either a notifier
-    #   or from a custom circuit cache nil can be returned even though the block ran successfully
+    #   or from a custom circuit store nil can be returned even though the block ran successfully
     def run(exception: true, &block)
       if open?
         skipped!

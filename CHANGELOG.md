@@ -1,5 +1,6 @@
 ## Change log
 ### v2.0.0 (unreleased)
+- `Circuitbox::CircuitBreaker`'s `:cache` option has been renamed to `:circuit_store` [\#190](https://github.com/yammer/circuitbox/pull/190)
 - Have the notifiers handle timing rather than circuitbox [\#169](https://github.com/yammer/circuitbox/pull/169)
 - Improve the `Circuitbox.circuit` store when used in multi-threaded cases [\#167](https://github.com/yammer/circuitbox/pull/167)
 - Always emit a runtime metric when running the circuit's block [\#163](https://github.com/yammer/circuitbox/pull/163)
