@@ -1,6 +1,4 @@
-require "integration_helper"
-require 'moneta'
-require "typhoeus/adapters/faraday"
+require_relative '../integration_helper'
 
 class Circuitbox
 
@@ -12,12 +10,12 @@ class Circuitbox
     @@only_once = false
     def setup
       Circuitbox.configure do |config|
-        config.default_circuit_store = Moneta.new(:Memory, expires: true)
+        config.default_circuit_store = Circuitbox::MemoryStore.new
       end
 
       @connection = Faraday.new do |c|
         c.use FaradayMiddleware
-        c.adapter :typhoeus # support in_parallel
+        c.adapter :net_http
       end
       @success_url = "http://localhost:4711"
       @failure_url = "http://localhost:4712"
@@ -52,29 +50,5 @@ class Circuitbox
       result = connection.get(success_url)
       assert result.success?
     end
-
-    def test_parallel_requests_closed_circuit_response
-      response_1, response_2 = nil
-      connection.in_parallel do
-        response_1 = connection.get(success_url)
-        response_2 = connection.get(success_url)
-      end
-
-      assert response_1.success?
-      assert response_2.success?
-    end
-
-    def test_parallel_requests_open_circuit_response
-      open_circuit
-      response_1, response_2 = nil
-      connection.in_parallel do
-        response_1 = connection.get(failure_url)
-        response_2 = connection.get(failure_url)
-      end
-
-      assert_equal response_1.status, 503
-      assert_equal response_2.status, 503
-    end
-
   end
 end

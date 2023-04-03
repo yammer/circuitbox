@@ -45,8 +45,6 @@ class Circuitbox
       exceptions: DEFAULT_EXCEPTIONS
     }.freeze
 
-    attr_reader :opts
-
     def initialize(app, opts = {})
       @app = app
       @opts = DEFAULT_OPTIONS.merge(opts)
@@ -70,12 +68,12 @@ class Circuitbox
     private
 
     def call_default_value(response, exception)
-      default_value = opts[:default_value]
+      default_value = @opts[:default_value]
       default_value.respond_to?(:call) ? default_value.call(response, exception) : default_value
     end
 
     def open_circuit?(response)
-      opts[:open_circuit].call(response)
+      @opts[:open_circuit].call(response)
     end
 
     def circuit_open_value(env, service_response, exception)
@@ -83,12 +81,12 @@ class Circuitbox
     end
 
     def circuit(env)
-      identifier = opts[:identifier]
+      identifier = @opts[:identifier]
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
 
-      Circuitbox.circuit(id, opts[:circuit_breaker_options])
+      Circuitbox.circuit(id, @opts[:circuit_breaker_options])
     end
   end
 end
 
-Faraday::Middleware.register_middleware circuitbox: Circuitbox::FaradayMiddleware
+Faraday::Middleware.register_middleware(circuitbox: Circuitbox::FaradayMiddleware)
