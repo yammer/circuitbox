@@ -34,10 +34,7 @@ class Circuitbox
     }.freeze
 
     DEFAULT_EXCEPTIONS = [
-      # Faraday before 0.9.0 didn't have Faraday::TimeoutError so we default to Faraday::Error::TimeoutError
-      # Faraday >= 0.9.0 defines Faraday::TimeoutError and this can be used for all versions up to 1.0.0 that
-      # also define and raise Faraday::Error::TimeoutError as Faraday::TimeoutError is an ancestor
-      defined?(Faraday::TimeoutError) ? Faraday::TimeoutError : Faraday::Error::TimeoutError,
+      Faraday::TimeoutError,
       RequestFailed
     ].freeze
 

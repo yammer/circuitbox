@@ -81,16 +81,10 @@ class Circuitbox
 
     def test_default_exceptions
       middleware = FaradayMiddleware.new(app)
-
-      faraday_version = Gem::Version.new(Faraday::VERSION).segments
-      faraday_major = faraday_version[0]
-      faraday_minor = faraday_version[1]
-
-      faraday_exception = faraday_major.positive? || faraday_minor > 8 ? Faraday::TimeoutError : Faraday::Error::TimeoutError
       middleware_opts = opts_from(middleware)
       circuit_breaker_options = middleware_opts[:circuit_breaker_options]
 
-      assert_includes circuit_breaker_options[:exceptions], faraday_exception
+      assert_includes circuit_breaker_options[:exceptions], Faraday::TimeoutError
       assert_includes circuit_breaker_options[:exceptions], FaradayMiddleware::RequestFailed
     end
 
