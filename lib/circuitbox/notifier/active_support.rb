@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Circuitbox
-  class Notifier
+  module Notifier
     class ActiveSupport
       def notify(circuit_name, event)
         ::ActiveSupport::Notifications.instrument("#{event}.circuitbox", circuit: circuit_name)
