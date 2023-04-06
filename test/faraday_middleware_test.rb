@@ -20,25 +20,28 @@ class Circuitbox
 
     def test_default_identifier
       middleware = FaradayMiddleware.new(app)
+      middleware_opts = opts_from(middleware)
       env = { url: URI('http://yammer.com/') }
 
-      assert_equal 'yammer.com', middleware.opts[:identifier].call(env)
+      assert_equal 'yammer.com', middleware_opts[:identifier].call(env)
     end
 
     def test_default_identifier_no_host
       middleware = FaradayMiddleware.new(app)
+      middleware_opts = opts_from(middleware)
       uri = gimme
       give(uri).host { nil }
       give(uri).to_s { 'yam' }
       env = { url: uri }
 
-      assert_equal 'yam', middleware.opts[:identifier].call(env)
+      assert_equal 'yam', middleware_opts[:identifier].call(env)
     end
 
     def test_overwrite_identifier
       middleware = FaradayMiddleware.new(app, identifier: 'sential')
+      middleware_opts = opts_from(middleware)
 
-      assert_equal 'sential', middleware.opts[:identifier]
+      assert_equal 'sential', middleware_opts[:identifier]
     end
 
     def test_overwrite_default_value_generator_lambda
@@ -78,15 +81,10 @@ class Circuitbox
 
     def test_default_exceptions
       middleware = FaradayMiddleware.new(app)
-      circuit_breaker_options = middleware.opts[:circuit_breaker_options]
+      middleware_opts = opts_from(middleware)
+      circuit_breaker_options = middleware_opts[:circuit_breaker_options]
 
-      faraday_version = Gem::Version.new(Faraday::VERSION).segments
-      faraday_major = faraday_version[0]
-      faraday_minor = faraday_version[1]
-
-      faraday_exception = faraday_major.positive? || faraday_minor > 8 ? Faraday::TimeoutError : Faraday::Error::TimeoutError
-
-      assert_includes circuit_breaker_options[:exceptions], faraday_exception
+      assert_includes circuit_breaker_options[:exceptions], Faraday::TimeoutError
       assert_includes circuit_breaker_options[:exceptions], FaradayMiddleware::RequestFailed
     end
 
@@ -137,7 +135,8 @@ class Circuitbox
 
     def test_overwrite_exceptions
       middleware = FaradayMiddleware.new(app, circuit_breaker_options: { exceptions: [SentialException] })
-      circuit_breaker_options = middleware.opts[:circuit_breaker_options]
+      middleware_opts = opts_from(middleware)
+      circuit_breaker_options = middleware_opts[:circuit_breaker_options]
 
       assert_includes circuit_breaker_options[:exceptions], SentialException
     end
@@ -190,6 +189,12 @@ class Circuitbox
       assert_equal 503, response.status
       assert response.finished?
       refute response.success?
+    end
+
+    private
+
+    def opts_from(middleware)
+      middleware.instance_variable_get(:@opts)
     end
   end
 end

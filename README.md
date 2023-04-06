@@ -169,7 +169,10 @@ end
 
 ## Faraday
 
-Circuitbox ships with [Faraday HTTP client](https://github.com/lostisland/faraday) middleware.
+Circuitbox ships with a [Faraday HTTP client](https://github.com/lostisland/faraday) middleware.
+The versions of faraday the middleware has been tested against is `>= 0.17` through `~> 2.0`.
+The middleware does not support parallel requests through a connections `in_parallel` method.
+
 
 ```ruby
 require 'faraday'
