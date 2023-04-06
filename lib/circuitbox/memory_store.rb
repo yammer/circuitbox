@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'memory_store/monotonic_time'
+require_relative 'time_helper/monotonic'
 require_relative 'memory_store/container'
 
 class Circuitbox
   class MemoryStore
-    include MonotonicTime
+    include TimeHelper::Monotonic
 
     def initialize(compaction_frequency: 60)
       @store = {}

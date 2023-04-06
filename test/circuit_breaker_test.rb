@@ -459,6 +459,33 @@ class CircuitBreakerTest < Minitest::Test
     end
   end
 
+  def test_time_class_can_be_overridden
+    # this wouldn't work since Time doesn't have a `current_second` method,
+    # but it's to test that time_class can be overridden
+    circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                             exceptions: [StandardError],
+                                             circuit_store: Circuitbox::MemoryStore.new,
+                                             time_class: Time)
+
+    assert_equal Time, circuit.time_class
+  end
+
+  def test_time_class_defaults_to_realtime_when_not_circuitbox_memorystore
+    circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                             exceptions: [StandardError],
+                                             circuit_store: Moneta.new(:Memory, expires: true))
+
+    assert_equal Circuitbox::TimeHelper::Real, circuit.time_class
+  end
+
+  def test_time_class_defaults_to_monotonic_when_circuitbox_memorystore
+    circuit = Circuitbox::CircuitBreaker.new(:yammer,
+                                             exceptions: [StandardError],
+                                             circuit_store: Circuitbox::MemoryStore.new)
+
+    assert_equal Circuitbox::TimeHelper::Monotonic, circuit.time_class
+  end
+
   class Notifications < Minitest::Test
     def setup
       Circuitbox.configure do |config|

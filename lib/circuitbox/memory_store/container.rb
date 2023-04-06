@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'monotonic_time'
+require_relative '../time_helper/monotonic'
 
 class Circuitbox
   class MemoryStore
     class Container
-      include MonotonicTime
+      include TimeHelper::Monotonic
 
       attr_accessor :value
 
