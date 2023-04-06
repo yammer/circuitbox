@@ -34,18 +34,13 @@ class Circuitbox
     }.freeze
 
     DEFAULT_EXCEPTIONS = [
-      # Faraday before 0.9.0 didn't have Faraday::TimeoutError so we default to Faraday::Error::TimeoutError
-      # Faraday >= 0.9.0 defines Faraday::TimeoutError and this can be used for all versions up to 1.0.0 that
-      # also define and raise Faraday::Error::TimeoutError as Faraday::TimeoutError is an ancestor
-      defined?(Faraday::TimeoutError) ? Faraday::TimeoutError : Faraday::Error::TimeoutError,
+      Faraday::TimeoutError,
       RequestFailed
     ].freeze
 
     DEFAULT_CIRCUIT_BREAKER_OPTIONS = {
       exceptions: DEFAULT_EXCEPTIONS
     }.freeze
-
-    attr_reader :opts
 
     def initialize(app, opts = {})
       @app = app
@@ -70,12 +65,12 @@ class Circuitbox
     private
 
     def call_default_value(response, exception)
-      default_value = opts[:default_value]
+      default_value = @opts[:default_value]
       default_value.respond_to?(:call) ? default_value.call(response, exception) : default_value
     end
 
     def open_circuit?(response)
-      opts[:open_circuit].call(response)
+      @opts[:open_circuit].call(response)
     end
 
     def circuit_open_value(env, service_response, exception)
@@ -83,12 +78,12 @@ class Circuitbox
     end
 
     def circuit(env)
-      identifier = opts[:identifier]
+      identifier = @opts[:identifier]
       id = identifier.respond_to?(:call) ? identifier.call(env) : identifier
 
-      Circuitbox.circuit(id, opts[:circuit_breaker_options])
+      Circuitbox.circuit(id, @opts[:circuit_breaker_options])
     end
   end
 end
 
-Faraday::Middleware.register_middleware circuitbox: Circuitbox::FaradayMiddleware
+Faraday::Middleware.register_middleware(circuitbox: Circuitbox::FaradayMiddleware)
