@@ -2,10 +2,16 @@
 
 ![Tests](https://github.com/yammer/circuitbox/workflows/Tests/badge.svg) [![Gem Version](https://badge.fury.io/rb/circuitbox.svg)](https://badge.fury.io/rb/circuitbox)
 
-Circuitbox is a Ruby circuit breaker gem. It protects your application from failures of its service dependencies. It wraps calls to external services and monitors for failures in one minute intervals. Once more than 10 requests have been made with a 50% failure rate, Circuitbox stops sending requests to that failing service for one minute. This helps your application gracefully degrade.
+Circuitbox is a Ruby circuit breaker gem.
+It protects your application from failures of its service dependencies.
+It wraps calls to external services and monitors for failures in one minute intervals.
+Using a circuit's defaults once more than 5 requests have been made with a 50% failure rate, Circuitbox stops sending requests to that failing service for 90 seconds.
+This helps your application gracefully degrade.
+
 Resources about the circuit breaker pattern:
 * [http://martinfowler.com/bliki/CircuitBreaker.html](http://martinfowler.com/bliki/CircuitBreaker.html)
-* [https://github.com/Netflix/Hystrix/wiki/How-it-Works#CircuitBreaker](https://github.com/Netflix/Hystrix/wiki/How-it-Works#CircuitBreaker)
+
+*Upgrading to 2.x? See [2.0 upgrade](docs/2.0-upgrade.md)*
 
 ## Usage
 
@@ -43,13 +49,17 @@ Using the `run` method will throw an exception when the circuit is open or the u
 ```
 
 ## Global Configuration
-Circuitbox has defaults for circuit_store and notifier.
-This can be configured through ```Circuitbox.configure```.
-The circuit cache used by ```Circuitbox.circuit``` will be cleared after running ```Circuitbox.configure```.
-This means when accessing the circuit through ```Circuitbox.circuit``` any custom configuration options should always be given.
 
-Any circuit created manually through ```Circuitbox::CircuitBreaker``` before updating the configuration
-will need to be recreated to pick up the new defaults.
+Circuitbox defaults can be configured through ```Circuitbox.configure```.
+There are two defaults that can be configured:
+* `default_circuit_store` - Defaults to a `Circuitbox::MemoryStore`. This can be changed to a compatible Moneta store.
+* `default_notifier` - Defaults to `Circuitbox::Notifier::ActiveSupport` if `ActiveSupport::Notifications` is defined, otherwise defaults to `Circuitbox::Notifier::Null`
+
+After configuring circuitbox through `Circuitbox.configure`, the internal circuit cache of `Circuitbox.circuit` is cleared.
+
+Any circuit created manually through ```Circuitbox::CircuitBreaker``` before updating the configuration will need to be recreated to pick up the new defaults.
+
+The following is an example Circuitbox configuration:
 
 ```ruby
   Circuitbox.configure do |config|
@@ -86,7 +96,6 @@ class ExampleServiceClient
       error_threshold:  50,
 
       # Customized notifier
-      # overrides the default
       # this overrides what is set in the global configuration
       notifier: Notifier.new
     })
@@ -107,12 +116,13 @@ Circuitbox.circuit(:yammer, {
 
 Holds all the relevant data to trip the circuit if a given number of requests
 fail in a specified period of time. Circuitbox also supports
-[Moneta](https://github.com/minad/moneta). As moneta is not a dependency of circuitbox
+[Moneta](https://github.com/moneta-rb/moneta). As moneta is not a dependency of circuitbox
 it needs to be loaded prior to use. There are a lot of moneta stores to choose from but
 some pre-requisits need to be satisfied first:
 
 - Needs to support increment, this is true for most but not all available stores.
 - Needs to support expiry.
+- Needs to support bulk read.
 - Needs to support concurrent access if you share them. For example sharing a
   KyotoCabinet store across process fails because the store is single writer
   multiple readers, and all circuits sharing the store need to be able to write.
@@ -120,52 +130,7 @@ some pre-requisits need to be satisfied first:
 
 ## Notifications
 
-Circuitbox has two built in notifiers, null and active support.
-The active support notifier is used if `ActiveSupport::Notifications` is defined when circuitbox is loaded.
-If `ActiveSupport::Notifications` is not defined the null notifier is used.
-The null notifier does not send notifications anywhere.
-
-The default notifier can be changed to use a specific built in notifier or a custom notifier when [configuring circuitbox](#global-configuration).
-
-### ActiveSupport
-Usage example:
-
-**Circuit open/close:**
-
-```ruby
-ActiveSupport::Notifications.subscribe('open.circuitbox') do |_name, _start, _finish, _id, payload|
-  circuit_name = payload[:circuit]
-  Rails.logger.warn("Open circuit for: #{circuit_name}")
-end
-ActiveSupport::Notifications.subscribe('close.circuitbox') do |_name, _start, _finish, _id, payload|
-  circuit_name = payload[:circuit]
-  Rails.logger.info("Close circuit for: #{circuit_name}")
-end
-```
-
-**Circuit run:**
-
-```ruby
-ActiveSupport::Notifications.subscribe('run.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  circuit_name = event.payload[:circuit_name]
-  
-  Rails.logger.info("Circuit: #{circuit_name} Runtime: #{event.duration}")
-end
-```
-
-**Circuit Warnings:**
-In case of misconfiguration, circuitbox will fire a `warning.circuitbox`
-notification.
-
-```ruby
-ActiveSupport::Notifications.subscribe('warning.circuitbox') do |_name, _start, _finish, _id, payload|
-  circuit_name = payload[:circuit]
-  warning      = payload[:message]
-  Rails.logger.warning("Circuit warning for: #{circuit_name} Message: #{warning}")
-end
-
-```
+See [Circuit Notifications](docs/circuit_notifications.md)
 
 ## Faraday
 

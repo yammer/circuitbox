@@ -19,16 +19,30 @@ class Circuitbox
       end
     end
 
+    # Configure Circuitbox's defaults
+    # After configuring the cached circuits are cleared
+    #
+    # @yieldparam [Circuitbox::Configuration] Circuitbox configuration
+    #
     def configure
       yield self
       clear_cached_circuits!
       nil
     end
 
+    # Circuit store used by circuits that are not configured with a specific circuit store
+    # Defaults to Circuitbox::MemoryStore
+    #
+    # @return [Circuitbox::MemoryStore, Moneta] Circuit store
     def default_circuit_store
       @default_circuit_store ||= MemoryStore.new
     end
 
+    # Notifier used by circuits that are not configured with a specific notifier.
+    # If ActiveSupport::Notifications is defined it defaults to Circuitbox::Notifier::ActiveSupport
+    # Otherwise it defaults to Circuitbox::Notifier::Null
+    #
+    # @return [Circuitbox::Notifier::ActiveSupport, Circuitbox::Notifier::Null] Notifier
     def default_notifier
       @default_notifier ||= if defined?(ActiveSupport::Notifications)
                               Notifier::ActiveSupport.new
