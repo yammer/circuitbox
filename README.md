@@ -130,55 +130,7 @@ some pre-requisits need to be satisfied first:
 
 ## Notifications
 
-Circuitbox has two built in notifiers, active support and null.
-The active support notifier is used if `ActiveSupport::Notifications` is defined when circuitbox is loaded.
-If `ActiveSupport::Notifications` is not defined the null notifier is used.
-The null notifier does not send notifications anywhere.
-
-The default notifier can be changed to use a specific built in notifier or a custom notifier, see [global configuration](#global-configuration).
-
-### ActiveSupport
-Usage example:
-
-**Circuit open/close:**
-
-```ruby
-ActiveSupport::Notifications.subscribe('open.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  circuit_name = event.payload[:circuit]
-  Rails.logger.warn("Open circuit for: #{circuit_name}")
-end
-
-ActiveSupport::Notifications.subscribe('close.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  circuit_name = event.payload[:circuit]
-  Rails.logger.info("Close circuit for: #{circuit_name}")
-end
-```
-
-**Circuit run:**
-
-```ruby
-ActiveSupport::Notifications.subscribe('run.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  circuit_name = event.payload[:circuit_name]
-  
-  Rails.logger.info("Circuit: #{circuit_name} Runtime: #{event.duration}")
-end
-```
-
-**Circuit Warnings:**
-In case of misconfiguration, only when a circuit is initialized, circuitbox will send a `warning.circuitbox` notification.
-
-```ruby
-ActiveSupport::Notifications.subscribe('warning.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  circuit_name = event.payload[:circuit]
-  warning      = event.payload[:message]
-  Rails.logger.warning("Circuit warning for: #{circuit_name} Message: #{warning}")
-end
-
-```
+See [Circuit Notifications](docs/circuit_notifications.md)
 
 ## Faraday
 
