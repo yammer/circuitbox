@@ -1,5 +1,6 @@
 ## Change log
-### v2.0.0 (unreleased)
+### v2.0.0
+- Add upgrade guide [\#196](https://github.com/yammer/circuitbox/pull/196)
 - When `Circuitbox::MemoryStore` is used use the monotonic system clock when calculating time windows [\#193](https://github.com/yammer/circuitbox/pull/193)
 - `Circuitbox::CircuitBreaker`'s `:cache` option has been renamed to `:circuit_store` [\#190](https://github.com/yammer/circuitbox/pull/190)
 - Improve circuit opening, fetch some keys in bulk [\#188](https://github.com/yammer/circuitbox/pull/188)
