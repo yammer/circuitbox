@@ -190,8 +190,8 @@ class Circuitbox
     end
 
     def trip
-      @circuit_store.store(@open_storage_key, true, expires: option_value(:sleep_window))
-      @circuit_store.store(@half_open_storage_key, true)
+      @circuit_store.store(@open_storage_key, 'true', expires: option_value(:sleep_window))
+      @circuit_store.store(@half_open_storage_key, 'true')
     end
 
     def close!
