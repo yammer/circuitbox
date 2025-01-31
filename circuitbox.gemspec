@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'gimme', '~> 0.5'
   spec.add_development_dependency 'minitest', '~> 5.14'
   spec.add_development_dependency 'minitest-excludes', '~> 2.0'
-  spec.add_development_dependency 'mocha', '~> 1.12'
+  spec.add_development_dependency 'mocha', '~> 2.7'
   spec.add_development_dependency 'moneta', '~> 1.0'
   spec.add_development_dependency 'rack', '~> 2.0'
   spec.add_development_dependency 'rake', '~> 13.0'
