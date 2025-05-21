@@ -115,17 +115,18 @@ Circuitbox.circuit(:yammer, {
 ## Circuit Store
 
 Holds all the relevant data to trip the circuit if a given number of requests
-fail in a specified period of time. Circuitbox also supports
-[Moneta](https://github.com/moneta-rb/moneta). As moneta is not a dependency of circuitbox
-it needs to be loaded prior to use. There are a lot of moneta stores to choose from but
-some pre-requisits need to be satisfied first:
+fail in a specified period of time. By default, Circuitbox uses an in-memory
+store, but it also supports [Moneta](https://github.com/moneta-rb/moneta) for
+alternative storage options. To use Moneta, add it to your project dependencies.
 
-- Needs to support increment, this is true for most but not all available stores.
-- Needs to support expiry.
-- Needs to support bulk read.
-- Needs to support concurrent access if you share them. For example sharing a
-  KyotoCabinet store across process fails because the store is single writer
-  multiple readers, and all circuits sharing the store need to be able to write.
+When using a Moneta store, ensure it:
+
+- Supports increment operations (true for most, but not all available stores)
+- Supports key expiry
+- Supports bulk read operations
+- Supports concurrent access if shared between processes (For example,
+  KyotoCabinet is single-writer/multiple-readers, which can cause issues when
+  multiple circuits need write access)
 
 
 ## Notifications
