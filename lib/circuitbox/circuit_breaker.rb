@@ -15,6 +15,13 @@ class Circuitbox
       time_window: 60
     }.freeze
 
+    # Define constants for events
+    FAILURE_EVENT = 'failure'.freeze
+    SUCCESS_EVENT = 'success'.freeze
+    SKIPPED_EVENT = 'skipped'.freeze
+    CLOSE_EVENT   = 'close'.freeze
+    OPEN_EVENT    = 'open'.freeze
+
     # Initialize a CircuitBreaker
     #
     # @param service [String, Symbol] Name of the circuit for notifications and metrics store
@@ -117,14 +124,14 @@ class Circuitbox
     #
     # @return [Integer] Number of failures
     def failure_count
-      @circuit_store.load(stat_storage_key('failure'), raw: true).to_i
+      @circuit_store.load(stat_storage_key(FAILURE_EVENT), raw: true).to_i
     end
 
     # Number of successes the circuit has encountered in the current time window
     #
     # @return [Integer] Number of successes
     def success_count
-      @circuit_store.load(stat_storage_key('success'), raw: true).to_i
+      @circuit_store.load(stat_storage_key(SUCCESS_EVENT), raw: true).to_i
     end
 
     # If the circuit is open the key indicating that the circuit is open
@@ -141,8 +148,8 @@ class Circuitbox
     def should_open?
       aligned_time = align_time_to_window
 
-      failures, successes = @circuit_store.values_at(stat_storage_key('failure', aligned_time),
-                                                     stat_storage_key('success', aligned_time),
+      failures, successes = @circuit_store.values_at(stat_storage_key(FAILURE_EVENT, aligned_time),
+                                                     stat_storage_key(SUCCESS_EVENT, aligned_time),
                                                      raw: true)
       # Calling to_i is only needed for moneta stores which can return a string representation of an integer.
       # While readability could increase by adding .map(&:to_i) to the end of the values_at call it's also slightly
@@ -186,7 +193,7 @@ class Circuitbox
     end
 
     def notify_opened
-      notify_event('open')
+      notify_event(OPEN_EVENT)
     end
 
     def trip
@@ -204,7 +211,7 @@ class Circuitbox
 
       # Running event outside of the synchronize block to allow other threads
       # that may be waiting to become unblocked
-      notify_event('close')
+      notify_event(CLOSE_EVENT)
     end
 
     def half_open?
@@ -212,13 +219,13 @@ class Circuitbox
     end
 
     def success!
-      increment_and_notify_event('success')
+      increment_and_notify_event(SUCCESS_EVENT)
 
       close! if half_open?
     end
 
     def failure!
-      increment_and_notify_event('failure')
+      increment_and_notify_event(FAILURE_EVENT)
 
       if half_open?
         half_open_failure
@@ -228,7 +235,7 @@ class Circuitbox
     end
 
     def skipped!
-      notify_event('skipped')
+      notify_event(SKIPPED_EVENT)
     end
 
     # Send event notification to notifier
