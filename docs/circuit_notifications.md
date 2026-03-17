@@ -45,14 +45,12 @@ The timing is done by `ActiveSupport::Notifications`.
 #### Open/Close/Skipped/Success/Failure
 
 ```ruby
-ActiveSupport::Notifications.subscribe('open.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
+ActiveSupport::Notifications.subscribe('open.circuitbox') do |event|
   circuit_name = event.payload[:circuit]
   Rails.logger.warn("Open circuit for: #{circuit_name}")
 end
 
-ActiveSupport::Notifications.subscribe('close.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
+ActiveSupport::Notifications.subscribe('close.circuitbox') do |event|
   circuit_name = event.payload[:circuit]
   Rails.logger.info("Close circuit for: #{circuit_name}")
 end
@@ -61,8 +59,7 @@ end
 #### Warning
 
 ```ruby
-ActiveSupport::Notifications.subscribe('warning.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
+ActiveSupport::Notifications.subscribe('warning.circuitbox') do |event|
   circuit_name = event.payload[:circuit]
   warning      = event.payload[:message]
   Rails.logger.warning("Circuit warning for: #{circuit_name} Message: #{warning}")
@@ -71,8 +68,7 @@ end
 
 #### Timing
 ```ruby
-ActiveSupport::Notifications.subscribe('run.circuitbox') do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
+ActiveSupport::Notifications.subscribe('run.circuitbox') do |event|
   circuit_name = event.payload[:circuit_name]
   
   Rails.logger.info("Circuit: #{circuit_name} Runtime: #{event.duration}")
